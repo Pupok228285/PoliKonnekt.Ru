@@ -1,0 +1,330 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ПолиКоннект — сайт студентов</title>
+<meta name="description" content="Услуги, вещи, лента и форум студентов и выпускников. Помощь с учёбой и бытом, обмен и подарки.">
+<link rel="stylesheet" href="css/style.css?v=43">
+</head>
+<body>
+<div id="wrap">
+<div id="frame">
+
+  <header class="logo logo-wb">
+    <a href="index.html">
+      <img src="img/logo-mark.svg?v=2" alt="">
+      <span class="word">ПолиКоннект</span>
+    </a>
+  </header>
+
+  <div class="wb-widget" id="ringWidget" role="group" aria-label="Активность сайта по дням — гистограмма в духе Wayback Machine, листайте месяцы/годы или кликните по столбику" tabindex="0">
+    <div class="wb-top">
+      <div class="wb-months" id="wbMonths"></div>
+    </div>
+    <div class="wb-bars" id="ringTicks"></div>
+    <div class="wb-bottom">
+      <div class="wb-daynav">
+        <button class="wb-arrow" id="wbPrev" type="button" aria-label="Предыдущий день">◀</button>
+        <div class="wb-daynum" id="ringDateDay">…</div>
+        <div class="wb-datesub" id="ringDateSub">…</div>
+        <button class="wb-arrow" id="wbNext" type="button" aria-label="Следующий день">▶</button>
+      </div>
+      <div class="wb-yearnav">
+        <button class="wb-arrow" id="wbYearPrev" type="button" aria-label="Предыдущий год">◀</button>
+        <span class="wb-year" id="wbYear">…</span>
+        <button class="wb-arrow" id="wbYearNext" type="button" aria-label="Следующий год">▶</button>
+      </div>
+      <button class="wb-today" id="ringToday" type="button" title="Вернуться к сегодня">Сегодня</button>
+    </div>
+    <div class="ring-pop" id="ringPop" hidden></div>
+  </div>
+
+  <nav class="navigatore" aria-label="Разделы">
+    <a class="t-red" href="#uslugi">Услуги и вещи</a><a class="t-yellow" href="#lenta">Лента</a><a class="t-green" href="forum.html">Форум</a><a class="t-blue" href="diary.html">Дневник</a><a class="t-violet" href="albums.html">Альбомы</a>
+  </nav>
+
+  <div class="urlobar">
+    <div class="urlo" id="urlo"><b>…</b></div>
+    <div class="urlo2" id="urlo2">Загрузка...</div>
+  </div>
+
+  <div id="userlink">
+    <form id="authForm" action="#" method="post">
+      <span id="authGuestFields" style="display:flex;align-items:center;gap:4px">
+        <img src="img/icons/i-user.svg" width="16" height="16" alt="">
+        <input class="field" type="email" name="email" id="authEmail" placeholder="почта" aria-label="Почта" style="width:150px">
+        <img src="img/icons/i-key.svg" width="16" height="16" alt="" style="margin-left:10px">
+        <input class="field" type="password" name="pass" id="authPass" placeholder="пароль, от 6 символов" aria-label="Пароль" style="width:170px">
+        <button class="submit" type="submit" style="margin-left:5px">Вход</button>
+        <button class="submit" type="button" id="authRegister">Регистрация</button>
+      </span>
+      <span id="authUserBar" style="display:none">
+        Здравствуйте, <b id="authNick">…</b><img id="authTick" class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="display:none;vertical-align:-3px">
+        &middot; <a href="profile.html">Профиль</a> <span id="authAdminWrap" hidden>&middot; <a href="admin.html" id="authAdminLink">Админ-панель</a></span> &middot; <a href="#" id="authLogout">Выйти</a>
+      </span>
+      <a class="pm-link" href="messages.html"><img src="img/icons/i-mail.svg" alt="">Сообщения <span class="badge" id="pmBadge" hidden style="display:none">0</span></a>
+      <span class="sp"></span>
+    </form>
+    <div id="authStatus" class="hint" style="padding:2px 8px 4px"></div>
+  </div>
+
+  <div id="cols">
+
+    <aside id="menusx">
+
+      <div class="sidebox">
+        <h2>Сервисы</h2>
+
+        <div class="row"><a class="item" href="#lenta"><img src="img/icons/i-arrow.svg" alt="">Лента</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Короткие посты обо всём: вопросы, находки, объявления, мысли.</div></div>
+
+        <div class="row"><a class="item" href="forum.html"><img src="img/icons/i-feed.svg" alt="">Форум</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Обсуждения по факультетам, корпусам и общим темам.</div></div>
+
+        <div class="row"><a class="item" href="reviews.html"><img src="img/icons/i-reviews.svg" alt="">Отзывы</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">О преподавателях, корпусах и дисциплинах — честно, с именем.</div></div>
+
+
+        <div class="row"><a class="item" href="diary.html"><img src="img/icons/i-user.svg" alt="">Дневник</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Личный блог — заметки, истории, дневник учёбы.</div></div>
+
+        <div class="row"><a class="item" href="canteen.html"><img src="img/icons/i-canteen.svg" alt="">Столовая</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Общий чат сайта — болтовня, как в очереди за обедом.</div></div>
+
+        <div class="row"><a class="item" href="artel.html"><img src="img/icons/i-artel.svg" alt="">К’Артель</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Свои команды. Раз в месяц голосованием выбираете главаря.</div></div>
+
+        <div class="row"><a class="item" href="albums.html"><img src="img/icons/i-portfolio.svg" alt="">Альбомы</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Только фото, без подписей: эстетичное и смешное вперемешку.</div></div>
+
+        <div class="row"><a class="item" href="library.html"><img src="img/icons/i-doc.svg" alt="">Библиотека</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Конспекты и методички. Бесплатно, для всех зарегистрированных.</div></div>
+
+        <div class="row"><a class="item" href="#uslugi"><img src="img/icons/i-service.svg" alt="">Услуги и вещи</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Помощь и подработки от студентов, продажа и обмен вещей — платно, даром или в поиске.</div></div>
+
+        <div class="row"><a class="item" href="lostfound.html"><img src="img/icons/i-lost.svg" alt="">Потеряшки</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Нашли или потеряли — зонт, кота, тетрадь. Сюда.</div></div>
+
+        <div class="row"><a class="item" href="quotes.html"><img src="img/icons/i-quote.svg" alt="">Цитаты и Креатив</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Смешные фразы с пар и свои тексты, стихи, зарисовки.</div></div>
+
+        <div class="row"><a class="item" href="dating.html"><img src="img/icons/i-heart.svg" alt="">Знакомства</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Случайный чат и анкеты. Только для подтверждённых студентов.</div></div>
+
+        <div class="row"><a class="item" href="support.html"><img src="img/icons/i-support.svg" alt="">Поддержка</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Вопрос модератору, жалоба или предложение идеи.</div></div>
+
+        <div class="row"><a class="item" href="settings.html"><img src="img/icons/i-settings.svg" alt="">Настройки</a></div>
+      </div>
+
+      <div class="sidebox" id="categoryBox">
+        <h2>Услуги по темам</h2>
+        <a class="item dot now" href="#" data-cat="">Все <span class="cnt" data-cnt="">0</span></a>
+        <a class="item dot" href="#" data-cat="Учёба">Учёба <span class="cnt" data-cnt="Учёба">0</span></a>
+        <a class="item dot" href="#" data-cat="Быт и общежитие">Быт и общежитие <span class="cnt" data-cnt="Быт и общежитие">0</span></a>
+        <a class="item dot" href="#" data-cat="Переезд, переноска">Переезд, переноска <span class="cnt" data-cnt="Переезд, переноска">0</span></a>
+        <a class="item dot" href="#" data-cat="Дизайн и творчество">Дизайн и творчество <span class="cnt" data-cnt="Дизайн и творчество">0</span></a>
+        <a class="item dot" href="#" data-cat="IT и техника">IT и техника <span class="cnt" data-cnt="IT и техника">0</span></a>
+        <a class="item dot" href="#" data-cat="Репетиторство">Репетиторство <span class="cnt" data-cnt="Репетиторство">0</span></a>
+        <a class="item dot" href="#" data-cat="Вещи и обмен">Вещи и обмен <span class="cnt" data-cnt="Вещи и обмен">0</span></a>
+      </div>
+
+      <div class="sidebox" id="verifySidebox">
+        <h2>Значок студента</h2>
+        <div class="sb-note" id="verifyBox">
+          <img src="img/icons/i-verified.svg" width="16" height="16" alt="" style="vertical-align:-4px">
+          Отправьте фото зачётки, и рядом с вашим ником появится галочка. Фото видит только администратор и удаляется после проверки.
+          <br><button class="submit" type="button" id="verifyBtn">Подтвердить</button>
+          <input type="file" id="verifyFile" accept="image/*" hidden>
+          <div class="hint" id="verifyStatus" style="margin-top:4px"></div>
+        </div>
+      </div>
+
+      <div class="sidebox">
+        <h2>Полезное</h2>
+        <div class="sb-note">
+          <a href="https://mospolytech.ru/obuchauschimsya/raspisaniya/" target="_blank" rel="noopener">📅 Расписание занятий по группам</a> — официальный сайт Политеха, без входа.
+        </div>
+      </div>
+
+      <div class="sidebox">
+        <h2>Статистика</h2>
+        <div class="sb-line">Нас уже <span class="red" id="statMembersCount">…</span></div>
+        <div class="sb-text" id="statNewestWrap" style="display:none">Приветствуем: <a href="profile.html" id="statNewestLink"><b id="statNewestNick">…</b></a></div>
+        <div class="sb-line"><span class="red" id="statListingsCount">0</span> Объявления</div>
+        <div class="sb-text"><b id="statFeedCount">…</b> постов в ленте</div>
+        <div class="sb-text"><b id="statForumCount">…</b> тем на форуме</div>
+      </div>
+
+    </aside>
+
+    <main id="orange">
+
+      <section class="box">
+        <h2>Добро пожаловать</h2>
+        <div class="welcome">
+          <div class="mark"><img src="img/logo-mark.svg?v=2" alt="">ПолиКоннект</div>
+          <p><b>Добро пожаловать на ПолиКоннект</b> — сайт студентов и выпускников. Здесь можно найти помощь с учёбой и бытом, предложить свои умения, обменяться вещами, отдать ненужное и просто пообщаться. Заходить и смотреть может любой, а чтобы писать и продавать, достаточно зарегистрироваться. Все рады тем, кто готов общаться в рамках правил взаимного уважения.</p>
+          <div class="btns">
+            <button class="submit" type="button" id="newListingOpenBtn">Разместить объявление</button>
+            <a class="submit" href="#feedComposer">Написать в ленту</a>
+            <a class="submit" href="rules.html">Правила сайта</a>
+          </div>
+        </div>
+        <form class="search" action="#" onsubmit="return false" role="search">
+          <input class="field q" type="search" id="listingSearch" placeholder="Что ищете? Например: репетитор по матанализу" aria-label="Поиск по объявлениям">
+          <select class="field" id="listingSearchCategory" aria-label="Тема">
+            <option value="">Все темы</option><option>Учёба</option><option>Быт и общежитие</option><option>Переезд, переноска</option><option>Дизайн и творчество</option><option>IT и техника</option><option>Репетиторство</option><option>Вещи и обмен</option>
+          </select>
+          <button class="submit" type="button" id="listingSearchBtn">Найти</button>
+        </form>
+      </section>
+
+      <section class="box" id="newListingSection" style="display:none">
+        <h2 id="newListingHeading">Новое объявление</h2>
+        <form class="composer" id="newListingForm" action="#" onsubmit="return false">
+          <input class="field" type="text" id="nlTitle" placeholder="Заголовок" style="width:100%;margin-bottom:6px" maxlength="150">
+          <div class="row" style="gap:6px;margin-bottom:6px">
+            <select class="field" id="nlKind">
+              <option value="service">Услуга</option>
+              <option value="thing">Вещь</option>
+            </select>
+            <select class="field" id="nlCategory">
+              <option>Учёба</option><option>Быт и общежитие</option><option>Переезд, переноска</option><option>Дизайн и творчество</option><option>IT и техника</option><option>Репетиторство</option><option>Вещи и обмен</option>
+            </select>
+            <select class="field" id="nlDealType">
+              <option value="paid">Платно</option>
+              <option value="free">Отдам даром</option>
+              <option value="wanted">Ищу</option>
+            </select>
+            <input class="field" type="text" id="nlPrice" placeholder="Цена, например: 300 ₽ или 400 ₽/час" style="flex:1">
+          </div>
+          <textarea id="nlDescription" placeholder="Описание..."></textarea>
+          <div id="nlPhotoPreview" class="hint" style="display:none;padding:4px 2px 0"></div>
+          <div class="row">
+            <span class="left">
+              <button class="submit" type="button" id="nlPhotoBtn" style="padding:2px 8px">📎 Фото</button>
+              <input type="file" id="nlPhotoInput" accept="image/*" hidden>
+              <span id="newListingHint"></span>
+            </span>
+            <button class="submit" type="button" id="newListingSubmit">Опубликовать</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="box" id="uslugi">
+        <h2>Свежие объявления</h2>
+        <div class="tabs" id="listingTabs">
+          <a class="on" href="#" data-tab="">Все</a><a href="#" data-tab="service">Услуги</a><a href="#" data-tab="thing">Вещи</a><a href="#" data-tab="free">Отдам даром</a><a href="#" data-tab="wanted">Ищу</a><a href="#" data-tab="mine">Мои объявления</a>
+        </div>
+        <div class="ipb">
+          <div class="maintitle" id="listingsMainTitle">Услуги, помощь и вещи</div>
+          <table>
+            <thead>
+            <tr>
+              <th style="width:26px"></th>
+              <th>Объявление</th>
+              <th style="width:130px">Автор</th>
+              <th class="c" style="width:88px">Цена</th>
+              <th class="hide-m" style="width:150px">Обновление</th>
+            </tr>
+            </thead>
+            <tbody id="listingsBody">
+              <tr><td colspan="5" class="hint" style="padding:8px">Загрузка...</td></tr>
+            </tbody>
+          </table>
+          <div class="catend"></div>
+        </div>
+      </section>
+
+      <section class="box" id="lenta">
+        <h2>Лента</h2>
+        <div class="tabs">
+          <a class="on" href="#" title="Пока единственный режим — сортировка по свежести">Новые</a>
+        </div>
+        <div class="ipb">
+          <div class="maintitle"><a class="r" href="#">Вся лента &raquo;</a>Что нового у студентов</div>
+          <form class="composer" id="feedComposer">
+            <textarea id="feedText" placeholder="Что нового? Не более 500 знаков." maxlength="500" aria-label="Текст поста"></textarea>
+            <div class="row">
+              <span class="left" id="feedStatus"></span>
+              <button class="submit" type="submit">Опубликовать</button>
+            </div>
+          </form>
+
+          <div id="feedList"><p class="hint" style="padding:8px 2px">Загрузка...</p></div>
+          <div class="catend"></div>
+        </div>
+      </section>
+
+      <section class="box">
+        <h2>Свежие темы форума</h2>
+        <div class="ipb">
+          <div class="maintitle"><a class="r" href="forum.html">Весь форум &raquo;</a>Форум студентов</div>
+          <table>
+            <tr>
+              <th style="width:26px"></th>
+              <th>Тема</th>
+              <th style="width:120px" class="hide-m">Раздел</th>
+              <th class="c" style="width:64px">Ответов</th>
+              <th style="width:150px" class="hide-m">Обновление</th>
+            </tr>
+            <tbody id="recentTopicsBody">
+              <tr><td colspan="5" class="hint" style="padding:8px">Загрузка...</td></tr>
+            </tbody>
+          </table>
+          <div class="catend"></div>
+        </div>
+      </section>
+
+      <section class="box">
+        <h2>Активные участники</h2>
+        <div class="online-count" id="onlineCountLine">Загрузка...</div>
+        <table class="online" id="onlineTable">
+          <tr><th>Главная</th><td data-section="Главная">—</td></tr>
+          <tr class="alt"><th>Услуги и Вещи</th><td data-section="Услуги и Вещи">—</td></tr>
+          <tr><th>Лента</th><td data-section="Лента">—</td></tr>
+          <tr class="alt"><th>Форум</th><td data-section="Форум">—</td></tr>
+          <tr><th>Столовая</th><td data-section="Столовая">—</td></tr>
+          <tr class="alt"><th>Остальное</th><td data-section="Остальное">—</td></tr>
+        </table>
+      </section>
+
+    </main>
+  </div>
+
+</div>
+</div>
+
+<p class="foot">
+  ПолиКоннект — неофициальный сайт студентов и выпускников. Сайт принадлежит студентам и не является официальным ресурсом университета.<br>
+  <a href="rules.html">Правила сайта</a> · <a href="rules.html#nельзя">Что нельзя размещать</a> · <a href="#">Пожаловаться на объявление</a> · <a href="support.html">Написать в поддержку</a>
+</p>
+
+<div class="ad-popup" id="adPopup">
+  <div class="titlebar"><span>Реклама</span><button type="button" id="adPopupClose" title="Закрыть">×</button></div>
+  <div class="adslot" id="adPopupSlot"><span class="adslot-tag">реклама</span><p id="adPopupText"></p></div>
+</div>
+
+<script>
+// Кнопки «!» в боковом меню: клик/тап показывает описание раздела под пунктом.
+document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    var pop = btn.closest('.row').querySelector('.desc-pop');
+    var willOpen = !pop.classList.contains('show');
+    document.querySelectorAll('.sidebox .desc-pop.show').forEach(function (p) { p.classList.remove('show'); });
+    document.querySelectorAll('.sidebox .qm[aria-expanded="true"]').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+    if (willOpen) {
+      pop.classList.add('show');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/activity-ticker.js?v=1"></script>
+<script src="js/activity-ring.js?v=14"></script>
+<script src="js/auth-ui.js?v=4"></script>
+<script src="js/presence.js?v=3"></script>
+<script src="js/site-stats.js?v=3"></script>
+<script src="js/ad-popup.js?v=8"></script>
+<script src="js/pm-badge.js?v=1"></script>
+<script src="js/social.js?v=3"></script>
+<script src="js/verify-upload.js?v=2"></script>
+<script src="js/feed.js?v=5"></script>
+<script src="js/listings.js?v=2"></script>
+<script src="js/report.js?v=2"></script>
+<script src="js/dev-switch.js?v=1"></script>
+</body>
+</html>

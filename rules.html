@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Правила сайта — ПолиКоннект</title>
+<meta name="description" content="Правила сайта и что нельзя размещать.">
+<link rel="stylesheet" href="css/style.css?v=43">
+</head>
+<body>
+<div id="wrap">
+<div id="frame">
+
+  <header class="logo">
+    <a href="index.html">
+      <img src="img/logo-mark.svg?v=2" alt="">
+      <span class="word">ПолиКоннект</span>
+    </a>
+  </header>
+
+  <nav class="navigatore" aria-label="Разделы">
+    <a class="t-red" href="index.html#uslugi">Услуги и вещи</a><a class="t-yellow" href="index.html#lenta">Лента</a><a class="t-green" href="forum.html">Форум</a><a class="t-blue" href="diary.html">Дневник</a><a class="t-violet" href="albums.html">Альбомы</a>
+  </nav>
+
+  <div id="userlink">
+    <form id="authForm" action="#" method="post">
+      <span id="authGuestFields" style="display:flex;align-items:center;gap:4px">
+        <img src="img/icons/i-user.svg" width="16" height="16" alt="">
+        <input class="field" type="email" name="email" id="authEmail" placeholder="почта" aria-label="Почта" style="width:150px">
+        <img src="img/icons/i-key.svg" width="16" height="16" alt="" style="margin-left:10px">
+        <input class="field" type="password" name="pass" id="authPass" placeholder="пароль, от 6 символов" aria-label="Пароль" style="width:170px">
+        <button class="submit" type="submit" style="margin-left:5px">Вход</button>
+        <button class="submit" type="button" id="authRegister">Регистрация</button>
+      </span>
+      <span id="authUserBar" style="display:none">
+        Здравствуйте, <b id="authNick">…</b><img id="authTick" class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="display:none;vertical-align:-3px">
+        &middot; <a href="profile.html">Профиль</a> <span id="authAdminWrap" hidden>&middot; <a href="admin.html" id="authAdminLink">Админ-панель</a></span> &middot; <a href="#" id="authLogout">Выйти</a>
+      </span>
+      <a class="pm-link" href="messages.html"><img src="img/icons/i-mail.svg" alt="">Сообщения <span class="badge" id="pmBadge" hidden style="display:none">0</span></a>
+      <span class="sp"></span>
+    </form>
+    <div id="authStatus" class="hint" style="padding:2px 8px 4px"></div>
+  </div>
+
+  <div id="cols">
+
+    <aside id="menusx">
+
+      <div class="sidebox">
+        <h2>На этой странице</h2>
+        <a class="item" href="#glavnoe">Главное</a>
+        <a class="item" href="#nельзя">Что нельзя размещать</a>
+        <a class="item" href="#modera">Как работает модерация</a>
+      </div>
+
+      <div class="sidebox">
+        <h2>Не согласны с решением?</h2>
+        <div class="sb-note">
+          Если модератор или админ что-то удалили или заблокировали — напишите в <a href="support.html">Поддержку</a>, разберём.
+        </div>
+      </div>
+
+    </aside>
+
+    <main id="orange">
+
+      <p class="crumbs"><a href="index.html">Главная</a> &rarr; <span class="here">Правила сайта</span></p>
+
+      <section class="box" id="glavnoe">
+        <h2>Правила сайта</h2>
+        <div class="welcome" style="padding-top:0">
+          <p style="text-align:left">ПолиКоннект держится на том, что все тут реальные студенты и выпускники Московского Политеха, которые узнают друг друга по зачётке, а не по анонимности. Правила простые и укладываются в одну мысль: ведите себя так, будто встретите человека на паре — потому что скорее всего так и есть.</p>
+          <ol style="text-align:left;padding-left:20px;line-height:1.7">
+            <li>Без оскорблений, травли и разжигания розни — ни в постах, ни в личных сообщениях, ни на стене артели.</li>
+            <li>Зачётку подтверждаем один раз честно — за чужую зачётку или подделку сразу бан, без разговоров.</li>
+            <li>Сделка (Услуги/Вещи) — между вами и покупателем напрямую; сайт пока не разводит платежи и не несёт за них ответственности, будьте внимательны сами.</li>
+            <li>Один человек — один аккаунт. Замечен второй «про запас» — оба заблокируют, без разбирательств, кто из них «настоящий».</li>
+            <li>В К’Артели раз в месяц выбирают главаря — уважайте итоги голосования, даже если ваш кандидат проиграл.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="box" id="nельзя">
+        <h2>Что нельзя размещать</h2>
+        <div class="welcome" style="padding-top:0">
+          <ul style="text-align:left;padding-left:20px;line-height:1.8">
+            <li><b>Курсовые, дипломы и рефераты на заказ.</b> Реклама таких услуг прямо запрещена законом (383-ФЗ) — удаляем без предупреждения, независимо от вашего мнения о законе.</li>
+            <li><b>Обман и мошенничество</b> — фейковые объявления, «предоплата и пропал», подмена товара.</li>
+            <li><b>Чужие персональные данные</b> без согласия человека — скриншоты переписок, номера телефонов, адреса.</li>
+            <li><b>Реклама сторонних сервисов</b>, не связанных с жизнью студентов Политеха — это не рекламная площадка.</li>
+            <li><b>Незаконные товары и услуги</b> — тут без пояснений, и так понятно.</li>
+            <li><b>Спам</b> — одно и то же объявление в десяти разделах сразу.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box" id="modera">
+        <h2>Как работает модерация</h2>
+        <p style="padding:0 2px">Увидели нарушение — жмите «Пожаловаться» прямо под постом, темой или объявлением (или пишите в <a href="support.html">Поддержку</a>, если это что-то более общее). Жалоба уходит админам и модераторам напрямую, без публичного разбирательства. Решение по ней вы увидите там же, в Поддержке, — можно и переписываться, пока вопрос не решится.</p>
+      </section>
+
+    </main>
+  </div>
+
+</div>
+</div>
+
+<p class="foot">
+  ПолиКоннект — неофициальный сайт студентов и выпускников. Сайт принадлежит студентам и не является официальным ресурсом университета.<br>
+  <a href="rules.html">Правила сайта</a> · <a href="rules.html#nельзя">Что нельзя размещать</a> · <a href="support.html">Пожаловаться на объявление</a> · <a href="support.html">Написать в поддержку</a>
+</p>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/auth-ui.js?v=4"></script>
+<script src="js/presence.js?v=3"></script>
+<script src="js/pm-badge.js?v=1"></script>
+<script src="js/report.js?v=2"></script>
+<script src="js/dev-switch.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>История аккаунта — ПолиКоннект</title>
+<meta name="description" content="Служебная страница для админа и модераторов.">
+<link rel="stylesheet" href="css/style.css?v=43">
+</head>
+<body>
+<div id="wrap">
+<div id="frame">
+
+  <header class="logo">
+    <a href="index.html">
+      <img src="img/logo-mark.svg?v=2" alt="">
+      <span class="word">ПолиКоннект</span>
+    </a>
+  </header>
+
+  <nav class="navigatore" aria-label="Разделы">
+    <a class="t-red" href="index.html#uslugi">Услуги и вещи</a><a class="t-yellow" href="index.html#lenta">Лента</a><a class="t-green" href="forum.html">Форум</a><a class="t-blue" href="diary.html">Дневник</a><a class="t-violet" href="albums.html">Альбомы</a>
+  </nav>
+
+  <div id="userlink">
+    <form id="authForm" action="#" method="post">
+      <span id="authGuestFields" style="display:flex;align-items:center;gap:4px">
+        <img src="img/icons/i-user.svg" width="16" height="16" alt="">
+        <input class="field" type="email" name="email" id="authEmail" placeholder="почта" aria-label="Почта" style="width:150px">
+        <img src="img/icons/i-key.svg" width="16" height="16" alt="" style="margin-left:10px">
+        <input class="field" type="password" name="pass" id="authPass" placeholder="пароль, от 6 символов" aria-label="Пароль" style="width:170px">
+        <button class="submit" type="submit" style="margin-left:5px">Вход</button>
+        <button class="submit" type="button" id="authRegister">Регистрация</button>
+      </span>
+      <span id="authUserBar" style="display:none">
+        Здравствуйте, <b id="authNick">…</b><img id="authTick" class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="display:none;vertical-align:-3px">
+        &middot; <a href="profile.html">Профиль</a> <span id="authAdminWrap" hidden>&middot; <a href="admin.html" id="authAdminLink">Админ-панель</a></span> &middot; <a href="#" id="authLogout">Выйти</a>
+      </span>
+      <span class="sp"></span>
+    </form>
+    <div id="authStatus" class="hint" style="padding:2px 8px 4px"></div>
+  </div>
+
+  <div id="cols">
+
+    <aside id="menusx">
+      <div class="sidebox">
+        <h2>Служебная страница</h2>
+        <a class="item" href="admin.html"><img src="img/icons/i-arrow.svg" alt="">Админ-панель</a>
+        <a class="item" href="index.html"><img src="img/icons/i-arrow.svg" alt="">На сайт</a>
+      </div>
+    </aside>
+
+    <main id="orange">
+
+      <p class="crumbs"><a href="index.html">Главная</a> &rarr; <span class="here">История аккаунта</span></p>
+
+      <section class="box" id="guard">
+        <h2>История аккаунта</h2>
+        <p style="padding:0 2px" id="guardText">Проверяем права...</p>
+      </section>
+
+      <div id="historyArea" hidden>
+
+        <section class="box">
+          <h2>Основное</h2>
+          <div id="headerBox"><p class="hint" style="padding:8px 2px">Загрузка...</p></div>
+        </section>
+
+        <section class="box">
+          <h2>Активность по разделам</h2>
+          <p class="hint" style="padding:0 2px 6px">Грузится по одному разделу за раз — если какой-то зависнет, остальные всё равно покажутся.</p>
+          <div id="sectionsBox"></div>
+        </section>
+
+      </div>
+
+    </main>
+  </div>
+
+</div>
+</div>
+
+<p class="foot">
+  ПолиКоннект — служебная страница администратора.
+</p>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/auth-ui.js?v=4"></script>
+<script src="js/presence.js?v=3"></script>
+<script src="js/account-history.js?v=2"></script>
+<script src="js/dev-switch.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Настройки — ПолиКоннект</title>
+<meta name="description" content="Микрофон в Библиотеке, аккаунт.">
+<link rel="stylesheet" href="css/style.css?v=43">
+</head>
+<body>
+<div id="wrap">
+<div id="frame">
+
+  <header class="logo">
+    <a href="index.html">
+      <img src="img/logo-mark.svg?v=2" alt="">
+      <span class="word">ПолиКоннект</span>
+    </a>
+  </header>
+
+  <nav class="navigatore" aria-label="Разделы">
+    <a class="t-red" href="index.html#uslugi">Услуги и вещи</a><a class="t-yellow" href="index.html#lenta">Лента</a><a class="t-green" href="forum.html">Форум</a><a class="t-blue" href="diary.html">Дневник</a><a class="t-violet" href="albums.html">Альбомы</a>
+  </nav>
+
+  <div id="userlink">
+    <form id="authForm" action="#" method="post">
+      <span id="authGuestFields" style="display:flex;align-items:center;gap:4px">
+        <img src="img/icons/i-user.svg" width="16" height="16" alt="">
+        <input class="field" type="email" name="email" id="authEmail" placeholder="почта" aria-label="Почта" style="width:150px">
+        <img src="img/icons/i-key.svg" width="16" height="16" alt="" style="margin-left:10px">
+        <input class="field" type="password" name="pass" id="authPass" placeholder="пароль, от 6 символов" aria-label="Пароль" style="width:170px">
+        <button class="submit" type="submit" style="margin-left:5px">Вход</button>
+        <button class="submit" type="button" id="authRegister">Регистрация</button>
+      </span>
+      <span id="authUserBar" style="display:none">
+        Здравствуйте, <b id="authNick">…</b><img id="authTick" class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="display:none;vertical-align:-3px">
+        &middot; <a href="profile.html">Профиль</a> <span id="authAdminWrap" hidden>&middot; <a href="admin.html" id="authAdminLink">Админ-панель</a></span> &middot; <a href="#" id="authLogout">Выйти</a>
+      </span>
+      <a class="pm-link" href="messages.html"><img src="img/icons/i-mail.svg" alt="">Сообщения <span class="badge" id="pmBadge" hidden style="display:none">0</span></a>
+      <span class="sp"></span>
+    </form>
+    <div id="authStatus" class="hint" style="padding:2px 8px 4px"></div>
+  </div>
+
+  <div id="cols">
+
+    <aside id="menusx">
+
+      <div class="sidebox">
+        <h2>Сервисы</h2>
+
+        <div class="row"><a class="item" href="index.html#lenta"><img src="img/icons/i-arrow.svg" alt="">Лента</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Короткие посты обо всём: вопросы, находки, объявления, мысли.</div></div>
+
+        <div class="row"><a class="item" href="forum.html"><img src="img/icons/i-feed.svg" alt="">Форум</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Обсуждения по факультетам, корпусам и общим темам.</div></div>
+
+        <div class="row"><a class="item" href="reviews.html"><img src="img/icons/i-reviews.svg" alt="">Отзывы</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">О преподавателях, корпусах и дисциплинах — честно, с именем.</div></div>
+
+
+        <div class="row"><a class="item" href="diary.html"><img src="img/icons/i-user.svg" alt="">Дневник</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Личный блог — заметки, истории, дневник учёбы.</div></div>
+
+        <div class="row"><a class="item" href="canteen.html"><img src="img/icons/i-canteen.svg" alt="">Столовая</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Общий чат сайта — болтовня, как в очереди за обедом.</div></div>
+
+        <div class="row"><a class="item" href="artel.html"><img src="img/icons/i-artel.svg" alt="">К’Артель</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Свои команды. Раз в месяц голосованием выбираете главаря.</div></div>
+
+        <div class="row"><a class="item" href="albums.html"><img src="img/icons/i-portfolio.svg" alt="">Альбомы</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Только фото, без подписей: эстетичное и смешное вперемешку.</div></div>
+
+        <div class="row"><a class="item" href="library.html"><img src="img/icons/i-doc.svg" alt="">Библиотека</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Конспекты и методички. Бесплатно, для всех зарегистрированных.</div></div>
+
+        <div class="row"><a class="item" href="index.html#uslugi"><img src="img/icons/i-service.svg" alt="">Услуги и вещи</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Помощь и подработки от студентов, продажа и обмен вещей — платно, даром или в поиске.</div></div>
+
+        <div class="row"><a class="item" href="lostfound.html"><img src="img/icons/i-lost.svg" alt="">Потеряшки</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Нашли или потеряли — зонт, кота, тетрадь. Сюда.</div></div>
+
+        <div class="row"><a class="item" href="quotes.html"><img src="img/icons/i-quote.svg" alt="">Цитаты и Креатив</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Смешные фразы с пар и свои тексты, стихи, зарисовки.</div></div>
+
+        <div class="row"><a class="item" href="dating.html"><img src="img/icons/i-heart.svg" alt="">Знакомства</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Случайный чат и анкеты. Только для подтверждённых студентов.</div></div>
+
+        <div class="row"><a class="item" href="support.html"><img src="img/icons/i-support.svg" alt="">Поддержка</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Вопрос модератору, жалоба или предложение идеи.</div></div>
+
+        <div class="row"><a class="item now" href="settings.html"><img src="img/icons/i-settings.svg" alt="">Настройки</a></div>
+      </div>
+
+      <div class="sidebox">
+        <h2>О приватности</h2>
+        <div class="sb-note">
+          Микрофон — предпочтение именно этого браузера (хранится у вас локально), не аккаунта; разрешение слушать микрофон в любом случае каждый раз спрашивает сам браузер. Невидимка, «кто может писать первым» и заблокированные — уже настройки аккаунта, действуют на любом устройстве, где вы вошли.
+        </div>
+      </div>
+
+    </aside>
+
+    <main id="orange">
+
+      <p class="crumbs"><a href="index.html">Главная</a> &rarr; <span class="here">Настройки</span></p>
+
+      <section class="box" id="privacyGuestNotice" hidden>
+        <h2>Приватность</h2>
+        <p class="hint" style="padding:6px 2px">Доступно только вошедшим. Войдите вверху страницы.</p>
+      </section>
+
+      <section class="box" id="privacyArea" hidden>
+        <h2>Приватность</h2>
+        <div class="p-row">
+          <span class="lbl">Показывать, что я на сайте</span>
+          <span class="val">
+            <div class="seg" id="onlineSeg">
+              <button type="button" data-on="1">Показывать</button>
+              <button type="button" data-on="0">Невидимка</button>
+            </div>
+          </span>
+        </div>
+        <p class="hint" style="padding:4px 2px 0">В «Активных участниках» на главной вас не будет видно. На админов и модераторов правило не действует — им нужно видеть всех для модерации.</p>
+
+        <div class="p-row" style="margin-top:10px">
+          <span class="lbl">Кто может написать мне первым</span>
+          <span class="val">
+            <div class="seg" id="dmSeg">
+              <button type="button" data-on="all">Все</button>
+              <button type="button" data-on="friends">Только друзья</button>
+            </div>
+          </span>
+        </div>
+        <p class="hint" style="padding:4px 2px 0">Не отменяет уже начатые переписки и не касается сообщений от администраторов и модераторов.</p>
+      </section>
+
+      <section class="box" id="anonGuestNotice" hidden>
+        <h2>Анонимные сообщения</h2>
+        <p class="hint" style="padding:6px 2px">Доступно только вошедшим. Войдите вверху страницы.</p>
+      </section>
+
+      <section class="box" id="anonArea" hidden>
+        <h2>Анонимные сообщения</h2>
+        <p style="padding:0 2px">Если включено, на вашем профиле у других появится кнопка «Оставить анонимное сообщение» — кто угодно из зарегистрированных сможет написать вам, не раскрывая свой ник. Сообщения увидите в своём профиле.</p>
+        <div class="p-row">
+          <span class="lbl">Принимать анонимные сообщения</span>
+          <span class="val">
+            <div class="seg" id="anonSeg">
+              <button type="button" data-on="1">Включено</button>
+              <button type="button" data-on="0">Выключено</button>
+            </div>
+          </span>
+        </div>
+      </section>
+
+      <section class="box" id="blockedGuestNotice" hidden>
+        <h2>Заблокированные</h2>
+        <p class="hint" style="padding:6px 2px">Доступно только вошедшим. Войдите вверху страницы.</p>
+      </section>
+
+      <section class="box" id="blockedArea" hidden>
+        <h2>Заблокированные</h2>
+        <div id="blockedList"><p class="hint" style="padding:4px 2px">Загрузка...</p></div>
+      </section>
+
+      <section class="box" id="credentialsGuestNotice" hidden>
+        <h2>Почта и пароль</h2>
+        <p class="hint" style="padding:6px 2px">Доступно только вошедшим. Войдите вверху страницы.</p>
+      </section>
+
+      <section class="box" id="credentialsArea" hidden>
+        <h2>Почта и пароль</h2>
+        <div class="p-row">
+          <span class="lbl">Почта</span>
+          <span class="val">
+            <input class="field" type="email" id="newEmailInput" placeholder="новая почта" style="width:220px">
+            <button class="submit" type="button" id="changeEmailBtn">Сменить почту</button>
+            <span class="hint" id="changeEmailHint" style="margin:0 0 0 6px"></span>
+          </span>
+        </div>
+        <p class="hint" style="padding:4px 2px 0">На новую почту придёт письмо для подтверждения — пока не подтвердите, вход остаётся по старой.</p>
+
+        <div class="p-row" style="margin-top:10px">
+          <span class="lbl">Новый пароль</span>
+          <span class="val">
+            <input class="field" type="password" id="newPasswordInput" placeholder="от 6 символов" style="width:220px">
+            <button class="submit" type="button" id="changePasswordBtn">Сменить пароль</button>
+            <span class="hint" id="changePasswordHint" style="margin:0 0 0 6px"></span>
+          </span>
+        </div>
+      </section>
+
+      <section class="box">
+        <h2>Микрофон в Библиотеке</h2>
+        <p style="padding:0 2px">На странице «Библиотека» можно включить шумомер: пока страница открыта, сайт честно следит за уровнем шума в комнате и подсказывает, если стало громко. Звук нигде не записывается и никуда не отправляется — громкость считается прямо в браузере и тут же забывается.</p>
+        <div class="p-row">
+          <span class="lbl">Шумомер</span>
+          <span class="val">
+            <div class="seg" id="micSeg">
+              <button type="button" data-on="1">Включён</button>
+              <button type="button" data-on="0">Выключен</button>
+            </div>
+          </span>
+        </div>
+        <p class="hint" style="padding:4px 2px 0">По умолчанию выключен — доступ к микрофону сайт запросит только на странице Библиотеки, и только если здесь включено. Выключить можно в любой момент, здесь же.</p>
+      </section>
+
+      <section class="box" id="accountGuestNotice" hidden>
+        <h2>Аккаунт</h2>
+        <p class="hint" style="padding:6px 2px">Настройки аккаунта доступны только вошедшим. Войдите вверху страницы.</p>
+      </section>
+
+      <section class="box" id="accountArea" hidden>
+        <h2>Аккаунт</h2>
+        <p style="padding:0 2px">Ник, аватар, цитата и приватность истории — в <a href="profile.html">вашем профиле</a>.</p>
+        <p class="hint" style="padding:6px 2px 0;color:#b23e00;font-weight:bold">Опасная зона</p>
+        <p style="padding:0 2px">Удаление аккаунта делает администратор вручную (чтобы случайный клик не стёр всё безвозвратно) — отправьте запрос, и его рассмотрят в Поддержке.</p>
+        <button class="submit" type="button" id="deleteAccountBtn" style="color:#b23e00">Запросить удаление аккаунта</button>
+        <p class="hint" id="deleteAccountHint" style="padding:6px 2px"></p>
+      </section>
+
+    </main>
+  </div>
+
+</div>
+</div>
+
+<p class="foot">
+  ПолиКоннект — неофициальный сайт студентов и выпускников. Сайт принадлежит студентам и не является официальным ресурсом университета.<br>
+  <a href="rules.html">Правила сайта</a> · <a href="rules.html#nельзя">Что нельзя размещать</a> · <a href="support.html">Пожаловаться на объявление</a> · <a href="support.html">Написать в поддержку</a>
+</p>
+
+<script>
+document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    var pop = btn.closest('.row').querySelector('.desc-pop');
+    var willOpen = !pop.classList.contains('show');
+    document.querySelectorAll('.sidebox .desc-pop.show').forEach(function (p) { p.classList.remove('show'); });
+    document.querySelectorAll('.sidebox .qm[aria-expanded="true"]').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+    if (willOpen) {
+      pop.classList.add('show');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/auth-ui.js?v=4"></script>
+<script src="js/presence.js?v=3"></script>
+<script src="js/pm-badge.js?v=1"></script>
+<script src="js/settings.js?v=3"></script>
+<script src="js/report.js?v=2"></script>
+<script src="js/dev-switch.js?v=1"></script>
+</body>
+</html>

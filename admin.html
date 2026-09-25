@@ -1,0 +1,234 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Админ-панель — ПолиКоннект</title>
+<meta name="description" content="Онлайн, очередь проверки зачёток, участники.">
+<link rel="stylesheet" href="css/style.css?v=43">
+</head>
+<body>
+<div id="wrap">
+<div id="frame">
+
+  <header class="logo">
+    <a href="index.html">
+      <img src="img/logo-mark.svg?v=2" alt="">
+      <span class="word">ПолиКоннект</span>
+    </a>
+  </header>
+
+  <nav class="navigatore" aria-label="Разделы">
+    <a class="t-red" href="index.html#uslugi">Услуги и вещи</a><a class="t-yellow" href="index.html#lenta">Лента</a><a class="t-green" href="forum.html">Форум</a><a class="t-blue" href="diary.html">Дневник</a><a class="t-violet" href="albums.html">Альбомы</a>
+  </nav>
+
+  <div class="urlobar">
+    <div class="urlo"><b>Админ</b></div>
+    <div class="urlo2">служебная страница — обычным посетителям сюда заходить незачем</div>
+  </div>
+
+  <div id="userlink">
+    <form id="authForm" action="#" method="post">
+      <span id="authGuestFields" style="display:flex;align-items:center;gap:4px">
+        <img src="img/icons/i-user.svg" width="16" height="16" alt="">
+        <input class="field" type="email" name="email" id="authEmail" placeholder="почта" aria-label="Почта" style="width:150px">
+        <img src="img/icons/i-key.svg" width="16" height="16" alt="" style="margin-left:10px">
+        <input class="field" type="password" name="pass" id="authPass" placeholder="пароль, от 6 символов" aria-label="Пароль" style="width:170px">
+        <button class="submit" type="submit" style="margin-left:5px">Вход</button>
+        <button class="submit" type="button" id="authRegister">Регистрация</button>
+      </span>
+      <span id="authUserBar" style="display:none">
+        Здравствуйте, <b id="authNick">…</b><img id="authTick" class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="display:none;vertical-align:-3px">
+        &middot; <a href="profile.html">Профиль</a> <span id="authAdminWrap" hidden>&middot; <a href="admin.html" id="authAdminLink">Админ-панель</a></span> &middot; <a href="#" id="authLogout">Выйти</a>
+      </span>
+      <span class="sp"></span>
+    </form>
+    <div id="authStatus" class="hint" style="padding:2px 8px 4px"></div>
+  </div>
+
+  <div id="cols">
+
+    <aside id="menusx">
+      <div class="sidebox">
+        <h2>Админ-панель</h2>
+        <a class="item" href="index.html"><img src="img/icons/i-arrow.svg" alt="">Назад на сайт</a>
+      </div>
+    </aside>
+
+    <main id="orange">
+
+      <p class="crumbs"><a href="index.html">Главная</a> &rarr; <span class="here">Админ-панель</span></p>
+
+      <section class="box" id="adminGuard">
+        <h2>Админ-панель</h2>
+        <p style="padding:0 2px" id="adminGuardText">Проверяем права...</p>
+      </section>
+
+      <div id="adminArea" hidden>
+
+        <p class="hint" id="adminRoleNote" style="padding:0 2px"></p>
+
+        <section class="box">
+          <h2>Онлайн сейчас</h2>
+          <div class="online-count" id="onlineCount">—</div>
+          <div id="onlineList" class="hint" style="padding:2px 2px 6px"></div>
+        </section>
+
+        <section class="box">
+          <h2>Заявки на проверку зачёток</h2>
+          <div id="queueBox"><p class="hint" style="padding:4px 2px">Загрузка...</p></div>
+        </section>
+
+        <section class="box">
+          <h2>Поддержка — жалобы и вопросы</h2>
+          <button class="submit" type="button" id="supportHistoryBtn" style="margin-bottom:8px">История всех обращений</button>
+          <div id="supportHistoryPanel" hidden style="margin-bottom:10px"></div>
+          <div id="supportBox"><p class="hint" style="padding:4px 2px">Загрузка...</p></div>
+        </section>
+
+        <section class="box" id="albumsAdminSection" hidden>
+          <h2>Альбомы</h2>
+          <p class="hint" style="padding:0 2px 6px">Фото сжимаются в браузере перед загрузкой. У админа лимита на количество нет — лимит есть только у заявок от участников (ниже).</p>
+          <div class="p-row">
+            <span class="lbl">Новый альбом</span>
+            <span class="val">
+              <input class="field" type="text" id="newAlbumTitle" placeholder="Название альбома" style="width:220px">
+              <button class="submit" type="button" id="newAlbumBtn">Создать</button>
+              <span class="hint" id="newAlbumStatus" style="margin:0 0 0 6px"></span>
+            </span>
+          </div>
+          <div id="albumsAdminList"><p class="hint" style="padding:4px 2px">Загрузка...</p></div>
+        </section>
+
+        <section class="box" id="albumSubsSection" hidden>
+          <h2>Рисунки и фото от участников</h2>
+          <p class="hint" style="padding:0 2px 6px">Заявки со страницы «Альбомы» — выберите альбом и добавьте, или отклоните.</p>
+          <div id="albumSubsList"><p class="hint" style="padding:4px 2px">Загрузка...</p></div>
+        </section>
+
+        <section class="box" id="adsAdminSection" hidden>
+          <h2>Реклама (поп-ап на главной)</h2>
+          <p class="hint" style="padding:0 2px 6px">Пока нет ни одного активного объявления — поп-ап честно показывает старую шутку, как и раньше.</p>
+
+          <p class="hint" style="padding:0 2px 6px">Текст и фото независимы — можно и то, и то вместе (текст ляжет подписью), или что-то одно.</p>
+
+          <div class="p-row"><span class="lbl">Текст</span><span class="val">
+            <input class="field" type="text" id="adTextInput" placeholder="Текст или подпись, до 300 знаков (необязательно, если есть фото)" maxlength="300" style="width:100%">
+          </span></div>
+
+          <div class="p-row"><span class="lbl">Фото</span><span class="val">
+            <input type="file" accept="image/*" id="adImageInput"> <span class="hint" style="margin:0 0 0 6px">необязательно, если есть текст</span>
+          </span></div>
+
+          <div class="p-row"><span class="lbl">Ссылка (необяз.)</span><span class="val">
+            <input class="field" type="text" id="adLinkInput" placeholder="https://..." style="width:100%">
+          </span></div>
+
+          <div class="p-row"><span class="lbl">Показывать до</span><span class="val">
+            <input class="field" type="date" id="adUntilInput">
+          </span></div>
+
+          <div class="p-row"><span class="lbl">Размер — ПК</span><span class="val">
+            <select class="field" id="adDesktopPreset">
+              <option value="468x60">Баннер 468×60</option>
+              <option value="728x90">Лидерборд 728×90</option>
+              <option value="300x250" selected>Прямоугольник 300×250</option>
+              <option value="160x600">Небоскрёб 160×600</option>
+              <option value="custom">Свой размер</option>
+            </select>
+            Ширина <input class="field" type="number" id="adDesktopW" value="300" style="width:64px">
+            Высота <input class="field" type="number" id="adDesktopH" value="250" style="width:64px">
+          </span></div>
+
+          <div class="p-row"><span class="lbl">Размер — телефон</span><span class="val">
+            <select class="field" id="adMobilePreset">
+              <option value="320x50" selected>Баннер 320×50</option>
+              <option value="300x100">Прямоугольник 300×100</option>
+              <option value="320x250">Крупный 320×250</option>
+              <option value="custom">Свой размер</option>
+            </select>
+            Ширина <input class="field" type="number" id="adMobileW" value="320" style="width:64px">
+            Высота <input class="field" type="number" id="adMobileH" value="50" style="width:64px">
+          </span></div>
+
+          <div class="p-row"><span class="lbl">Превью</span><span class="val">
+            <div class="ad-preview-screens">
+              <div class="ad-preview-frame desktop"><div class="lbl2">ПК</div><div class="ad-preview-screen"><div class="ad-preview-box" id="adPreviewDesktopBox"></div></div></div>
+              <div class="ad-preview-frame mobile"><div class="lbl2">Телефон</div><div class="ad-preview-screen"><div class="ad-preview-box" id="adPreviewMobileBox"></div></div></div>
+            </div>
+          </span></div>
+
+          <div class="btns" style="justify-content:flex-start">
+            <button class="submit" type="button" id="adCreateBtn">Опубликовать объявление</button>
+            <span class="hint" id="adCreateStatus" style="margin:0 0 0 6px"></span>
+          </div>
+
+          <div id="adsAdminList" style="margin-top:10px"><p class="hint" style="padding:4px 2px">Загрузка...</p></div>
+        </section>
+
+        <section class="box" id="artelModeSection" hidden>
+          <h2>К’Артель — как назначается главарь</h2>
+          <p class="hint" style="padding:0 2px 6px">Один режим сразу для всех артелей на сайте. Второй способ при этом полностью отключается.</p>
+          <div class="p-row"><span class="lbl">Режим</span><span class="val">
+            <select class="field" id="artelLeaderModeSelect">
+              <option value="election">Голосованием участников</option>
+              <option value="appoint">Прямым назначением (админ или модератор)</option>
+            </select>
+            <span class="hint" id="artelLeaderModeStatus" style="margin:0 0 0 6px"></span>
+          </span></div>
+        </section>
+
+        <section class="box" id="membersSection">
+          <h2>Участники</h2>
+          <form class="search" id="memberSearchForm" onsubmit="return false">
+            <input class="field q" type="text" id="memberSearch" placeholder="Ник, часть ника или ID участника">
+            <button class="submit" type="submit">Найти</button>
+            <button class="submit" type="button" id="memberShowAll">Показать всех</button>
+          </form>
+          <div class="tabs" id="memberRoleTabs" style="margin-top:8px">
+            <a class="on" href="#" data-role="">Все</a><a href="#" data-role="admin">Админы</a><a href="#" data-role="moderator">Модераторы</a><a href="#" data-role="leader">Главари К’Артелей</a><a href="#" data-role="verified">Подтверждённые</a>
+          </div>
+          <div class="ipb" style="margin-top:8px">
+            <div class="maintitle">Список <span class="r" id="memberCount"></span></div>
+            <table>
+              <tr>
+                <th style="width:40px">№</th>
+                <th>Ник</th>
+                <th class="hide-m">Почта</th>
+                <th class="c" style="width:70px">Студент</th>
+                <th class="c" style="width:70px">Роль</th>
+                <th class="hide-m" style="width:110px">Онлайн был</th>
+              </tr>
+              <tbody id="memberRows"></tbody>
+            </table>
+            <div class="catend"></div>
+          </div>
+        </section>
+
+        <section class="box" id="memberDetailBox" hidden>
+          <h2>Карточка участника</h2>
+          <div id="memberDetail"></div>
+        </section>
+
+      </div>
+
+    </main>
+  </div>
+
+</div>
+</div>
+
+<p class="foot">
+  ПолиКоннект — служебная страница администратора.
+</p>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/auth-ui.js?v=4"></script>
+<script src="js/presence.js?v=3"></script>
+<script src="js/pm-badge.js?v=1"></script>
+<script src="js/admin.js?v=22"></script>
+<script src="js/report.js?v=2"></script>
+<script src="js/dev-switch.js?v=1"></script>
+</body>
+</html>
