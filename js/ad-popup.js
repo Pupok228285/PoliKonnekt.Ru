@@ -23,7 +23,7 @@
   var slot = document.getElementById('adPopupSlot');
   var closeBtn = document.getElementById('adPopupClose');
   var rotateTimer = null;
-  var ROTATE_MS = 8000; // 8 секунд на объявление, пока их несколько
+  var ROTATE_MS = 15000; // 15 секунд на объявление, пока их несколько
 
   function escapeHtml(s) {
     var d = document.createElement('div');
