@@ -458,7 +458,7 @@
       var p = profRes.data;
       setAvatarBox(pAv, p.avatar_url, p.nickname.charAt(0).toUpperCase());
       pNick.textContent = p.nickname;
-      document.title = p.nickname + ' — профиль — ПолиКоннект';
+      document.title = p.nickname + ' — профиль — ПолиКоннект.ru';
       pTick.style.display = p.verified ? '' : 'none';
       if (pVerifyNote) {
         if (p.verified) {

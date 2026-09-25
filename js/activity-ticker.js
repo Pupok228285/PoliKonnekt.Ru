@@ -61,7 +61,7 @@
       return new Date(b.row.created_at) - new Date(a.row.created_at);
     });
     if (!found.length) {
-      nameEl.innerHTML = '<b>ПолиКоннект</b>';
+      nameEl.innerHTML = '<b>ПолиКоннект.ru</b>';
       textEl.textContent = 'Пока на сайте тихо — будьте первым.';
       return;
     }

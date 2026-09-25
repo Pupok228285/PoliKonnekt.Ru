@@ -143,7 +143,7 @@
 
       var data = res.data;
       var authorProf = data.profiles || {};
-      document.title = data.title + ' — Форум — ПолиКоннект';
+      document.title = data.title + ' — Форум — ПолиКоннект.ru';
       if (topicTitleEl) topicTitleEl.textContent = data.title;
       if (crumbHere) crumbHere.textContent = data.title;
       if (crumbSection) { crumbSection.textContent = data.section; crumbSection.href = 'forum-section.html?name=' + encodeURIComponent(data.section); }

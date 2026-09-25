@@ -20,7 +20,7 @@
   var newTopicSubmit = document.getElementById('newTopicSubmit');
   var newTopicHint = document.getElementById('newTopicHint');
 
-  document.title = sectionName + ' — Отзывы — ПолиКоннект';
+  document.title = sectionName + ' — Отзывы — ПолиКоннект.ru';
   if (crumbHere) crumbHere.textContent = sectionName || 'Раздел';
   if (sectionTitle) sectionTitle.textContent = sectionName || 'Раздел';
   if (sbSectionName) sbSectionName.textContent = sectionName || '—';

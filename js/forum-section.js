@@ -22,7 +22,7 @@
   var newTopicSubmit = document.getElementById('newTopicSubmit');
   var newTopicHint = document.getElementById('newTopicHint');
 
-  document.title = sectionName + ' — Форум — ПолиКоннект';
+  document.title = sectionName + ' — Форум — ПолиКоннект.ru';
   if (crumbHere) crumbHere.textContent = sectionName || 'Раздел';
   if (sectionTitle) sectionTitle.textContent = sectionName || 'Раздел';
   if (sbSectionName) sbSectionName.textContent = sectionName || '—';

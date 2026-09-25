@@ -114,7 +114,7 @@
         if (res.error || !res.data) { topicTitle.textContent = 'Тема не найдена'; return; }
         var t = res.data;
         var prof = t.profiles || {};
-        document.title = t.title + ' — Отзывы — ПолиКоннект';
+        document.title = t.title + ' — Отзывы — ПолиКоннект.ru';
         topicTitle.textContent = t.title;
         if (crumbSection) { crumbSection.textContent = t.section; crumbSection.href = 'reviews-section.html?name=' + encodeURIComponent(t.section); }
         if (crumbHere) crumbHere.textContent = t.title;

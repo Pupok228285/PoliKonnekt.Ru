@@ -58,7 +58,7 @@
     window.supa.from('profiles').select('nickname').eq('id', userId).single().then(function (res) {
       var nick = res.data ? (res.data.nickname || '?') : '?';
       pageTitle.textContent = 'Дневник: ' + nick;
-      document.title = pageTitle.textContent + ' — ПолиКоннект';
+      document.title = pageTitle.textContent + ' — ПолиКоннект.ru';
       if (crumbCurrent) { crumbCurrent.hidden = false; crumbCurrent.textContent = ' → ' + pageTitle.textContent; }
       if (sbNote) sbNote.textContent = 'Записи только этого человека. Общая лента — по ссылке «Дневник» в шапке.';
     });

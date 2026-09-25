@@ -91,7 +91,7 @@
   }
 
   function applyArtel() {
-    document.title = artel.name + ' — К’Артель — ПолиКоннект';
+    document.title = artel.name + ' — К’Артель — ПолиКоннект.ru';
     if (crumbHere) crumbHere.textContent = artel.name;
     if (artelNameEl) artelNameEl.textContent = artel.name;
     if (artelDescEl) artelDescEl.textContent = artel.description;
