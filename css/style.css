@@ -1123,7 +1123,9 @@ html, body { overflow-x: hidden; }
   display: flex;
   flex-direction: column;
   justify-content: center;
+  transition: opacity .3s ease;
 }
+.ad-popup .adslot.fading { opacity: 0; }
 .ad-popup .adslot img { display: block; width: 100%; }
 .adslot-tag {
   position: absolute;

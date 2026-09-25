@@ -85,8 +85,12 @@
     reveal();
     if (ads.length > 1) {
       rotateTimer = setInterval(function () {
-        idx = (idx + 1) % ads.length;
-        renderAd(ads[idx]);
+        slot.classList.add('fading');
+        setTimeout(function () {
+          idx = (idx + 1) % ads.length;
+          renderAd(ads[idx]);
+          slot.classList.remove('fading');
+        }, 300);
       }, ROTATE_MS);
     }
   }
