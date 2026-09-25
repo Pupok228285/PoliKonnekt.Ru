@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обработка данных — ПолиКоннект</title>
+<meta name="description" content="Какие данные собирает сайт, кто их видит и как их удалить.">
+<link rel="stylesheet" href="css/style.css?v=43">
+</head>
+<body>
+<div id="wrap">
+<div id="frame">
+
+  <header class="logo">
+    <a href="index.html">
+      <img src="img/logo-mark.svg?v=2" alt="">
+      <span class="word">ПолиКоннект</span>
+    </a>
+  </header>
+
+  <nav class="navigatore" aria-label="Разделы">
+    <a class="t-red" href="index.html#uslugi">Услуги и вещи</a><a class="t-yellow" href="index.html#lenta">Лента</a><a class="t-green" href="forum.html">Форум</a><a class="t-blue" href="diary.html">Дневник</a><a class="t-violet" href="albums.html">Альбомы</a>
+  </nav>
+
+  <div id="userlink">
+    <form id="authForm" action="#" method="post">
+      <span id="authGuestFields" style="display:flex;align-items:center;gap:4px">
+        <img src="img/icons/i-user.svg" width="16" height="16" alt="">
+        <input class="field" type="email" name="email" id="authEmail" placeholder="почта" aria-label="Почта" style="width:150px">
+        <img src="img/icons/i-key.svg" width="16" height="16" alt="" style="margin-left:10px">
+        <input class="field" type="password" name="pass" id="authPass" placeholder="пароль, от 6 символов" aria-label="Пароль" style="width:170px">
+        <button class="submit" type="submit" style="margin-left:5px">Вход</button>
+        <button class="submit" type="button" id="authRegister">Регистрация</button>
+      </span>
+      <span id="authUserBar" style="display:none">
+        Здравствуйте, <b id="authNick">…</b><img id="authTick" class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="display:none;vertical-align:-3px">
+        &middot; <a href="profile.html">Профиль</a> <span id="authAdminWrap" hidden>&middot; <a href="admin.html" id="authAdminLink">Админ-панель</a></span> &middot; <a href="#" id="authLogout">Выйти</a>
+      </span>
+      <a class="pm-link" href="messages.html"><img src="img/icons/i-mail.svg" alt="">Сообщения <span class="badge" id="pmBadge" hidden style="display:none">0</span></a>
+      <span class="sp"></span>
+    </form>
+    <div id="authStatus" class="hint" style="padding:2px 8px 4px"></div>
+  </div>
+
+  <div id="cols">
+
+    <aside id="menusx">
+
+      <div class="sidebox">
+        <h2>На этой странице</h2>
+        <a class="item" href="#kakie">Какие данные собираем</a>
+        <a class="item" href="#kto-vidit">Кто что видит</a>
+        <a class="item" href="#gde">Где хранятся и кто их получает</a>
+        <a class="item" href="#udalit">Как удалить свои данные</a>
+      </div>
+
+      <div class="sidebox">
+        <h2>Вопросы?</h2>
+        <div class="sb-note">
+          Если что-то непонятно или хотите удалить данные — пишите в <a href="support.html">Поддержку</a>.
+        </div>
+      </div>
+
+    </aside>
+
+    <main id="orange">
+
+      <p class="crumbs"><a href="index.html">Главная</a> &rarr; <span class="here">Обработка данных</span></p>
+
+      <section class="box" id="kakie">
+        <h2>Какие данные собираем</h2>
+        <div class="welcome" style="padding-top:0">
+          <p style="text-align:left">ПолиКоннект — сайт студентов и выпускников Московского Политеха, для регистрации нужна настоящая почта. Вот что сайт хранит о вас:</p>
+          <ul style="text-align:left;padding-left:20px;line-height:1.8">
+            <li><b>При регистрации:</b> почта и пароль (пароль хранится в виде хэша — необратимо зашифрован, его не видит вообще никто, даже админ сайта, см. ниже).</li>
+            <li><b>В профиле — по желанию:</b> никнейм, имя, пол, дата рождения, факультет, курс, специальность, интересы, ссылка на ВК, фото профиля.</li>
+            <li><b>Фото зачётки</b> — если проходите подтверждение статуса студента.</li>
+            <li><b>Всё, что вы сами публикуете</b> — посты в Ленте, темы и ответы на форуме, объявления, записи в Дневнике, Цитатах, Столовой, Потеряшках, на стене К’Артели, отзывы, анкета Знакомств, личные сообщения.</li>
+            <li><b>Технические отметки</b> — когда вы последний раз заходили на сайт (чтобы показывать «в сети»), дата регистрации.</li>
+          </ul>
+          <p style="text-align:left">Мы не запрашиваем номер телефона, паспортные данные и не продаём и не передаём ваши данные рекламщикам или каким-либо третьим лицам — на сайте вообще нет сторонней рекламной аналитики или трекеров.</p>
+        </div>
+      </section>
+
+      <section class="box" id="kto-vidit">
+        <h2>Кто что видит</h2>
+        <div class="welcome" style="padding-top:0">
+          <ul style="text-align:left;padding-left:20px;line-height:1.8">
+            <li><b>Публичный профиль и все ваши посты</b> — видит любой посетитель сайта, даже без регистрации (это открытая площадка, не приватный дневник).</li>
+            <li><b>Вашу почту</b> — видят только админы и модераторы (нужно для связи и проверки нарушений), другим студентам она не показывается нигде.</li>
+            <li><b>Пароль</b> — не видит никто. Он хранится в виде одностороннего хэша (необратимого «слепка»), даже у нас нет технической возможности его прочитать — только вы можете войти или сбросить его через почту.</li>
+            <li><b>Фото зачётки</b> — только вы сами и админ, который подтверждает статус студента.</li>
+            <li><b>Анонимные сообщения (валентинки)</b> — получатель никогда не видит, кто отправил. Админ видит отправителя — но только на случай жалобы на оскорбление или травлю через эту функцию, не просто так.</li>
+            <li><b>«История аккаунта»</b> — админы и модераторы могут посмотреть в одном месте всё, что вы публично писали на сайте (это и так у всех на виду, просто собрано вместе для модерации) — но не пароль.</li>
+            <li><b>Личные сообщения</b> — видите только вы и собеседник. Админ может посмотреть переписку только если на неё пожаловались, для разбора жалобы.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box" id="gde">
+        <h2>Где хранятся и кто их получает</h2>
+        <div class="welcome" style="padding-top:0">
+          <ul style="text-align:left;padding-left:20px;line-height:1.8">
+            <li>Все данные хранятся на серверах <b>Supabase</b> — облачного сервиса баз данных, который мы используем как техническую платформу (аналог того, как почта хранится на серверах почтового провайдера).</li>
+            <li>Когда вы пишете в <b>Поддержку</b> или отправляете заявку на подтверждение зачётки, короткое уведомление (ваш ник и текст обращения) автоматически уходит в закрытый Telegram админов сайта — чтобы быстрее заметить и ответить. Это не публичный канал, доступ только у админов.</li>
+            <li><b>Микрофон в Библиотеке</b> (если вы сами включили его в Настройках) — звук обрабатывается прямо в вашем браузере для измерения громкости и никуда не отправляется, не записывается и не сохраняется — ни на сайт, ни куда-либо ещё.</li>
+            <li>В браузере (localStorage) сохраняются только мелкие технические настройки — вошли ли вы, включён ли микрофон, скрыта ли реклама. Это не передаётся на сторону и стирается, если очистить данные сайта в браузере.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box" id="udalit">
+        <h2>Как удалить свои данные</h2>
+        <p style="padding:0 2px">В Настройках, в разделе «Аккаунт», есть запрос на удаление аккаунта — он уходит обычным обращением в Поддержку и его руками обрабатывает администратор (это специально не мгновенная кнопка — как и остальную модерацию на сайте, удаление проверяет человек, а не скрипт). Если нужно удалить что-то одно — конкретный пост, фото или сообщение — просто удалите его сами со страницы, где оно опубликовано, либо тоже напишите в <a href="support.html">Поддержку</a>.</p>
+      </section>
+
+    </main>
+  </div>
+
+</div>
+</div>
+
+<p class="foot">
+  ПолиКоннект — неофициальный сайт студентов и выпускников. Сайт принадлежит студентам и не является официальным ресурсом университета.<br>
+  <a href="rules.html">Правила сайта</a> · <a href="rules.html#nельзя">Что нельзя размещать</a> · <a href="privacy.html">Обработка данных</a> · <a href="support.html">Написать в поддержку</a>
+</p>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/auth-ui.js?v=4"></script>
+<script src="js/presence.js?v=3"></script>
+<script src="js/pm-badge.js?v=1"></script>
+<script src="js/dev-switch.js?v=1"></script>
+</body>
+</html>
