@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Посетили сегодня — ПолиКоннект.ru</title>
+<meta name="description" content="Кто заходил на сайт сегодня.">
+<link rel="stylesheet" href="css/style.css?v=44">
+</head>
+<body>
+<div id="wrap">
+<div id="frame">
+
+  <header class="logo">
+    <a href="index.html">
+      <img src="img/logo-mark.svg?v=2" alt="">
+      <span class="word">ПолиКоннект<span class="tld">.ru</span></span>
+    </a>
+  </header>
+
+  <nav class="navigatore" aria-label="Разделы">
+    <a class="t-red" href="index.html#uslugi">Услуги и вещи</a><a class="t-yellow" href="index.html#lenta">Лента</a><a class="t-green" href="forum.html">Форум</a><a class="t-blue" href="diary.html">Дневник</a><a class="t-violet" href="albums.html">Альбомы</a>
+  </nav>
+
+  <div id="userlink">
+    <form id="authForm" action="#" method="post">
+      <span id="authGuestFields" style="display:flex;align-items:center;gap:4px">
+        <img src="img/icons/i-user.svg" width="16" height="16" alt="">
+        <input class="field" type="email" name="email" id="authEmail" placeholder="почта" aria-label="Почта" style="width:150px">
+        <img src="img/icons/i-key.svg" width="16" height="16" alt="" style="margin-left:10px">
+        <input class="field" type="password" name="pass" id="authPass" placeholder="пароль, от 6 символов" aria-label="Пароль" style="width:170px">
+        <button class="submit" type="submit" style="margin-left:5px">Вход</button>
+        <button class="submit" type="button" id="authRegister">Регистрация</button>
+      </span>
+      <span id="authUserBar" style="display:none">
+        Здравствуйте, <b id="authNick">…</b><img id="authTick" class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="display:none;vertical-align:-3px">
+        &middot; <a href="profile.html">Профиль</a> <span id="authAdminWrap" hidden>&middot; <a href="admin.html" id="authAdminLink">Админ-панель</a></span> &middot; <a href="#" id="authLogout">Выйти</a>
+      </span>
+      <a class="pm-link" href="messages.html"><img src="img/icons/i-mail.svg" alt="">Сообщения <span class="badge" id="pmBadge" hidden style="display:none">0</span></a>
+      <span class="sp"></span>
+    </form>
+    <div id="authStatus" class="hint" style="padding:2px 8px 4px"></div>
+  </div>
+
+  <div id="cols">
+
+    <aside id="menusx">
+      <div class="sidebox">
+        <h2>Форум</h2>
+        <a class="item" href="forum.html"><img src="img/icons/i-arrow.svg" alt="">Назад на форум</a>
+        <a class="item" href="index.html"><img src="img/icons/i-arrow.svg" alt="">На главную</a>
+      </div>
+    </aside>
+
+    <main id="orange">
+
+      <p class="crumbs"><a href="index.html">Главная</a> &rarr; <a href="forum.html">Форум</a> &rarr; <span class="here">Посетили сегодня</span></p>
+
+      <section class="box">
+        <h2>Посетили сайт сегодня</h2>
+        <div class="ipb">
+          <div class="maintitle">Список <span class="r" id="visitorsCount"></span></div>
+          <table>
+            <tr><th>Ник</th><th style="width:150px">Заходил(а)</th></tr>
+            <tbody id="visitorsBody"><tr><td colspan="2" class="hint" style="padding:8px">Загрузка...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+</div>
+</div>
+
+<p class="foot">
+  ПолиКоннект.ru — неофициальный сайт студентов и выпускников. Сайт принадлежит студентам и не является официальным ресурсом университета.<br>
+  <a href="rules.html">Правила сайта</a> · <a href="rules.html#nельзя">Что нельзя размещать</a> · <a href="privacy.html">Обработка данных</a> · <a href="support.html">Написать в поддержку</a>
+</p>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/auth-ui.js?v=4"></script>
+<script src="js/presence.js?v=3"></script>
+<script src="js/pm-badge.js?v=1"></script>
+<script src="js/visitors-today.js?v=1"></script>
+<script src="js/dev-switch.js?v=1"></script>
+</body>
+</html>
