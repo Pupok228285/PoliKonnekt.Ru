@@ -1,15 +1,14 @@
 /*
- * Список тех, кто заходил на сайт сегодня — по profiles.last_seen_at
- * (обновляет presence.js на каждой странице для вошедших). Публичная
- * страница, как и остальной список участников — своя же политика
- * profiles_select_all это уже разрешает.
+ * Кто заходил на сайт сегодня — по profiles.last_seen_at (его обновляет
+ * presence.js). Кто включил невидимку в Настройках (hide_online), сюда не
+ * попадает — как и в «онлайн» на главной (site-stats.js).
  */
 (function () {
   if (!window.supa) return;
 
-  var body = document.getElementById('visitorsBody');
   var countEl = document.getElementById('visitorsCount');
-  if (!body) return;
+  var listEl = document.getElementById('visitorsList');
+  if (!countEl) return;
 
   function escapeHtml(s) {
     var d = document.createElement('div');
@@ -17,24 +16,31 @@
     return d.innerHTML;
   }
 
-  function fmtTime(iso) {
-    var d = new Date(iso);
-    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  function pluralForm(n, one, few, many) {
+    var mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+    return many;
   }
 
   var startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  window.supa.from('profiles').select('id, nickname, last_seen_at')
+  window.supa.from('profiles').select('id, nickname')
     .gte('last_seen_at', startOfDay.toISOString())
+    .eq('hide_online', false)
     .order('last_seen_at', { ascending: false })
     .then(function (res) {
-      if (res.error) { body.innerHTML = '<tr><td colspan="2" class="hint" style="padding:8px">Не удалось загрузить.</td></tr>'; return; }
+      if (res.error) { countEl.textContent = 'Не удалось загрузить.'; return; }
       var rows = res.data || [];
-      if (countEl) countEl.textContent = '(' + rows.length + ')';
-      if (!rows.length) { body.innerHTML = '<tr><td colspan="2" class="hint" style="padding:8px">Сегодня ещё никто не заходил.</td></tr>'; return; }
-      body.innerHTML = rows.map(function (p) {
-        return '<tr><td><a href="profile.html?id=' + p.id + '">' + escapeHtml(p.nickname) + '</a></td><td>' + fmtTime(p.last_seen_at) + '</td></tr>';
-      }).join('');
+      if (!rows.length) { countEl.textContent = 'Сегодня ещё никто не заходил.'; return; }
+      countEl.textContent = 'Сегодня на сайте ' +
+        pluralForm(rows.length, 'побывал', 'побывали', 'побывали') + ' ' + rows.length + ' ' +
+        pluralForm(rows.length, 'пользователь', 'пользователя', 'пользователей');
+      if (listEl) {
+        listEl.innerHTML = rows.map(function (p) {
+          return '<a href="profile.html?id=' + p.id + '">' + escapeHtml(p.nickname) + '</a>';
+        }).join(', ');
+      }
     });
 })();
