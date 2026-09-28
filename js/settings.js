@@ -193,6 +193,105 @@
     });
   }
 
+  // ---------- уведомления в Telegram (db/schema_v40.sql) ----------
+  var tgGuestNotice = document.getElementById('tgGuestNotice');
+  var tgArea = document.getElementById('tgArea');
+  var tgNotConfigured = document.getElementById('tgNotConfigured');
+  var tgNotLinked = document.getElementById('tgNotLinked');
+  var tgLinked = document.getElementById('tgLinked');
+  var tgLinkedAs = document.getElementById('tgLinkedAs');
+  var tgConnectBtn = document.getElementById('tgConnectBtn');
+  var tgOpenLink = document.getElementById('tgOpenLink');
+  var tgConnectHint = document.getElementById('tgConnectHint');
+  var tgDisconnectBtn = document.getElementById('tgDisconnectBtn');
+  var tgBotUsername = null;
+  var tgPollTimer = null;
+
+  function stopTgPoll() {
+    if (tgPollTimer) { clearInterval(tgPollTimer); tgPollTimer = null; }
+  }
+
+  function renderTelegram(link) {
+    if (link) {
+      stopTgPoll();
+      tgNotConfigured.hidden = true;
+      tgNotLinked.hidden = true;
+      tgLinked.hidden = false;
+      tgLinkedAs.textContent = link.tg_username ? ' — @' + link.tg_username : '';
+      document.querySelectorAll('.tg-seg').forEach(function (seg) {
+        applySeg(seg, link['notify_' + seg.getAttribute('data-key')] ? '1' : '0');
+      });
+      return;
+    }
+    tgLinked.hidden = true;
+    tgNotConfigured.hidden = !!tgBotUsername;
+    tgNotLinked.hidden = !tgBotUsername;
+  }
+
+  function loadTelegram() {
+    if (!tgArea) return;
+    Promise.all([
+      window.supa.from('site_settings').select('telegram_bot_username').eq('id', true).maybeSingle(),
+      window.supa.from('telegram_links').select('*').eq('profile_id', myId).maybeSingle()
+    ]).then(function (res) {
+      if (res[0].error || res[1].error) { tgNotConfigured.hidden = false; return; }
+      tgBotUsername = res[0].data && res[0].data.telegram_bot_username;
+      renderTelegram(res[1].data);
+    });
+  }
+
+  if (tgConnectBtn) {
+    tgConnectBtn.addEventListener('click', function () {
+      if (!myId || !tgBotUsername) return;
+      tgConnectBtn.disabled = true;
+      window.supa.rpc('create_telegram_link_code').then(function (r) {
+        tgConnectBtn.disabled = false;
+        if (r.error) { setHint(tgConnectHint, r.error.message, false); return; }
+        tgOpenLink.href = 'https://t.me/' + encodeURIComponent(tgBotUsername) + '?start=' + encodeURIComponent(r.data);
+        tgOpenLink.style.display = '';
+        tgConnectBtn.style.display = 'none';
+        setHint(tgConnectHint, 'Нажмите «Открыть бота», в Telegram нажмите «Запустить» — эта страница сама увидит, что всё подключилось. Ссылка действует 15 минут.', true);
+        // Ждём, пока бот привяжет аккаунт, — без перезагрузки страницы.
+        stopTgPoll();
+        var tries = 0;
+        tgPollTimer = setInterval(function () {
+          tries++;
+          if (tries > 100) { stopTgPoll(); return; }
+          window.supa.from('telegram_links').select('*').eq('profile_id', myId).maybeSingle().then(function (lr) {
+            if (lr.data) renderTelegram(lr.data);
+          });
+        }, 3000);
+      });
+    });
+  }
+
+  if (tgDisconnectBtn) {
+    tgDisconnectBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (!myId || !confirm('Отключить уведомления в Telegram?')) return;
+      window.supa.from('telegram_links').delete().eq('profile_id', myId).then(function (r) {
+        if (r.error) { alert(r.error.message); return; }
+        tgOpenLink.style.display = 'none';
+        tgConnectBtn.style.display = '';
+        setHint(tgConnectHint, '', true);
+        renderTelegram(null);
+      });
+    });
+  }
+
+  document.querySelectorAll('.tg-seg').forEach(function (seg) {
+    seg.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!myId) return;
+        var on = b.getAttribute('data-on');
+        applySeg(seg, on);
+        window.supa.rpc('set_telegram_pref', { p_key: seg.getAttribute('data-key'), p_value: on === '1' }).then(function (r) {
+          if (r.error) alert(r.error.message);
+        });
+      });
+    });
+  });
+
   // ---------- сессия: показать разделы вошедшего, подтянуть текущее состояние ----------
   window.supa.auth.getSession().then(function (res) {
     var session = res.data && res.data.session;
@@ -202,9 +301,11 @@
       if (anonGuestNotice) anonGuestNotice.hidden = false;
       if (blockedGuestNotice) blockedGuestNotice.hidden = false;
       if (credentialsGuestNotice) credentialsGuestNotice.hidden = false;
+      if (tgGuestNotice) tgGuestNotice.hidden = false;
       return;
     }
     myId = session.user.id;
+    if (tgArea) { tgArea.hidden = false; loadTelegram(); }
     if (accountArea) accountArea.hidden = false;
     if (privacyArea) privacyArea.hidden = false;
     if (anonArea) anonArea.hidden = false;

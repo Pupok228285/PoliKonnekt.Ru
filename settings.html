@@ -92,6 +92,33 @@
 
       <p class="crumbs"><a href="index.html">Главная</a> &rarr; <span class="here">Настройки</span></p>
 
+      <section class="box" id="tgGuestNotice" hidden>
+        <h2>Уведомления в Telegram</h2>
+        <p class="hint" style="padding:6px 2px">Доступно только вошедшим. Войдите вверху страницы.</p>
+      </section>
+
+      <section class="box" id="tgArea" hidden>
+        <h2>Уведомления в Telegram</h2>
+        <p style="padding:0 2px">Бот напишет вам в Telegram, когда придёт сообщение, кто-то ответит, прокомментирует или позовёт в друзья — держать сайт открытым не нужно.</p>
+        <p class="hint" id="tgNotConfigured" style="padding:4px 2px" hidden>Бот уведомлений ещё не настроен — загляните чуть позже.</p>
+        <div id="tgNotLinked" hidden>
+          <div class="btns" style="justify-content:flex-start">
+            <button class="submit" type="button" id="tgConnectBtn">Подключить Telegram</button>
+            <a class="submit" id="tgOpenLink" href="#" target="_blank" rel="noopener" style="display:none">Открыть бота в Telegram</a>
+          </div>
+          <p class="hint" id="tgConnectHint" style="padding:4px 2px 0"></p>
+        </div>
+        <div id="tgLinked" hidden>
+          <p style="padding:0 2px">Подключено<span id="tgLinkedAs"></span>. <a href="#" id="tgDisconnectBtn">Отключить</a></p>
+          <div class="p-row"><span class="lbl">Личные сообщения</span><span class="val"><div class="seg tg-seg" data-key="messages"><button type="button" data-on="1">Присылать</button><button type="button" data-on="0">Нет</button></div></span></div>
+          <div class="p-row"><span class="lbl">Ответы в моих темах и отзывах</span><span class="val"><div class="seg tg-seg" data-key="replies"><button type="button" data-on="1">Присылать</button><button type="button" data-on="0">Нет</button></div></span></div>
+          <div class="p-row"><span class="lbl">Комментарии к моим записям</span><span class="val"><div class="seg tg-seg" data-key="comments"><button type="button" data-on="1">Присылать</button><button type="button" data-on="0">Нет</button></div></span></div>
+          <div class="p-row"><span class="lbl">Друзья</span><span class="val"><div class="seg tg-seg" data-key="friends"><button type="button" data-on="1">Присылать</button><button type="button" data-on="0">Нет</button></div></span></div>
+          <div class="p-row"><span class="lbl">Отзывы в профиле</span><span class="val"><div class="seg tg-seg" data-key="reviews"><button type="button" data-on="1">Присылать</button><button type="button" data-on="0">Нет</button></div></span></div>
+          <div class="p-row"><span class="lbl">Анонимные сообщения</span><span class="val"><div class="seg tg-seg" data-key="anon"><button type="button" data-on="1">Присылать</button><button type="button" data-on="0">Нет</button></div></span></div>
+        </div>
+      </section>
+
       <section class="box" id="privacyGuestNotice" hidden>
         <h2>Приватность</h2>
         <p class="hint" style="padding:6px 2px">Доступно только вошедшим. Войдите вверху страницы.</p>
@@ -238,7 +265,7 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/auth-ui.js?v=4"></script>
 <script src="js/presence.js?v=3"></script>
 <script src="js/pm-badge.js?v=1"></script>
-<script src="js/settings.js?v=3"></script>
+<script src="js/settings.js?v=4"></script>
 <script src="js/report.js?v=2"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>
