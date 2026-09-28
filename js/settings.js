@@ -177,7 +177,7 @@
   if (deleteBtn) {
     deleteBtn.addEventListener('click', function () {
       if (!myId) return;
-      if (!confirm('Отправить запрос на удаление аккаунта в поддержку? Решение примет администратор.')) return;
+      if (!confirm('Отправить запрос на удаление аккаунта в поддержку?')) return;
       deleteBtn.disabled = true;
       window.supa.from('support_messages').insert({
         author_id: myId,
@@ -188,7 +188,7 @@
       }).then(function (res) {
         deleteBtn.disabled = false;
         if (res.error) { setHint(deleteHint, res.error.message, false); return; }
-        setHint(deleteHint, 'Отправлено — обращение увидят администраторы, ответят в Поддержке.', true);
+        setHint(deleteHint, 'Отправлено — ответ придёт в Поддержке.', true);
       });
     });
   }

@@ -25,7 +25,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 const BOT_TOKEN = Deno.env.get('TELEGRAM_NOTIFY_BOT_TOKEN') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SITE_URL = (Deno.env.get('SITE_URL') ?? 'https://pupok228285.github.io/PoliKonnekt.Ru').replace(/\/+$/, '');
-const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-notify`;
+const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/swift-responder`;
 
 function serviceKey(): string {
   try {
