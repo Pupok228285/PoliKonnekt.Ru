@@ -4,6 +4,11 @@
  * Пара участников хранится в conversations как (user_a, user_b) — это
  * просто отсортированная пара для уникальности, кто есть кто решает
  * поле initiator; "другой человек" вычисляется через myId.
+ *
+ * Группы (db/schema_v42.sql) живут в том же списке и в том же окне диалога:
+ * current.kind — 'dm' или 'group'. Добавление людей — только через
+ * add_chat_group_member(), она сама проверяет блокировки и настройку
+ * «кто может добавлять меня в группы».
  */
 (function () {
   if (!window.supa) return;
@@ -42,11 +47,52 @@
   var newMsgPhotoInput = document.getElementById('newMsgPhotoInput');
   var newMsgPhotoPreview = document.getElementById('newMsgPhotoPreview');
   var newMsgPendingPhoto = null;
+  var dlgReportLink = document.getElementById('dlgReportLink');
+  var dlgFirstMsgHint = document.getElementById('dlgFirstMsgHint');
+  var newGroupBtn = document.getElementById('newGroupBtn');
+  var groupCreate = document.getElementById('groupCreate');
+  var groupCreateBack = document.getElementById('groupCreateBack');
+  var groupTitleInput = document.getElementById('groupTitleInput');
+  var groupFriendsList = document.getElementById('groupFriendsList');
+  var groupExtraNicks = document.getElementById('groupExtraNicks');
+  var groupCreateBtn = document.getElementById('groupCreateBtn');
+  var groupCreateHint = document.getElementById('groupCreateHint');
+  var groupMembersLink = document.getElementById('groupMembersLink');
+  var groupPanel = document.getElementById('groupPanel');
+  var groupMembersList = document.getElementById('groupMembersList');
+  var groupAddNick = document.getElementById('groupAddNick');
+  var groupAddBtn = document.getElementById('groupAddBtn');
+  var groupAddHint = document.getElementById('groupAddHint');
+  var groupRenameRow = document.getElementById('groupRenameRow');
+  var groupRenameInput = document.getElementById('groupRenameInput');
+  var groupRenameBtn = document.getElementById('groupRenameBtn');
+  var groupLeaveLink = document.getElementById('groupLeaveLink');
+  var groupDeleteLink = document.getElementById('groupDeleteLink');
   if (!pmArea) return;
 
   var myId = null;
-  var current = null; // { id, otherId, otherNick, otherVerified }
+  // { kind: 'dm', id, otherId, otherNick, otherVerified } или
+  // { kind: 'group', id, title, ownerId, memberCount }
+  var current = null;
   var pendingPhoto = null;
+  var groupsAvailable = true; // false, если schema_v42.sql ещё не применена
+  var openGroupFromUrl = null;
+  var pendingGroupNotice = null; // кого не удалось добавить при создании группы
+
+  var GROUP_ERRORS = {
+    group_friends_only: 'принимает приглашения в группы только от друзей',
+    group_blocked: 'нельзя добавить — кто-то из вас заблокировал другого',
+    group_full: 'в группе уже 50 человек',
+    group_not_member: 'вы не участник этой группы',
+    group_no_such_user: 'такого ника нет'
+  };
+  function groupErrorText(err) {
+    var msg = (err && err.message) || '';
+    for (var key in GROUP_ERRORS) {
+      if (msg.indexOf(key) !== -1) return GROUP_ERRORS[key];
+    }
+    return msg || 'ошибка';
+  }
 
   var EMOJI_LIST = ['😀','😂','🙂','😉','😍','😎','🤔','😢','😡','😱','🥳','😴','🤝','🙏','👍','👎','👀','🔥','💯','🎉','❤️','✅','❌','💩','🍕','☕','📚','🎓','⚡','🤯','😅','🙈'];
 
@@ -131,19 +177,58 @@
     });
   }
 
-  // ---------- входящие ----------
+  // ---------- список: личные переписки и группы вместе ----------
   function loadInbox() {
-    window.supa.from('conversations')
-      .select('id, user_a, user_b, last_message_at, a:profiles!user_a(id,nickname,verified), b:profiles!user_b(id,nickname,verified)')
-      .eq('status', 'accepted')
-      .or('user_a.eq.' + myId + ',user_b.eq.' + myId)
-      .order('last_message_at', { ascending: false })
-      .then(function (res) {
-        if (res.error || !res.data) return;
-        inboxEmpty.hidden = res.data.length > 0;
-        inboxBox.querySelectorAll('.match-card').forEach(function (c) { c.remove(); });
-        res.data.forEach(renderInboxRow);
+    Promise.all([
+      window.supa.from('conversations')
+        .select('id, user_a, user_b, last_message_at, a:profiles!user_a(id,nickname,verified), b:profiles!user_b(id,nickname,verified)')
+        .eq('status', 'accepted')
+        .or('user_a.eq.' + myId + ',user_b.eq.' + myId)
+        .order('last_message_at', { ascending: false }),
+      window.supa.rpc('my_chat_groups')
+    ]).then(function (res) {
+      var dms = res[0].error ? [] : (res[0].data || []);
+      groupsAvailable = !res[1].error;
+      var groups = res[1].error ? [] : (res[1].data || []);
+      var items = dms.map(function (d) { return { kind: 'dm', at: d.last_message_at, row: d }; })
+        .concat(groups.map(function (g) { return { kind: 'group', at: g.last_message_at, row: g }; }));
+      items.sort(function (x, y) { return new Date(y.at) - new Date(x.at); });
+
+      inboxEmpty.hidden = items.length > 0;
+      inboxBox.querySelectorAll('.match-card').forEach(function (c) { c.remove(); });
+      items.forEach(function (it) {
+        if (it.kind === 'dm') renderInboxRow(it.row); else renderGroupRow(it.row);
       });
+
+      if (openGroupFromUrl) {
+        var target = groups.find(function (g) { return String(g.group_id) === openGroupFromUrl; });
+        openGroupFromUrl = null;
+        if (target) openGroup(target);
+      }
+    });
+  }
+
+  function renderGroupRow(g) {
+    var el = document.createElement('div');
+    el.className = 'match-card' + (g.unread > 0 ? ' unread' : '');
+    el.setAttribute('data-group-id', g.group_id);
+    if (current && current.kind === 'group' && current.id === g.group_id) el.classList.add('active');
+    var preview = '';
+    if (g.last_sender_nick) {
+      preview = (g.last_sender_nick + ': ') + (g.last_body || (g.last_has_photo ? '📷 фото' : ''));
+    } else {
+      preview = g.member_count + ' участн.';
+    }
+    el.innerHTML =
+      '<div class="ph grp">👥</div>' +
+      '<div class="body">' +
+        '<div class="name">' + escapeHtml(g.title) +
+          (g.unread > 0 ? ' <span class="badge">' + g.unread + '</span>' : '') + '</div>' +
+        '<div class="bio">' + escapeHtml(preview) + '</div>' +
+      '</div>' +
+      '<div class="time">' + fmtShort(g.last_message_at) + '</div>';
+    inboxBox.insertBefore(el, inboxBox.querySelector('.catend'));
+    el.addEventListener('click', function () { openGroup(g); });
   }
 
   function renderInboxRow(row) {
@@ -152,7 +237,7 @@
     var el = document.createElement('div');
     el.className = 'match-card';
     el.setAttribute('data-conv-id', row.id);
-    if (current && current.id === row.id) el.classList.add('active');
+    if (current && current.kind === 'dm' && current.id === row.id) el.classList.add('active');
     el.innerHTML =
       '<div class="ph">' + escapeHtml(nickname.charAt(0).toUpperCase()) + '</div>' +
       '<div class="body">' +
@@ -162,12 +247,12 @@
       '<div class="time">' + fmtShort(row.last_message_at) + '</div>';
     inboxBox.insertBefore(el, inboxBox.querySelector('.catend'));
 
-    window.supa.from('messages').select('body, sender_id').eq('conversation_id', row.id).order('created_at', { ascending: false }).limit(1)
+    window.supa.from('messages').select('body, sender_id, photo_path').eq('conversation_id', row.id).order('created_at', { ascending: false }).limit(1)
       .then(function (r) {
         var pv = el.querySelector('[data-preview]');
         if (pv && r.data && r.data[0]) {
           var prefix = r.data[0].sender_id === myId ? 'Вы: ' : '';
-          pv.textContent = prefix + r.data[0].body;
+          pv.textContent = prefix + (r.data[0].body || (r.data[0].photo_path ? '📷 фото' : ''));
         }
       });
 
@@ -175,31 +260,291 @@
   }
 
   // ---------- диалог: два окна рядом (список + переписка), как в ВК/Телеграме ----------
-  function openConversation(convId, other) {
-    current = { id: convId, otherId: other.id, otherNick: other.nickname || '?', otherVerified: other.verified };
+  function showDialogPane() {
     if (dialogEmpty) dialogEmpty.hidden = true;
+    if (groupCreate) groupCreate.hidden = true;
     if (dialogInner) dialogInner.hidden = false;
     if (pmChatShell) pmChatShell.classList.add('dialog-open');
-    if (inboxBox) {
-      inboxBox.querySelectorAll('.match-card').forEach(function (c) {
-        c.classList.toggle('active', c.getAttribute('data-conv-id') === String(convId));
-      });
-    }
-    dlgNick.textContent = current.otherNick;
-    dlgTick.style.display = other.verified ? '' : 'none';
     chatLog.innerHTML = '<p class="hint">Загрузка...</p>';
     clearPendingPhoto();
     if (chatEmojiPop) chatEmojiPop.classList.remove('show');
+  }
+
+  function markActiveRow() {
+    if (!inboxBox) return;
+    inboxBox.querySelectorAll('.match-card').forEach(function (c) {
+      var on = current && (
+        (current.kind === 'dm' && c.getAttribute('data-conv-id') === String(current.id)) ||
+        (current.kind === 'group' && c.getAttribute('data-group-id') === String(current.id)));
+      c.classList.toggle('active', !!on);
+    });
+  }
+
+  function openConversation(convId, other) {
+    current = { kind: 'dm', id: convId, otherId: other.id, otherNick: other.nickname || '?', otherVerified: other.verified };
+    showDialogPane();
+    markActiveRow();
+    dlgNick.textContent = current.otherNick;
+    dlgTick.style.display = other.verified ? '' : 'none';
+    blockLink.style.display = '';
+    if (dlgReportLink) dlgReportLink.style.display = '';
+    if (dlgFirstMsgHint) dlgFirstMsgHint.hidden = false;
+    if (groupMembersLink) groupMembersLink.hidden = true;
+    if (groupPanel) groupPanel.hidden = true;
     refreshBlockState();
+    loadMessages();
+  }
+
+  function openGroup(g) {
+    current = { kind: 'group', id: g.group_id, title: g.title, ownerId: g.owner_id, memberCount: g.member_count };
+    showDialogPane();
+    markActiveRow();
+    dlgNick.textContent = g.title;
+    dlgTick.style.display = 'none';
+    blockLink.style.display = 'none';
+    if (dlgReportLink) dlgReportLink.style.display = 'none';
+    if (dlgFirstMsgHint) dlgFirstMsgHint.hidden = true;
+    blockedNote.hidden = true;
+    chatRow.style.display = '';
+    if (groupMembersLink) { groupMembersLink.hidden = false; groupMembersLink.textContent = g.member_count + ' участн. ▾'; }
+    if (groupPanel) groupPanel.hidden = !pendingGroupNotice;
+    if (groupAddHint) {
+      groupAddHint.style.color = '#b23e00';
+      groupAddHint.textContent = pendingGroupNotice || '';
+    }
+    pendingGroupNotice = null;
+    var amOwner = g.owner_id === myId;
+    if (groupRenameRow) groupRenameRow.hidden = !amOwner;
+    if (groupRenameInput) groupRenameInput.value = g.title;
+    if (groupLeaveLink) groupLeaveLink.hidden = amOwner;
+    if (groupDeleteLink) groupDeleteLink.hidden = !amOwner;
+    loadGroupMembers();
     loadMessages();
   }
 
   function closeConversation() {
     current = null;
     if (dialogInner) dialogInner.hidden = true;
+    if (groupCreate) groupCreate.hidden = true;
     if (dialogEmpty) dialogEmpty.hidden = false;
     if (pmChatShell) pmChatShell.classList.remove('dialog-open');
     if (inboxBox) inboxBox.querySelectorAll('.match-card.active').forEach(function (c) { c.classList.remove('active'); });
+  }
+
+  // ---------- группа: участники, добавить, переименовать, выйти/удалить ----------
+  function loadGroupMembers() {
+    if (!current || current.kind !== 'group' || !groupMembersList) return;
+    var gid = current.id;
+    window.supa.from('chat_group_members')
+      .select('profile_id, joined_at, profiles!profile_id(id, nickname)')
+      .eq('group_id', gid)
+      .order('joined_at', { ascending: true })
+      .then(function (res) {
+        if (!current || current.kind !== 'group' || current.id !== gid) return;
+        if (res.error) { groupMembersList.innerHTML = '<p class="hint" style="padding:4px 8px">Не удалось загрузить участников.</p>'; return; }
+        var rows = res.data || [];
+        current.memberCount = rows.length;
+        if (groupMembersLink) groupMembersLink.textContent = rows.length + ' участн. ' + (groupPanel && !groupPanel.hidden ? '▴' : '▾');
+        var amOwner = current.ownerId === myId;
+        groupMembersList.innerHTML = '<div style="padding:4px 0">' + rows.map(function (m) {
+          var p = m.profiles || {};
+          var isOwner = m.profile_id === current.ownerId;
+          return '<span class="pm-member"><a href="profile.html?id=' + m.profile_id + '">' + escapeHtml(p.nickname || '?') + '</a>' +
+            (isOwner ? ' <span class="own">(создатель)</span>' : '') +
+            (amOwner && !isOwner ? ' <a href="#" class="rm" data-rm="' + m.profile_id + '" title="Убрать из группы">✕</a>' : '') +
+            '</span>';
+        }).join('') + '</div>';
+        groupMembersList.querySelectorAll('[data-rm]').forEach(function (a) {
+          a.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!confirm('Убрать этого человека из группы?')) return;
+            window.supa.from('chat_group_members').delete().eq('group_id', gid).eq('profile_id', a.getAttribute('data-rm')).then(function (r) {
+              if (r.error) { alert(r.error.message); return; }
+              loadGroupMembers();
+              loadInbox();
+            });
+          });
+        });
+      });
+  }
+
+  if (groupMembersLink) {
+    groupMembersLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (!groupPanel) return;
+      groupPanel.hidden = !groupPanel.hidden;
+      groupMembersLink.textContent = (current ? current.memberCount : '') + ' участн. ' + (groupPanel.hidden ? '▾' : '▴');
+    });
+  }
+
+  function findProfileByNick(nick) {
+    return window.supa.from('profiles').select('id, nickname').eq('nickname', nick).maybeSingle();
+  }
+
+  if (groupAddBtn) {
+    groupAddBtn.addEventListener('click', function () {
+      if (!current || current.kind !== 'group') return;
+      var nick = (groupAddNick.value || '').trim();
+      if (!nick) return;
+      var gid = current.id;
+      groupAddBtn.disabled = true;
+      findProfileByNick(nick).then(function (pr) {
+        if (!pr.data) { groupAddBtn.disabled = false; groupAddHint.style.color = '#b23e00'; groupAddHint.textContent = 'Такого ника нет.'; return; }
+        window.supa.rpc('add_chat_group_member', { p_group_id: gid, p_profile_id: pr.data.id }).then(function (r) {
+          groupAddBtn.disabled = false;
+          if (r.error) { groupAddHint.style.color = '#b23e00'; groupAddHint.textContent = pr.data.nickname + ': ' + groupErrorText(r.error); return; }
+          groupAddHint.style.color = '#1d7813';
+          groupAddHint.textContent = pr.data.nickname + ' добавлен(а).';
+          groupAddNick.value = '';
+          loadGroupMembers();
+          loadInbox();
+        });
+      });
+    });
+  }
+
+  if (groupRenameBtn) {
+    groupRenameBtn.addEventListener('click', function () {
+      if (!current || current.kind !== 'group') return;
+      var title = (groupRenameInput.value || '').trim();
+      if (!title) return;
+      var gid = current.id;
+      window.supa.from('chat_groups').update({ title: title }).eq('id', gid).then(function (r) {
+        if (r.error) { alert(r.error.message); return; }
+        if (current && current.id === gid) { current.title = title; dlgNick.textContent = title; }
+        loadInbox();
+      });
+    });
+  }
+
+  if (groupLeaveLink) {
+    groupLeaveLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (!current || current.kind !== 'group') return;
+      if (!confirm('Покинуть группу «' + current.title + '»? Вернуть вас сможет только кто-то из участников.')) return;
+      window.supa.from('chat_group_members').delete().eq('group_id', current.id).eq('profile_id', myId).then(function (r) {
+        if (r.error) { alert(r.error.message); return; }
+        closeConversation();
+        loadInbox();
+      });
+    });
+  }
+
+  if (groupDeleteLink) {
+    groupDeleteLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (!current || current.kind !== 'group') return;
+      if (!confirm('Удалить группу «' + current.title + '» вместе со всей перепиской? Это нельзя отменить.')) return;
+      window.supa.from('chat_groups').delete().eq('id', current.id).then(function (r) {
+        if (r.error) { alert(r.error.message); return; }
+        closeConversation();
+        loadInbox();
+      });
+    });
+  }
+
+  // ---------- создание группы ----------
+  function setGroupCreateHint(text, ok) {
+    if (!groupCreateHint) return;
+    groupCreateHint.textContent = text || '';
+    groupCreateHint.style.color = ok == null ? '' : (ok ? '#1d7813' : '#b23e00');
+  }
+
+  function openGroupCreate() {
+    current = null;
+    markActiveRow();
+    if (dialogEmpty) dialogEmpty.hidden = true;
+    if (dialogInner) dialogInner.hidden = true;
+    if (groupCreate) groupCreate.hidden = false;
+    if (pmChatShell) pmChatShell.classList.add('dialog-open');
+    groupTitleInput.value = '';
+    groupExtraNicks.value = '';
+    setGroupCreateHint('', null);
+    if (!groupsAvailable) {
+      setGroupCreateHint('Группы ещё не включены на сайте — загляните чуть позже.', false);
+      groupCreateBtn.disabled = true;
+      groupFriendsList.innerHTML = '';
+      return;
+    }
+    groupCreateBtn.disabled = false;
+    groupFriendsList.innerHTML = '<span class="hint">Загрузка...</span>';
+    window.supa.from('friendships')
+      .select('requester_id, addressee_id, r:profiles!requester_id(id,nickname), a:profiles!addressee_id(id,nickname)')
+      .eq('status', 'accepted')
+      .or('requester_id.eq.' + myId + ',addressee_id.eq.' + myId)
+      .then(function (res) {
+        var friends = (res.data || []).map(function (f) { return f.requester_id === myId ? f.a : f.r; })
+          .filter(Boolean)
+          .sort(function (x, y) { return String(x.nickname).localeCompare(String(y.nickname), 'ru'); });
+        if (!friends.length) {
+          groupFriendsList.innerHTML = '<span class="hint">Друзей пока нет — добавьте людей по нику ниже.</span>';
+          return;
+        }
+        groupFriendsList.innerHTML = friends.map(function (f) {
+          return '<label><input type="checkbox" value="' + f.id + '"> ' + escapeHtml(f.nickname) + '</label>';
+        }).join('');
+      });
+  }
+
+  if (newGroupBtn) newGroupBtn.addEventListener('click', openGroupCreate);
+  if (groupCreateBack) {
+    groupCreateBack.addEventListener('click', function (e) {
+      e.preventDefault();
+      closeConversation();
+    });
+  }
+
+  if (groupCreateBtn) {
+    groupCreateBtn.addEventListener('click', function () {
+      var title = (groupTitleInput.value || '').trim();
+      if (!title) { setGroupCreateHint('Придумайте название группы.', false); return; }
+      var ids = Array.prototype.map.call(groupFriendsList.querySelectorAll('input[type=checkbox]:checked'), function (c) { return c.value; });
+      var nicks = (groupExtraNicks.value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+      groupCreateBtn.disabled = true;
+      setGroupCreateHint('Создаём...', null);
+
+      Promise.all(nicks.map(function (n) {
+        return findProfileByNick(n).then(function (r) { return { nick: n, id: r.data ? r.data.id : null }; });
+      })).then(function (found) {
+        var problems = [];
+        found.forEach(function (f) {
+          if (!f.id) problems.push(f.nick + ' — такого ника нет');
+          else if (f.id !== myId && ids.indexOf(f.id) === -1) ids.push(f.id);
+        });
+        return window.supa.rpc('create_chat_group', { p_title: title }).then(function (cr) {
+          if (cr.error) throw cr.error;
+          var gid = cr.data;
+          // Добавляем по одному, чтобы понять, кого именно не пустила настройка.
+          return ids.reduce(function (chain, pid) {
+            return chain.then(function () {
+              return window.supa.rpc('add_chat_group_member', { p_group_id: gid, p_profile_id: pid }).then(function (ar) {
+                if (ar.error) problems.push(pid + '|' + groupErrorText(ar.error));
+              });
+            });
+          }, Promise.resolve()).then(function () { return { gid: gid, problems: problems }; });
+        });
+      }).then(function (out) {
+        groupCreateBtn.disabled = false;
+        openGroupFromUrl = String(out.gid);
+        if (out.problems.length) {
+          // для отказов по id подставляем ники из списка друзей
+          var names = {};
+          groupFriendsList.querySelectorAll('label').forEach(function (l) {
+            var cb = l.querySelector('input');
+            if (cb) names[cb.value] = l.textContent.trim();
+          });
+          var text = 'Не добавлены: ' + out.problems.map(function (p) {
+            var parts = p.split('|');
+            return parts.length === 2 ? (names[parts[0]] || 'участник') + ' — ' + parts[1] : p;
+          }).join('; ');
+          pendingGroupNotice = text;
+        }
+        loadInbox();
+      }).catch(function (err) {
+        groupCreateBtn.disabled = false;
+        setGroupCreateHint(groupErrorText(err), false);
+      });
+    });
   }
 
   if (dlgBackBtn) {
@@ -210,9 +555,12 @@
   }
 
   function refreshBlockState() {
+    var cur = current;
+    if (!cur || cur.kind !== 'dm') return;
     window.supa.from('blocks').select('blocker_id, blocked_id')
       .or('and(blocker_id.eq.' + myId + ',blocked_id.eq.' + current.otherId + '),and(blocker_id.eq.' + current.otherId + ',blocked_id.eq.' + myId + ')')
       .then(function (res) {
+        if (current !== cur) return;
         var rows = res.data || [];
         var iBlocked = rows.some(function (r) { return r.blocker_id === myId; });
         var theyBlocked = rows.some(function (r) { return r.blocker_id === current.otherId; });
@@ -236,12 +584,29 @@
   }
 
   function loadMessages() {
-    window.supa.from('messages').select('id, sender_id, body, photo_path, created_at').eq('conversation_id', current.id).order('created_at', { ascending: true })
+    var cur = current;
+    var q = cur.kind === 'group'
+      ? window.supa.from('chat_group_messages').select('id, sender_id, body, photo_path, created_at, profiles!sender_id(nickname)').eq('group_id', cur.id)
+      : window.supa.from('messages').select('id, sender_id, body, photo_path, created_at').eq('conversation_id', cur.id);
+    q.order('created_at', { ascending: true })
       .then(function (res) {
+        if (current !== cur) return; // пока грузилось, открыли другой диалог
         if (res.error || !res.data) { chatLog.innerHTML = '<p class="hint">Не удалось загрузить.</p>'; return; }
         chatLog.innerHTML = '';
+        if (!res.data.length && cur.kind === 'group') chatLog.innerHTML = '<p class="hint">В группе пока тихо — напишите первым.</p>';
         res.data.forEach(appendMessage);
         chatLog.scrollTop = chatLog.scrollHeight;
+        if (cur.kind === 'group') {
+          window.supa.rpc('mark_chat_group_read', { p_group_id: cur.id }).then(function () {
+            var row = inboxBox && inboxBox.querySelector('[data-group-id="' + cur.id + '"]');
+            if (row) {
+              row.classList.remove('unread');
+              var b = row.querySelector('.name .badge');
+              if (b) b.remove();
+            }
+            if (window.PKRefreshPmBadge) window.PKRefreshPmBadge();
+          });
+        }
       });
   }
 
@@ -249,7 +614,9 @@
     var p = document.createElement('p');
     var mine = row.sender_id === myId;
     p.className = mine ? 'me' : 'them';
-    p.innerHTML = '<b>' + (mine ? 'Вы' : escapeHtml(current.otherNick)) + ':</b>' + (row.body ? ' ' + escapeHtml(row.body) : '');
+    var who = mine ? 'Вы'
+      : (current.kind === 'group' ? ((row.profiles && row.profiles.nickname) || '?') : current.otherNick);
+    p.innerHTML = '<b' + (!mine && current.kind === 'group' ? ' class="who"' : '') + '>' + escapeHtml(who) + ':</b>' + (row.body ? ' ' + escapeHtml(row.body) : '');
     chatLog.appendChild(p);
     if (row.photo_path) {
       var img = document.createElement('img');
@@ -257,7 +624,8 @@
       img.alt = 'фото';
       img.title = 'Открыть в полный размер';
       p.appendChild(img);
-      window.supa.storage.from('pm-photos').createSignedUrl(row.photo_path, 600).then(function (signed) {
+      var bucket = current.kind === 'group' ? 'group-photos' : 'pm-photos';
+      window.supa.storage.from(bucket).createSignedUrl(row.photo_path, 600).then(function (signed) {
         if (signed.data && signed.data.signedUrl) {
           img.src = signed.data.signedUrl;
           img.addEventListener('click', function () { window.open(signed.data.signedUrl, '_blank'); });
@@ -286,13 +654,14 @@
     var body = (chatInput.value || '').trim();
     if (!current || (!body && !pendingPhoto)) return;
     var photo = pendingPhoto;
+    var isGroup = current.kind === 'group';
     chatSend.disabled = true;
 
     function insertMessage(photoPath) {
-      var payload = { conversation_id: current.id, sender_id: myId };
+      var payload = isGroup ? { group_id: current.id, sender_id: myId } : { conversation_id: current.id, sender_id: myId };
       if (body) payload.body = body;
       if (photoPath) payload.photo_path = photoPath;
-      window.supa.from('messages').insert(payload).then(function (res) {
+      window.supa.from(isGroup ? 'chat_group_messages' : 'messages').insert(payload).then(function (res) {
         chatSend.disabled = false;
         if (res.error) { alert(res.error.message); return; }
         chatInput.value = '';
@@ -304,7 +673,7 @@
 
     if (photo) {
       var path = current.id + '/' + Date.now() + '-' + photo.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      window.supa.storage.from('pm-photos').upload(path, photo).then(function (upRes) {
+      window.supa.storage.from(isGroup ? 'group-photos' : 'pm-photos').upload(path, photo).then(function (upRes) {
         if (upRes.error) { chatSend.disabled = false; alert(upRes.error.message); return; }
         insertMessage(path);
       });
@@ -361,7 +730,7 @@
   if (blockLink) {
     blockLink.addEventListener('click', function (e) {
       e.preventDefault();
-      if (!current) return;
+      if (!current || current.kind !== 'dm') return;
       if (current.iBlocked) {
         window.supa.from('blocks').delete().eq('blocker_id', myId).eq('blocked_id', current.otherId).then(refreshBlockState);
       } else {
@@ -497,6 +866,7 @@
       var params = new URLSearchParams(window.location.search);
       var to = params.get('to');
       if (to && newMsgNick) newMsgNick.value = to;
+      if (params.get('group')) openGroupFromUrl = params.get('group');
 
       loadAll();
     });

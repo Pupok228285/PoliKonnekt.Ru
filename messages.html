@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Сообщения — ПолиКоннект.ru</title>
 <meta name="description" content="Личные сообщения: заявки на одобрение, входящие, блокировка.">
-<link rel="stylesheet" href="css/style.css?v=44">
+<link rel="stylesheet" href="css/style.css?v=46">
 </head>
 <body>
 <div id="wrap">
@@ -87,7 +87,8 @@
       <div class="sidebox">
         <h2>Как это работает</h2>
         <div class="sb-note">
-          Первое сообщение от незнакомого человека попадает в «Заявки» — вы одобряете или отклоняете, прежде чем он сможет писать снова. Дальше переписка идёт во «Входящих» как обычно. Заблокированный человек написать больше не сможет.
+          Первое сообщение от незнакомого человека попадает в «Заявки» — вы одобряете или отклоняете, прежде чем он сможет писать снова. Дальше переписка идёт в «Сообщениях» как обычно. Заблокированный человек написать больше не сможет.<br><br>
+          «+ Группа» — общий чат на несколько человек. Кто может добавлять вас в группы (все или только друзья) — в <a href="settings.html">Настройках</a>.
         </div>
       </div>
 
@@ -102,6 +103,79 @@
       </section>
 
       <div id="pmArea" hidden>
+
+      <section class="box">
+        <h2>Сообщения</h2>
+        <div class="pm-chat-shell" id="pmChatShell">
+
+          <div class="pm-list-pane">
+            <div class="pm-list-head">Переписки и группы <button class="submit pm-new-group" type="button" id="newGroupBtn">+ Группа</button></div>
+            <div class="pm-list-scroll" id="inboxBox">
+              <p class="hint" id="inboxEmpty" style="padding:6px 2px">Переписок пока нет.</p>
+            </div>
+          </div>
+
+          <div class="pm-dialog-pane">
+            <div class="pm-dialog-empty" id="dialogEmpty">Выберите переписку или группу слева — или напишите новому человеку ниже.</div>
+
+            <div id="groupCreate" class="pm-group-form" hidden>
+              <div class="pm-head">
+                <a href="#" class="pm-back-btn" id="groupCreateBack">← Назад</a>
+                <span class="nm">Новая группа</span>
+              </div>
+              <div class="p-row"><span class="lbl">Название</span><span class="val"><input class="field" type="text" id="groupTitleInput" maxlength="60" placeholder="Например: Курсач по матану" style="width:100%"></span></div>
+              <div class="p-row"><span class="lbl">Друзья</span><span class="val"><div id="groupFriendsList" class="pm-friend-pick"><span class="hint">Загрузка...</span></div></span></div>
+              <div class="p-row"><span class="lbl">Ещё по нику</span><span class="val"><input class="field" type="text" id="groupExtraNicks" placeholder="ник1, ник2 — через запятую" style="width:100%"></span></div>
+              <div class="btns" style="justify-content:flex-start;padding:6px 8px">
+                <button class="submit" type="button" id="groupCreateBtn">Создать группу</button>
+              </div>
+              <p class="hint" id="groupCreateHint" style="padding:0 8px"></p>
+            </div>
+
+            <div id="dialogInner" hidden>
+              <div class="pm-head">
+                <a href="#" class="pm-back-btn" id="dlgBackBtn">← Назад</a>
+                <span class="nm" id="dlgNick">…</span><img class="tick" id="dlgTick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="vertical-align:-3px;display:none">
+                <a href="#" id="groupMembersLink" style="font-size:10px;margin-left:6px" hidden></a>
+                <span class="sp2"></span>
+                <a href="#" class="danger" id="blockLink">Заблокировать</a>
+                <a href="#" class="danger" id="dlgReportLink">Пожаловаться</a>
+              </div>
+              <div class="pm-group-panel" id="groupPanel" hidden>
+                <div id="groupMembersList"></div>
+                <div class="p-row"><span class="lbl">Добавить</span><span class="val">
+                  <input class="field" type="text" id="groupAddNick" placeholder="ник" style="width:160px">
+                  <button class="submit" type="button" id="groupAddBtn">Добавить</button>
+                  <span class="hint" id="groupAddHint" style="margin-left:6px"></span>
+                </span></div>
+                <div class="p-row" id="groupRenameRow" hidden><span class="lbl">Название</span><span class="val">
+                  <input class="field" type="text" id="groupRenameInput" maxlength="60" style="width:160px">
+                  <button class="submit" type="button" id="groupRenameBtn">Сохранить</button>
+                </span></div>
+                <div style="padding:6px 8px">
+                  <a href="#" class="danger" id="groupLeaveLink" style="color:#b23e00;font-size:10px">Покинуть группу</a>
+                  <a href="#" class="danger" id="groupDeleteLink" style="color:#b23e00;font-size:10px" hidden>Удалить группу</a>
+                </div>
+              </div>
+              <div class="pm-blocked-note" id="blockedNote" hidden></div>
+              <div class="chatbox" id="chatBox">
+                <div class="log" id="chatLog"></div>
+                <div id="chatPhotoPreview" class="hint" style="display:none;padding:4px 8px 0"></div>
+                <div class="row2" id="chatRow" style="position:relative">
+                  <button class="submit" type="button" id="chatEmojiBtn" title="Смайлики" style="flex:0 0 auto;padding:2px 8px">😊</button>
+                  <div class="emoji-pop" id="chatEmojiPop"></div>
+                  <button class="submit" type="button" id="chatPhotoBtn" title="Прикрепить фото" style="flex:0 0 auto;padding:2px 8px">📎</button>
+                  <input type="file" id="chatPhotoInput" accept="image/*" hidden>
+                  <input class="field" type="text" id="chatInput" placeholder="Написать сообщение..." aria-label="Сообщение">
+                  <button class="submit" type="button" id="chatSend">Отправить</button>
+                </div>
+              </div>
+              <p class="hint" id="dlgFirstMsgHint" style="padding:4px 2px 0">Первое сообщение незнакомому человеку уходит ему в «Заявки» — он должен одобрить, прежде чем сможет ответить.</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
 
       <section class="box">
         <h2>Написать</h2>
@@ -131,47 +205,6 @@
           <div class="maintitle">Ждут вашего решения <span class="r" id="reqCount">(0)</span></div>
           <p class="hint" id="requestsEmpty" style="padding:6px 2px">Пока никто новый не писал.</p>
           <div class="catend"></div>
-        </div>
-      </section>
-
-      <section class="box">
-        <h2>Сообщения</h2>
-        <div class="pm-chat-shell" id="pmChatShell">
-
-          <div class="pm-list-pane">
-            <div class="pm-list-head">Переписки</div>
-            <div class="pm-list-scroll" id="inboxBox">
-              <p class="hint" id="inboxEmpty" style="padding:6px 2px">Переписок пока нет.</p>
-            </div>
-          </div>
-
-          <div class="pm-dialog-pane">
-            <div class="pm-dialog-empty" id="dialogEmpty">Выберите переписку слева — или напишите новому человеку выше.</div>
-            <div id="dialogInner" hidden>
-              <div class="pm-head">
-                <a href="#" class="pm-back-btn" id="dlgBackBtn">← Назад</a>
-                <span class="nm" id="dlgNick">…</span><img class="tick" id="dlgTick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="vertical-align:-3px;display:none">
-                <span class="sp2"></span>
-                <a href="#" class="danger" id="blockLink">Заблокировать</a>
-                <a href="#" class="danger">Пожаловаться</a>
-              </div>
-              <div class="pm-blocked-note" id="blockedNote" hidden></div>
-              <div class="chatbox" id="chatBox">
-                <div class="log" id="chatLog"></div>
-                <div id="chatPhotoPreview" class="hint" style="display:none;padding:4px 8px 0"></div>
-                <div class="row2" id="chatRow" style="position:relative">
-                  <button class="submit" type="button" id="chatEmojiBtn" title="Смайлики" style="flex:0 0 auto;padding:2px 8px">😊</button>
-                  <div class="emoji-pop" id="chatEmojiPop"></div>
-                  <button class="submit" type="button" id="chatPhotoBtn" title="Прикрепить фото" style="flex:0 0 auto;padding:2px 8px">📎</button>
-                  <input type="file" id="chatPhotoInput" accept="image/*" hidden>
-                  <input class="field" type="text" id="chatInput" placeholder="Написать сообщение..." aria-label="Сообщение">
-                  <button class="submit" type="button" id="chatSend">Отправить</button>
-                </div>
-              </div>
-              <p class="hint" style="padding:4px 2px 0">Первое сообщение незнакомому человеку уходит ему в «Заявки» — он должен одобрить, прежде чем сможет ответить.</p>
-            </div>
-          </div>
-
         </div>
       </section>
 
@@ -208,8 +241,8 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/activity-ticker.js?v=1"></script>
 <script src="js/auth-ui.js?v=4"></script>
 <script src="js/presence.js?v=3"></script>
-<script src="js/pm-badge.js?v=1"></script>
-<script src="js/messages.js?v=3"></script>
+<script src="js/pm-badge.js?v=3"></script>
+<script src="js/messages.js?v=5"></script>
 <script src="js/report.js?v=2"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>

@@ -71,6 +71,19 @@
       });
     });
   }
+  var groupInviteSeg = document.getElementById('groupInviteSeg');
+  if (groupInviteSeg) {
+    groupInviteSeg.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!myId) return;
+        var policy = b.getAttribute('data-on');
+        applySeg(groupInviteSeg, policy);
+        window.supa.from('profiles').update({ group_invite_policy: policy }).eq('id', myId).then(function (r) {
+          if (r.error) alert(r.error.message);
+        });
+      });
+    });
+  }
   if (dmSeg) {
     dmSeg.querySelectorAll('button').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -317,6 +330,11 @@
       applySeg(onlineSeg, r.data.hide_online ? '0' : '1');
       applySeg(dmSeg, r.data.dm_policy || 'all');
       applySeg(anonSeg, r.data.anon_messages_enabled ? '1' : '0');
+    });
+    // отдельным запросом: пока schema_v42.sql не применена, колонки нет — не
+    // должно ломать загрузку остальных настроек выше
+    window.supa.from('profiles').select('group_invite_policy').eq('id', myId).single().then(function (r) {
+      applySeg(groupInviteSeg, (r.data && r.data.group_invite_policy) || 'all');
     });
     loadBlocked();
   });

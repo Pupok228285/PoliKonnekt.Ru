@@ -264,7 +264,34 @@ async function buildNotice(table: string, op: string, id: number): Promise<Notic
   return null;
 }
 
+// Сообщение в группе — получателей много: все участники, кроме автора.
+async function handleGroupMessage(id: number): Promise<void> {
+  const { data: m } = await db.from('chat_group_messages').select('group_id, sender_id, body').eq('id', id).maybeSingle();
+  if (!m) return;
+  const { data: g } = await db.from('chat_groups').select('title').eq('id', m.group_id).maybeSingle();
+  if (!g) return;
+  const { data: members } = await db.from('chat_group_members').select('profile_id').eq('group_id', m.group_id).neq('profile_id', m.sender_id);
+  const ids = (members ?? []).map((x: { profile_id: string }) => x.profile_id);
+  if (!ids.length) return;
+  const { data: links } = await db.from('telegram_links').select('profile_id, chat_id, notify_messages').in('profile_id', ids);
+  if (!links || !links.length) return;
+  const { data: blockers } = await db.from('blocks').select('blocker_id').eq('blocked_id', m.sender_id).in('blocker_id', ids);
+  const blocked = new Set((blockers ?? []).map((b: { blocker_id: string }) => b.blocker_id));
+  const who = await nick(m.sender_id);
+  const text = `👥 <b>${escapeHtml(who)}</b> в группе «${escapeHtml(g.title)}»:\n${m.body ? quote(m.body) : '📷 фото'}\n<a href="${SITE_URL}/messages.html?group=${m.group_id}">Открыть группу</a>`;
+  for (const link of links) {
+    if (!link.notify_messages || blocked.has(link.profile_id)) continue;
+    const claim = await db.from('telegram_sent').insert({ event_key: `chat_group_messages:INSERT:${id}:${link.profile_id}` });
+    if (claim.error) continue;
+    const res = await sendTo(link.chat_id, text);
+    if (!res.ok && res.error_code === 403) {
+      await db.from('telegram_links').delete().eq('profile_id', link.profile_id);
+    }
+  }
+}
+
 async function handleEvent(table: string, op: string, id: number): Promise<void> {
+  if (table === 'chat_group_messages') { await handleGroupMessage(id); return; }
   const n = await buildNotice(table, op, id);
   if (!n || !n.recipient || n.recipient === n.actor) return;
 
