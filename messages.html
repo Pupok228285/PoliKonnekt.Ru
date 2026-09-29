@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Сообщения — ПолиКоннект.ru</title>
 <meta name="description" content="Личные сообщения: заявки на одобрение, входящие, блокировка.">
-<link rel="stylesheet" href="css/style.css?v=46">
+<link rel="stylesheet" href="css/style.css?v=47">
 </head>
 <body>
 <div id="wrap">
@@ -137,6 +137,7 @@
                 <a href="#" class="pm-back-btn" id="dlgBackBtn">← Назад</a>
                 <span class="nm" id="dlgNick">…</span><img class="tick" id="dlgTick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён" style="vertical-align:-3px;display:none">
                 <a href="#" id="groupMembersLink" style="font-size:10px;margin-left:6px" hidden></a>
+                <a href="#" class="pm-mute-link" id="dlgMuteLink" title="Звук уведомлений для этой переписки">🔔 звук</a>
                 <span class="sp2"></span>
                 <a href="#" class="danger" id="blockLink">Заблокировать</a>
                 <a href="#" class="danger" id="dlgReportLink">Пожаловаться</a>
@@ -241,8 +242,9 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/activity-ticker.js?v=1"></script>
 <script src="js/auth-ui.js?v=4"></script>
 <script src="js/presence.js?v=3"></script>
+<script src="js/notify-sound.js?v=2"></script>
 <script src="js/pm-badge.js?v=3"></script>
-<script src="js/messages.js?v=5"></script>
+<script src="js/messages.js?v=6"></script>
 <script src="js/report.js?v=2"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>

@@ -48,6 +48,7 @@
   var newMsgPhotoPreview = document.getElementById('newMsgPhotoPreview');
   var newMsgPendingPhoto = null;
   var dlgReportLink = document.getElementById('dlgReportLink');
+  var dlgMuteLink = document.getElementById('dlgMuteLink');
   var dlgFirstMsgHint = document.getElementById('dlgFirstMsgHint');
   var newGroupBtn = document.getElementById('newGroupBtn');
   var groupCreate = document.getElementById('groupCreate');
@@ -185,11 +186,15 @@
         .eq('status', 'accepted')
         .or('user_a.eq.' + myId + ',user_b.eq.' + myId)
         .order('last_message_at', { ascending: false }),
-      window.supa.rpc('my_chat_groups')
+      window.supa.rpc('my_chat_groups'),
+      window.supa.from('dm_mutes').select('conversation_id').eq('profile_id', myId)
     ]).then(function (res) {
       var dms = res[0].error ? [] : (res[0].data || []);
       groupsAvailable = !res[1].error;
       var groups = res[1].error ? [] : (res[1].data || []);
+      var mutedDmIds = {};
+      (res[2].data || []).forEach(function (r) { mutedDmIds[r.conversation_id] = true; });
+      dms.forEach(function (d) { d.muted = !!mutedDmIds[d.id]; });
       var items = dms.map(function (d) { return { kind: 'dm', at: d.last_message_at, row: d }; })
         .concat(groups.map(function (g) { return { kind: 'group', at: g.last_message_at, row: g }; }));
       items.sort(function (x, y) { return new Date(y.at) - new Date(x.at); });
@@ -223,7 +228,8 @@
       '<div class="ph grp">👥</div>' +
       '<div class="body">' +
         '<div class="name">' + escapeHtml(g.title) +
-          (g.unread > 0 ? ' <span class="badge">' + g.unread + '</span>' : '') + '</div>' +
+          (g.unread > 0 ? ' <span class="badge">' + g.unread + '</span>' : '') +
+          (g.muted ? ' <span class="muted-ico" title="Звук выключен">🔕</span>' : '') + '</div>' +
         '<div class="bio">' + escapeHtml(preview) + '</div>' +
       '</div>' +
       '<div class="time">' + fmtShort(g.last_message_at) + '</div>';
@@ -241,7 +247,8 @@
     el.innerHTML =
       '<div class="ph">' + escapeHtml(nickname.charAt(0).toUpperCase()) + '</div>' +
       '<div class="body">' +
-        '<div class="name">' + escapeHtml(nickname) + '</div>' +
+        '<div class="name">' + escapeHtml(nickname) +
+          (row.muted ? ' <span class="muted-ico" title="Звук выключен">🔕</span>' : '') + '</div>' +
         '<div class="bio" data-preview>...</div>' +
       '</div>' +
       '<div class="time">' + fmtShort(row.last_message_at) + '</div>';
@@ -293,6 +300,34 @@
     if (groupPanel) groupPanel.hidden = true;
     refreshBlockState();
     loadMessages();
+    renderMuteLink(false);
+    window.supa.from('dm_mutes').select('conversation_id').eq('conversation_id', convId).eq('profile_id', myId).maybeSingle().then(function (r) {
+      if (current && current.kind === 'dm' && current.id === convId) renderMuteLink(!!r.data);
+    });
+  }
+
+  function renderMuteLink(muted) {
+    if (!dlgMuteLink || !current) return;
+    current.muted = muted;
+    dlgMuteLink.textContent = muted ? '🔕 без звука' : '🔔 звук';
+    dlgMuteLink.title = muted ? 'Включить звук уведомлений для этой переписки' : 'Отключить звук уведомлений для этой переписки';
+  }
+
+  if (dlgMuteLink) {
+    dlgMuteLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (!current) return;
+      var next = !current.muted;
+      var rpc = current.kind === 'group'
+        ? window.supa.rpc('set_chat_group_muted', { p_group_id: current.id, p_muted: next })
+        : window.supa.rpc('set_dm_muted', { p_conversation_id: current.id, p_muted: next });
+      rpc.then(function (r) {
+        if (r.error) { alert(r.error.message); return; }
+        renderMuteLink(next);
+        if (window.PKNotifyRefreshMutes) window.PKNotifyRefreshMutes();
+        loadInbox();
+      });
+    });
   }
 
   function openGroup(g) {
@@ -318,6 +353,7 @@
     if (groupRenameInput) groupRenameInput.value = g.title;
     if (groupLeaveLink) groupLeaveLink.hidden = amOwner;
     if (groupDeleteLink) groupDeleteLink.hidden = !amOwner;
+    renderMuteLink(!!g.muted);
     loadGroupMembers();
     loadMessages();
   }

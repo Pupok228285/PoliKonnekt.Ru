@@ -71,6 +71,64 @@
       });
     });
   }
+  // ---------- звук на сайте (db/schema_v43.sql, js/notify-sound.js) ----------
+  var soundGuestNotice = document.getElementById('soundGuestNotice');
+  var soundArea = document.getElementById('soundArea');
+  var soundPickList = document.getElementById('soundPickList');
+  var soundVolume = document.getElementById('soundVolume');
+  var soundVolumeVal = document.getElementById('soundVolumeVal');
+
+  if (soundPickList && window.PKNotifySound) {
+    var currentSoundId = window.PKNotifySound.readSound();
+    function renderSoundPick() {
+      soundPickList.querySelectorAll('button').forEach(function (b) {
+        b.classList.toggle('on', b.getAttribute('data-id') === currentSoundId);
+      });
+    }
+    window.PKNotifySound.SOUNDS.forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = s.label;
+      b.setAttribute('data-id', s.id);
+      b.addEventListener('click', function () {
+        currentSoundId = s.id;
+        window.PKNotifySound.writeSound(s.id);
+        renderSoundPick();
+        window.PKNotifySound.play(s.id, Number(soundVolume.value));
+      });
+      soundPickList.appendChild(b);
+    });
+    renderSoundPick();
+  }
+  if (soundVolume && window.PKNotifySound) {
+    soundVolume.value = window.PKNotifySound.readVolume();
+    soundVolumeVal.textContent = soundVolume.value + '%';
+    soundVolume.addEventListener('input', function () {
+      soundVolumeVal.textContent = soundVolume.value + '%';
+    });
+    // change у range — срабатывает, когда ползунок отпустили, не во время
+    // перетаскивания: ровно то поведение, которое и нужно для превью.
+    soundVolume.addEventListener('change', function () {
+      window.PKNotifySound.writeVolume(Number(soundVolume.value));
+      window.PKNotifySound.play(document.querySelector('#soundPickList button.on') ? document.querySelector('#soundPickList button.on').getAttribute('data-id') : window.PKNotifySound.readSound(), Number(soundVolume.value));
+    });
+  }
+  document.querySelectorAll('.sound-seg').forEach(function (seg) {
+    seg.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!myId) return;
+        var on = b.getAttribute('data-on');
+        applySeg(seg, on);
+        var col = 'sound_notify_' + seg.getAttribute('data-key');
+        var payload = {};
+        payload[col] = on === '1';
+        window.supa.from('profiles').update(payload).eq('id', myId).then(function (r) {
+          if (r.error) alert(r.error.message);
+        });
+      });
+    });
+  });
+
   var groupInviteSeg = document.getElementById('groupInviteSeg');
   if (groupInviteSeg) {
     groupInviteSeg.querySelectorAll('button').forEach(function (b) {
@@ -315,10 +373,12 @@
       if (blockedGuestNotice) blockedGuestNotice.hidden = false;
       if (credentialsGuestNotice) credentialsGuestNotice.hidden = false;
       if (tgGuestNotice) tgGuestNotice.hidden = false;
+      if (soundGuestNotice) soundGuestNotice.hidden = false;
       return;
     }
     myId = session.user.id;
     if (tgArea) { tgArea.hidden = false; loadTelegram(); }
+    if (soundArea) soundArea.hidden = false;
     if (accountArea) accountArea.hidden = false;
     if (privacyArea) privacyArea.hidden = false;
     if (anonArea) anonArea.hidden = false;
@@ -335,6 +395,13 @@
     // должно ломать загрузку остальных настроек выше
     window.supa.from('profiles').select('group_invite_policy').eq('id', myId).single().then(function (r) {
       applySeg(groupInviteSeg, (r.data && r.data.group_invite_policy) || 'all');
+    });
+    window.supa.from('profiles').select('sound_notify_comments, sound_notify_messages, sound_notify_groups').eq('id', myId).single().then(function (r) {
+      if (!r.data) return;
+      document.querySelectorAll('.sound-seg').forEach(function (seg) {
+        var col = 'sound_notify_' + seg.getAttribute('data-key');
+        applySeg(seg, r.data[col] !== false ? '1' : '0');
+      });
     });
     loadBlocked();
   });

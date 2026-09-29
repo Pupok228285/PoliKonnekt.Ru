@@ -1080,6 +1080,23 @@ html, body { overflow-x: hidden; }
 .pm-member .own { color: #8a9bb0; font-size: 10px; }
 .pm-member a.rm { color: #b23e00; font-size: 10px; margin-left: 3px; }
 .chatbox .log .who { color: #2c4568; }
+.pm-mute-link { font-size: 10px; margin-left: 6px; color: #395c8f; text-decoration: none; }
+.pm-mute-link:hover { text-decoration: underline; }
+.match-card .name .muted-ico { opacity: .55; margin-left: 3px; }
+
+/* ---------- выбор звука уведомлений (Настройки) ---------- */
+.sound-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.sound-pick button {
+  padding: 3px 10px;
+  border: 2px solid #9fb9d7;
+  border-radius: 3px;
+  background: #fff;
+  font: 11px/1.6 var(--font);
+  color: #2c4568;
+  cursor: pointer;
+}
+.sound-pick button:hover { background: var(--row2); }
+.sound-pick button.on { background: #2c4568; border-color: #2c4568; color: #fff; }
 
 @media (max-width: 480px) {
   .pm-chat-shell:not(.dialog-open) .pm-dialog-pane { display: none; }

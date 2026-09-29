@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Настройки — ПолиКоннект.ru</title>
 <meta name="description" content="Микрофон в Библиотеке, аккаунт.">
-<link rel="stylesheet" href="css/style.css?v=46">
+<link rel="stylesheet" href="css/style.css?v=47">
 </head>
 <body>
 <div id="wrap">
@@ -117,6 +117,40 @@
           <div class="p-row"><span class="lbl">Отзывы в профиле</span><span class="val"><div class="seg tg-seg" data-key="reviews"><button type="button" data-on="1">Присылать</button><button type="button" data-on="0">Нет</button></div></span></div>
           <div class="p-row"><span class="lbl">Анонимные сообщения</span><span class="val"><div class="seg tg-seg" data-key="anon"><button type="button" data-on="1">Присылать</button><button type="button" data-on="0">Нет</button></div></span></div>
         </div>
+      </section>
+
+      <section class="box" id="soundGuestNotice" hidden>
+        <h2>Звук на сайте</h2>
+        <p class="hint" style="padding:6px 2px">Доступно только вошедшим. Войдите вверху страницы.</p>
+      </section>
+
+      <section class="box" id="soundArea" hidden>
+        <h2>Звук на сайте</h2>
+        <p style="padding:0 2px">Пока вкладка сайта открыта, при новых сообщениях, ответах и комментариях проигрывается короткий звук — без обновления страницы.</p>
+
+        <div class="p-row"><span class="lbl">Звук</span><span class="val">
+          <div class="sound-pick" id="soundPickList"></div>
+        </span></div>
+
+        <div class="p-row"><span class="lbl">Громкость</span><span class="val">
+          <input type="range" id="soundVolume" min="0" max="100" step="5" style="width:200px;vertical-align:middle">
+          <span id="soundVolumeVal" class="hint" style="margin-left:6px"></span>
+        </span></div>
+        <p class="hint" style="padding:4px 2px 0">Отпустите ползунок — звук проиграется на выбранной громкости. Звук и громкость — только этого браузера, на других устройствах можно выбрать свои.</p>
+
+        <div class="p-row" style="margin-top:10px">
+          <span class="lbl">Комментарии (форум и лента)</span>
+          <span class="val"><div class="seg sound-seg" data-key="comments"><button type="button" data-on="1">Звук</button><button type="button" data-on="0">Тихо</button></div></span>
+        </div>
+        <div class="p-row">
+          <span class="lbl">Личные сообщения</span>
+          <span class="val"><div class="seg sound-seg" data-key="messages"><button type="button" data-on="1">Звук</button><button type="button" data-on="0">Тихо</button></div></span>
+        </div>
+        <div class="p-row">
+          <span class="lbl">Группы</span>
+          <span class="val"><div class="seg sound-seg" data-key="groups"><button type="button" data-on="1">Звук</button><button type="button" data-on="0">Тихо</button></div></span>
+        </div>
+        <p class="hint" style="padding:4px 2px 0">Приглушить конкретную переписку или группу — прямо в её окне, в <a href="messages.html">Сообщениях</a>.</p>
       </section>
 
       <section class="box" id="privacyGuestNotice" hidden>
@@ -275,8 +309,9 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/supabase-client.js?v=1"></script>
 <script src="js/auth-ui.js?v=4"></script>
 <script src="js/presence.js?v=3"></script>
+<script src="js/notify-sound.js?v=2"></script>
 <script src="js/pm-badge.js?v=3"></script>
-<script src="js/settings.js?v=7"></script>
+<script src="js/settings.js?v=8"></script>
 <script src="js/report.js?v=2"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>
