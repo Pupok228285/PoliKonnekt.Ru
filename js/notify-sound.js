@@ -50,10 +50,31 @@
     { id: 'soft', label: 'Мягкий', tones: [
       { freq: 523, dur: .55, type: 'sine', peak: .6 }
     ] },
+    { id: 'glass', label: 'Стекло', tones: [
+      { freq: 988, dur: .32, type: 'sine', peak: .7 },
+      { freq: 1319, dur: .28, at: .015, type: 'sine', peak: .45 }
+    ] },
+    { id: 'softpop', label: 'Мягкий поп', tones: [
+      { freq: 1800, dur: .02, type: 'sine', peak: .3 },
+      { freq: 900, dur: .16, at: .02, type: 'sine', peak: .45 }
+    ] },
     { id: 'retro', label: 'Ретро', tones: [
       { freq: 400, dur: .05, type: 'square', peak: .5 },
       { freq: 800, dur: .05, at: .05, type: 'square', peak: .5 },
       { freq: 400, dur: .08, at: .1, type: 'square', peak: .5 }
+    ] },
+    { id: 'tritone', label: 'Три-тон', tones: [
+      { freq: 659, dur: .11, type: 'triangle', peak: .8 },
+      { freq: 988, dur: .13, at: .09, type: 'triangle', peak: .8 },
+      { freq: 1318, dur: .22, at: .2, type: 'triangle', peak: .7 }
+    ] },
+    { id: 'whoosh', label: 'Свист', noise: [
+      { dur: .22, fromFreq: 500, toFreq: 3200, peak: .5, q: 1.1 }
+    ] },
+    { id: 'chord', label: 'Аккорд', tones: [
+      { freq: 523, dur: .4, type: 'triangle', peak: .5 },
+      { freq: 659, dur: .4, type: 'triangle', peak: .45 },
+      { freq: 784, dur: .4, type: 'triangle', peak: .4 }
     ] }
   ];
   var SOUNDS_BY_ID = {};
@@ -69,6 +90,32 @@
     return audioCtx;
   }
 
+  // «Свист» (звук отправки в iMessage) — не нота, а отфильтрованный шум с
+  // растущей частотой полосы; отдельно от обычных тонов ниже.
+  function playNoiseSweep(ctx, dest, startAt, n) {
+    var dur = n.dur || 0.25;
+    var buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    var noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.value = n.q || 1.2;
+    filter.frequency.setValueAtTime(n.fromFreq || 500, startAt);
+    filter.frequency.exponentialRampToValueAtTime(n.toFreq || 3000, startAt + dur);
+    var g = ctx.createGain();
+    var peak = n.peak == null ? 0.5 : n.peak;
+    g.gain.setValueAtTime(0.0001, startAt);
+    g.gain.linearRampToValueAtTime(peak, startAt + dur * 0.15);
+    g.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);
+    noise.connect(filter);
+    filter.connect(g);
+    g.connect(dest);
+    noise.start(startAt);
+    noise.stop(startAt + dur + 0.02);
+  }
+
   function playSound(id, volumePct) {
     var def = SOUNDS_BY_ID[id] || SOUNDS_BY_ID[DEFAULT_SOUND];
     var ctx = getCtx();
@@ -78,7 +125,7 @@
     master.gain.value = Math.max(0, Math.min(1, (volumePct == null ? DEFAULT_VOLUME : volumePct) / 100));
     master.connect(ctx.destination);
     var startAt = ctx.currentTime + 0.01;
-    def.tones.forEach(function (t) {
+    (def.tones || []).forEach(function (t) {
       var osc = ctx.createOscillator();
       osc.type = t.type || 'sine';
       var g = ctx.createGain();
@@ -94,6 +141,9 @@
       g.connect(master);
       osc.start(t0);
       osc.stop(t0 + dur + 0.03);
+    });
+    (def.noise || []).forEach(function (n) {
+      playNoiseSweep(ctx, master, startAt + (n.at || 0), n);
     });
   }
 
