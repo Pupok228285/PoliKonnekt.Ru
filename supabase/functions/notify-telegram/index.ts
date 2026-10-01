@@ -46,6 +46,12 @@ Deno.serve(async (req: Request) => {
       return data;
     }
 
+    async function lookupGrantLabel(id: unknown): Promise<string | null> {
+      if (!supabase || !id) return null;
+      const { data } = await supabase.from('ad_access_grants').select('label').eq('id', id).maybeSingle();
+      return data ? data.label : null;
+    }
+
     // Telegram Bot API получает text в HTML-режиме (parse_mode ниже) — весь
     // текст, подставляемый из базы (ник, тема, сообщение), экранируется,
     // чтобы случайные `<`/`>`/`&` в чужом тексте не сломали разметку.
@@ -70,6 +76,11 @@ Deno.serve(async (req: Request) => {
       const body = String(record.body ?? '').slice(0, 300);
       const page = record.context_url ? `\nСтраница: ${escapeHtml(String(record.context_url))}` : '';
       text = `📩 <b>${kind} от ${escapeHtml(who)}: «${escapeHtml(subject)}»</b>\n<blockquote>${escapeHtml(body)}</blockquote>${page}\nОткрыть: админ-панель сайта.`;
+    } else if (table === 'ads') {
+      const label = await lookupGrantLabel(record.grant_id);
+      const who = label ? escapeHtml(label) : 'рекламодатель';
+      const preview = String(record.text_body ?? (record.image_url ? '[фото]' : '')).slice(0, 200);
+      text = `📢 <b>Новая заявка на рекламу от ${who}</b>\n<blockquote>${escapeHtml(preview)}</blockquote>\nОткрыть: админ-панель сайта → Реклама.`;
     } else {
       text = `Событие в таблице ${escapeHtml(table)}.`;
     }

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разместить рекламу — ПолиКоннект.ru</title>
+<meta name="description" content="Отправить объявление на модерацию по ссылке-доступу.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/style.css?v=50">
+</head>
+<body>
+<div id="wrap">
+<div id="frame">
+
+  <header class="logo">
+    <a href="index.html">
+      <img src="img/logo-mark.svg?v=2" alt="">
+      <span class="word">ПолиКоннект<span class="tld">.ru</span></span>
+    </a>
+  </header>
+
+  <div id="cols">
+
+    <main id="orange">
+
+      <section class="box" id="adSubmitLoading">
+        <h2>Разместить рекламу</h2>
+        <p class="hint" style="padding:0 2px">Проверяем ссылку...</p>
+      </section>
+
+      <section class="box" id="adSubmitInvalid" hidden>
+        <h2>Разместить рекламу</h2>
+        <p style="padding:0 2px">Эта ссылка недействительна или её срок уже истёк. Напишите тому, кто её выдал — попросите новую, либо обратитесь в <a href="support.html">Поддержку</a>.</p>
+      </section>
+
+      <section class="box" id="adSubmitArea" hidden>
+        <h2>Разместить рекламу — <span id="adSubmitLabel"></span></h2>
+        <p class="hint" style="padding:0 2px 6px" id="adSubmitExpiry"></p>
+        <p style="padding:0 2px 10px" id="adSubmitNote" hidden></p>
+
+        <p class="hint" style="padding:0 2px 6px">Заполните текст и/или фото, ссылку — на что ведёт объявление. Отправленное уходит на проверку админу сайта, после одобрения появится в рекламном блоке.</p>
+
+        <div class="p-row"><span class="lbl">Текст</span><span class="val">
+          <input class="field" type="text" id="asTextInput" placeholder="Текст или подпись, до 300 знаков (необязательно, если есть фото)" maxlength="300" style="width:100%">
+        </span></div>
+
+        <div class="p-row"><span class="lbl">Фото</span><span class="val">
+          <input type="file" accept="image/*" id="asImageInput"> <span class="hint" style="margin:0 0 0 6px">необязательно, если есть текст</span>
+        </span></div>
+
+        <div class="p-row"><span class="lbl">Ссылка (необяз.)</span><span class="val">
+          <input class="field" type="text" id="asLinkInput" placeholder="https://..." style="width:100%">
+        </span></div>
+
+        <div class="p-row"><span class="lbl">Размер — ПК</span><span class="val">
+          <select class="field" id="asDesktopPreset">
+            <option value="468x60">Баннер 468×60</option>
+            <option value="728x90">Лидерборд 728×90</option>
+            <option value="300x250" selected>Прямоугольник 300×250</option>
+            <option value="160x600">Небоскрёб 160×600</option>
+            <option value="custom">Свой размер</option>
+          </select>
+          Ширина <input class="field" type="number" id="asDesktopW" value="300" style="width:64px">
+          Высота <input class="field" type="number" id="asDesktopH" value="250" style="width:64px">
+        </span></div>
+
+        <div class="p-row"><span class="lbl">Размер — телефон</span><span class="val">
+          <select class="field" id="asMobilePreset">
+            <option value="320x50" selected>Баннер 320×50</option>
+            <option value="300x100">Прямоугольник 300×100</option>
+            <option value="320x250">Крупный 320×250</option>
+            <option value="custom">Свой размер</option>
+          </select>
+          Ширина <input class="field" type="number" id="asMobileW" value="320" style="width:64px">
+          Высота <input class="field" type="number" id="asMobileH" value="50" style="width:64px">
+        </span></div>
+
+        <div class="btns" style="justify-content:flex-start">
+          <button class="submit" type="button" id="asSubmitBtn">Отправить на проверку</button>
+          <span class="hint" id="asSubmitStatus" style="margin:0 0 0 6px"></span>
+        </div>
+      </section>
+
+      <section class="box" id="adSubmitDone" hidden>
+        <h2>Заявка отправлена</h2>
+        <p style="padding:0 2px">Спасибо! Админ сайта её проверит — если всё в порядке, объявление появится на сайте, если нужно что-то поправить, вам придёт сюда же комментарий (откройте эту ссылку ещё раз).</p>
+      </section>
+
+    </main>
+  </div>
+
+</div>
+</div>
+
+<p class="foot">
+  ПолиКоннект.ru — неофициальный сайт студентов и выпускников.
+</p>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/ad-submit.js?v=1"></script>
+</body>
+</html>

@@ -37,6 +37,15 @@
 
   var adsAdminSection = document.getElementById('adsAdminSection');
   var adsAdminList = document.getElementById('adsAdminList');
+  var adsPendingList = document.getElementById('adsPendingList');
+  var adGrantsList = document.getElementById('adGrantsList');
+  var adReappearInput = document.getElementById('adReappearInput');
+  var adRotateInput = document.getElementById('adRotateInput');
+
+  var AD_POSITION_LABELS = {
+    'bottom-right': 'снизу справа', 'bottom-left': 'снизу слева',
+    'top-right': 'сверху справа', 'top-left': 'сверху слева'
+  };
 
   var artelModeSection = document.getElementById('artelModeSection');
   var artelLeaderModeSelect = document.getElementById('artelLeaderModeSelect');
@@ -82,7 +91,7 @@
           loadMembers();
           if (albumsAdminSection) { albumsAdminSection.hidden = false; loadAlbumsAdmin(); }
           if (albumSubsSection) { albumSubsSection.hidden = false; loadAlbumSubs(); }
-          if (adsAdminSection) { adsAdminSection.hidden = false; loadAdsAdmin(); updateAdPreview(); }
+          if (adsAdminSection) { adsAdminSection.hidden = false; loadAdsAdmin(); loadAdsPending(); loadAdGrants(); loadAdTimings(); updateAdPreview(); subscribeAdsRealtime(); }
           if (artelModeSection) { artelModeSection.hidden = false; loadArtelLeaderMode(); }
         } else {
           roleNote.textContent = 'Вы вошли как модератор — список участников с почтой виден только администратору.';
@@ -590,21 +599,42 @@
     });
   }
 
+  function adPositionSelectHtml(adId, current) {
+    return '<select class="field ad-pos" data-id="' + adId + '" style="margin-left:6px;font-size:11px">' +
+      Object.keys(AD_POSITION_LABELS).map(function (key) {
+        return '<option value="' + key + '"' + (key === current ? ' selected' : '') + '>' + AD_POSITION_LABELS[key] + '</option>';
+      }).join('') + '</select>';
+  }
+
+  function bindAdPosSelects(root) {
+    root.querySelectorAll('.ad-pos').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        window.supa.from('ads').update({ position: sel.value }).eq('id', sel.getAttribute('data-id')).then(function (r) {
+          if (r.error) alert(r.error.message);
+        });
+      });
+    });
+  }
+
   function loadAdsAdmin() {
     if (!adsAdminList) return;
     adsAdminList.innerHTML = '<p class="hint" style="padding:4px 2px">Загрузка...</p>';
-    window.supa.from('ads').select('*').order('created_at', { ascending: false }).then(function (res) {
+    window.supa.from('ads').select('*').neq('status', 'pending').order('created_at', { ascending: false }).then(function (res) {
       if (res.error) { adsAdminList.innerHTML = '<p class="hint">' + escapeHtml(res.error.message) + '</p>'; return; }
       if (!res.data.length) { adsAdminList.innerHTML = '<p class="hint" style="padding:4px 2px">Пока нет объявлений — пока висит старая шутка.</p>'; return; }
       var now = Date.now();
       adsAdminList.innerHTML = res.data.map(function (ad) {
         var expired = new Date(ad.active_until).getTime() < now;
+        var statusLbl = ad.status === 'rejected' ? '<span class="hint">отменено</span>' :
+          (expired ? '<span class="hint">истекло</span>' : '<b style="color:#1d7813">активно</b>');
         var label = (ad.image_url ? '[фото]' : '') + (ad.image_url && ad.text_body ? ' + ' : '') + (ad.text_body ? '«' + escapeHtml(ad.text_body.slice(0, 60)) + '»' : '');
-        return '<div class="p-row"><span class="lbl">' + (expired ? '<span class="hint">истекло</span>' : '<b style="color:#1d7813">активно</b>') + '</span>' +
+        return '<div class="p-row"><span class="lbl">' + statusLbl + '</span>' +
           '<span class="val">' + label + ' <span class="hint" style="margin:0">до ' + fmtDateTime(ad.active_until) +
-          ' · ПК ' + ad.desktop_w + '×' + ad.desktop_h + ', тел. ' + ad.mobile_w + '×' + ad.mobile_h + '</span> ' +
+          ' · ПК ' + ad.desktop_w + '×' + ad.desktop_h + ', тел. ' + ad.mobile_w + '×' + ad.mobile_h + '</span>' +
+          adPositionSelectHtml(ad.id, ad.position) + ' ' +
           '<a href="#" class="ad-del" data-id="' + ad.id + '" style="margin-left:6px">удалить</a></span></div>';
       }).join('');
+      bindAdPosSelects(adsAdminList);
       adsAdminList.querySelectorAll('.ad-del').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
           e.preventDefault();
@@ -613,6 +643,162 @@
             loadAdsAdmin();
           });
         });
+      });
+    });
+  }
+
+  // ---------- тайминги поп-апа (site_settings) ----------
+  function loadAdTimings() {
+    if (!adReappearInput) return;
+    window.supa.from('site_settings').select('ad_reappear_minutes, ad_rotate_seconds').eq('id', true).single().then(function (res) {
+      if (res.error || !res.data) return;
+      adReappearInput.value = res.data.ad_reappear_minutes;
+      adRotateInput.value = res.data.ad_rotate_seconds;
+    });
+  }
+
+  function bindAdTiming(input, statusEl, column) {
+    if (!input) return;
+    input.addEventListener('change', function () {
+      var val = Number(input.value);
+      if (!val) return;
+      statusEl.textContent = 'сохраняем...';
+      var payload = {};
+      payload[column] = val;
+      window.supa.from('site_settings').update(payload).eq('id', true).then(function (r) {
+        if (r.error) { statusEl.textContent = 'ошибка: ' + r.error.message; return; }
+        statusEl.textContent = 'сохранено';
+        setTimeout(function () { statusEl.textContent = ''; }, 2000);
+      });
+    });
+  }
+  bindAdTiming(adReappearInput, document.getElementById('adReappearStatus'), 'ad_reappear_minutes');
+  bindAdTiming(adRotateInput, document.getElementById('adRotateStatus'), 'ad_rotate_seconds');
+
+  // Чтобы новые заявки и правки появлялись сами, без ручного обновления
+  // страницы — та же схема, что в notify-sound.js (postgres_changes).
+  var adsRealtimeSubscribed = false;
+  function subscribeAdsRealtime() {
+    if (adsRealtimeSubscribed) return;
+    adsRealtimeSubscribed = true;
+    window.supa.channel('admin-ads')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ads' }, function () {
+        loadAdsPending(); loadAdsAdmin();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ad_access_grants' }, function () {
+        loadAdGrants();
+      })
+      .subscribe();
+  }
+
+  // ---------- заявки на рекламу (ожидают решения) ----------
+  function renderAdReviewPreview(ad) {
+    function box(scale, w, h) {
+      var bw = Math.max(18, Math.round(w * scale)), bh = Math.max(14, Math.round(h * scale));
+      var inner = '<span class="tag">рекл.</span>';
+      if (ad.image_url) inner += '<img src="' + escapeHtml(ad.image_url) + '" alt="">';
+      else if (ad.text_body) inner += '<span class="txt">' + escapeHtml(ad.text_body) + '</span>';
+      return '<div class="ad-review-box" style="width:' + bw + 'px;height:' + bh + 'px">' + inner + '</div>';
+    }
+    return '<div class="ad-preview-screens" style="margin:6px 0">' +
+      '<div class="ad-preview-frame desktop"><div class="lbl2">ПК (' + ad.desktop_w + '×' + ad.desktop_h + ')</div><div class="ad-preview-screen">' + box(DESKTOP_PREVIEW_SCALE, ad.desktop_w, ad.desktop_h) + '</div></div>' +
+      '<div class="ad-preview-frame mobile"><div class="lbl2">Телефон (' + ad.mobile_w + '×' + ad.mobile_h + ')</div><div class="ad-preview-screen">' + box(MOBILE_PREVIEW_SCALE, ad.mobile_w, ad.mobile_h) + '</div></div>' +
+      '</div>';
+  }
+
+  function loadAdsPending() {
+    if (!adsPendingList) return;
+    adsPendingList.innerHTML = '<p class="hint" style="padding:4px 2px">Загрузка...</p>';
+    window.supa.from('ads').select('*, ad_access_grants(label)').eq('status', 'pending').order('created_at', { ascending: false }).then(function (res) {
+      if (res.error) { adsPendingList.innerHTML = '<p class="hint">' + escapeHtml(res.error.message) + '</p>'; return; }
+      if (!res.data.length) { adsPendingList.innerHTML = '<p class="hint" style="padding:4px 2px">Заявок нет.</p>'; return; }
+      adsPendingList.innerHTML = res.data.map(function (ad) {
+        var who = ad.ad_access_grants ? escapeHtml(ad.ad_access_grants.label) : 'рекламодатель';
+        var link = ad.link_url ? '<span class="hint">ссылка: ' + escapeHtml(ad.link_url) + '</span>' : '';
+        return '<div class="p-row" style="align-items:flex-start"><span class="lbl">' + escapeHtml(who) + '</span>' +
+          '<span class="val">' + link + renderAdReviewPreview(ad) +
+          '<div class="btns" style="justify-content:flex-start;margin-top:6px">' +
+          '<input class="field ad-until" type="date" style="width:120px">' +
+          '<button class="submit ad-approve" data-id="' + ad.id + '">Одобрить</button>' +
+          '<button class="submit ad-edit" data-id="' + ad.id + '">На доработку</button>' +
+          '<button class="submit ad-cancel" data-id="' + ad.id + '">Отменить</button>' +
+          '</div></span></div>';
+      }).join('');
+      adsPendingList.querySelectorAll('.ad-approve').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var row = btn.closest('.p-row');
+          var untilVal = row.querySelector('.ad-until').value;
+          var until = untilVal ? new Date(untilVal + 'T23:59:59').toISOString() : null;
+          window.supa.rpc('review_ad', { p_ad_id: Number(btn.getAttribute('data-id')), p_action: 'approve', p_until: until }).then(function (r) {
+            if (r.error) { alert(r.error.message); return; }
+            loadAdsPending(); loadAdsAdmin();
+          });
+        });
+      });
+      adsPendingList.querySelectorAll('.ad-edit').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var note = prompt('Что поправить? Рекламодатель увидит этот комментарий по своей ссылке.');
+          if (note === null) return;
+          window.supa.rpc('review_ad', { p_ad_id: Number(btn.getAttribute('data-id')), p_action: 'edit', p_note: note }).then(function (r) {
+            if (r.error) { alert(r.error.message); return; }
+            loadAdsPending();
+          });
+        });
+      });
+      adsPendingList.querySelectorAll('.ad-cancel').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (!confirm('Отменить заявку совсем? Ссылка-доступ сразу перестанет работать.')) return;
+          window.supa.rpc('review_ad', { p_ad_id: Number(btn.getAttribute('data-id')), p_action: 'cancel' }).then(function (r) {
+            if (r.error) { alert(r.error.message); return; }
+            loadAdsPending(); loadAdGrants();
+          });
+        });
+      });
+    });
+  }
+
+  // ---------- доступы для рекламодателей ----------
+  function loadAdGrants() {
+    if (!adGrantsList) return;
+    adGrantsList.innerHTML = '<p class="hint" style="padding:4px 2px">Загрузка...</p>';
+    window.supa.from('ad_access_grants').select('*').order('created_at', { ascending: false }).limit(20).then(function (res) {
+      if (res.error) { adGrantsList.innerHTML = '<p class="hint">' + escapeHtml(res.error.message) + '</p>'; return; }
+      if (!res.data.length) { adGrantsList.innerHTML = '<p class="hint" style="padding:4px 2px">Пока ни одной ссылки не выдано.</p>'; return; }
+      var now = Date.now();
+      adGrantsList.innerHTML = res.data.map(function (g) {
+        var expired = new Date(g.expires_at).getTime() < now;
+        var url = window.location.origin + window.location.pathname.replace(/admin\.html$/, '') + 'ad-submit.html?token=' + g.token;
+        return '<div class="p-row"><span class="lbl">' + escapeHtml(g.label) + '</span>' +
+          '<span class="val">' + (expired ? '<span class="hint">истекла ' + fmtDateTime(g.expires_at) + '</span>' : 'до ' + fmtDateTime(g.expires_at)) +
+          (expired ? '' : ' <a href="#" class="grant-copy" data-url="' + escapeHtml(url) + '" style="margin-left:6px">скопировать ссылку</a>') +
+          '</span></div>';
+      }).join('');
+      adGrantsList.querySelectorAll('.grant-copy').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          navigator.clipboard.writeText(a.getAttribute('data-url')).then(function () {
+            a.textContent = 'скопировано!';
+            setTimeout(function () { a.textContent = 'скопировать ссылку'; }, 1500);
+          });
+        });
+      });
+    });
+  }
+
+  var grantCreateBtn = document.getElementById('grantCreateBtn');
+  if (grantCreateBtn) {
+    grantCreateBtn.addEventListener('click', function () {
+      var statusEl = document.getElementById('grantCreateStatus');
+      var label = (document.getElementById('grantLabelInput').value || '').trim();
+      var days = Number(document.getElementById('grantDaysInput').value) || 2;
+      if (!label) { setStatusHint(statusEl, 'Укажите, кому выдаём.', false); return; }
+      grantCreateBtn.disabled = true;
+      window.supa.rpc('create_ad_grant', { p_label: label, p_days: days }).then(function (r) {
+        grantCreateBtn.disabled = false;
+        if (r.error) { setStatusHint(statusEl, r.error.message, false); return; }
+        setStatusHint(statusEl, 'Готово — ссылка в списке ниже.', true);
+        document.getElementById('grantLabelInput').value = '';
+        loadAdGrants();
       });
     });
   }
@@ -632,6 +818,8 @@
         text_body: textVal || null,
         link_url: (document.getElementById('adLinkInput').value || '').trim() || null,
         active_until: new Date(untilVal + 'T23:59:59').toISOString(),
+        position: document.getElementById('adPositionInput').value,
+        status: 'approved',
         desktop_w: Number(document.getElementById('adDesktopW').value) || 300,
         desktop_h: Number(document.getElementById('adDesktopH').value) || 250,
         mobile_w: Number(document.getElementById('adMobileW').value) || 320,

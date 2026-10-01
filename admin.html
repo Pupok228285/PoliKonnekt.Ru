@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Админ-панель — ПолиКоннект.ru</title>
 <meta name="description" content="Онлайн, очередь проверки зачёток, участники.">
-<link rel="stylesheet" href="css/style.css?v=47">
+<link rel="stylesheet" href="css/style.css?v=50">
 </head>
 <body>
 <div id="wrap">
@@ -107,9 +107,33 @@
         </section>
 
         <section class="box" id="adsAdminSection" hidden>
-          <h2>Реклама (поп-ап на главной)</h2>
-          <p class="hint" style="padding:0 2px 6px">Пока нет ни одного активного объявления — поп-ап честно показывает старую шутку, как и раньше.</p>
+          <h2>Реклама (поп-апы по углам экрана)</h2>
+          <p class="hint" style="padding:0 2px 6px">Пока нет ни одного активного объявления в углу — там показывается старая шутка, как и раньше. Посетитель в любой момент может закрыть блок крестиком — ниже настройка, через сколько он появится снова.</p>
 
+          <h3 style="padding:4px 2px">Тайминги поп-апа</h3>
+          <div class="p-row"><span class="lbl">Появляться заново через</span><span class="val">
+            <input class="field" type="number" id="adReappearInput" min="1" max="1440" style="width:60px"> мин. после закрытия крестиком
+            <span class="hint" id="adReappearStatus" style="margin:0 0 0 6px"></span>
+          </span></div>
+          <div class="p-row"><span class="lbl">Менять объявления через</span><span class="val">
+            <input class="field" type="number" id="adRotateInput" min="5" max="600" style="width:60px"> сек. (если их несколько в одном углу — порядок каждый раз случайный)
+            <span class="hint" id="adRotateStatus" style="margin:0 0 0 6px"></span>
+          </span></div>
+
+          <h3 style="padding:10px 2px 4px">Заявки на рассмотрении</h3>
+          <div id="adsPendingList"><p class="hint" style="padding:4px 2px">Загрузка...</p></div>
+
+          <h3 style="padding:10px 2px 4px">Доступы для рекламодателей</h3>
+          <p class="hint" style="padding:0 2px 6px">Выдайте ссылку на время — по ней, без аккаунта на сайте, можно прислать своё объявление на проверку.</p>
+          <div class="p-row"><span class="lbl">Кому</span><span class="val">
+            <input class="field" type="text" id="grantLabelInput" placeholder="Имя или название — для памяти" style="width:220px">
+            На <input class="field" type="number" id="grantDaysInput" value="2" min="1" style="width:50px"> дней
+            <button class="submit" type="button" id="grantCreateBtn">Создать ссылку</button>
+          </span></div>
+          <p class="hint" id="grantCreateStatus" style="padding:0 2px"></p>
+          <div id="adGrantsList" style="margin-top:6px"><p class="hint" style="padding:4px 2px">Загрузка...</p></div>
+
+          <h3 style="padding:10px 2px 4px">Своё объявление (публикуется сразу)</h3>
           <p class="hint" style="padding:0 2px 6px">Текст и фото независимы — можно и то, и то вместе (текст ляжет подписью), или что-то одно.</p>
 
           <div class="p-row"><span class="lbl">Текст</span><span class="val">
@@ -126,6 +150,15 @@
 
           <div class="p-row"><span class="lbl">Показывать до</span><span class="val">
             <input class="field" type="date" id="adUntilInput">
+          </span></div>
+
+          <div class="p-row"><span class="lbl">Угол экрана</span><span class="val">
+            <select class="field" id="adPositionInput">
+              <option value="bottom-right">Снизу справа</option>
+              <option value="bottom-left">Снизу слева</option>
+              <option value="top-right">Сверху справа</option>
+              <option value="top-left">Сверху слева</option>
+            </select>
           </span></div>
 
           <div class="p-row"><span class="lbl">Размер — ПК</span><span class="val">
@@ -228,7 +261,7 @@
 <script src="js/presence.js?v=3"></script>
 <script src="js/notify-sound.js?v=3"></script>
 <script src="js/pm-badge.js?v=3"></script>
-<script src="js/admin.js?v=22"></script>
+<script src="js/admin.js?v=25"></script>
 <script src="js/report.js?v=2"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>

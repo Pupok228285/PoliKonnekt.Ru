@@ -1108,12 +1108,6 @@ html, body { overflow-x: hidden; }
 
 .ad-popup {
   position: fixed;
-  right: 16px;
-  /* прячем сдвигом вниз с большим запасом — было -260px и при более высоких
-     объявлениях (свой размер в админке) снизу оставался виден кусочек;
-     высота объявления в базе ограничена 800px (db/schema_v21.sql), так что
-     -900px гарантированно хватает при любом допустимом размере. */
-  bottom: -900px;
   opacity: 0;
   z-index: 90;
   width: 260px;
@@ -1121,9 +1115,20 @@ html, body { overflow-x: hidden; }
   border: 1px solid #7c7c7c;
   box-shadow: 2px 3px 10px rgba(0, 0, 0, .35);
   /* лёгкий "перелёт" на появлении — живее плоского ease, на закрытии просто гасим */
-  transition: bottom .45s cubic-bezier(.34, 1.35, .64, 1), opacity .3s ease;
+  transition: top .45s cubic-bezier(.34, 1.35, .64, 1), bottom .45s cubic-bezier(.34, 1.35, .64, 1), opacity .3s ease;
 }
-.ad-popup.show { bottom: 16px; opacity: 1; }
+/* Углы экрана — прячем сдвигом за край с большим запасом (высота
+   объявления в базе ограничена 800px, db/schema_v21.sql, -900px хватает
+   при любом допустимом размере), .show возвращает на отступ 16px. */
+.ad-popup.show { opacity: 1; }
+.ad-popup.corner-bottom-right { right: 16px; bottom: -900px; }
+.ad-popup.corner-bottom-right.show { bottom: 16px; }
+.ad-popup.corner-bottom-left { left: 16px; bottom: -900px; }
+.ad-popup.corner-bottom-left.show { bottom: 16px; }
+.ad-popup.corner-top-right { right: 16px; top: -900px; }
+.ad-popup.corner-top-right.show { top: 16px; }
+.ad-popup.corner-top-left { left: 16px; top: -900px; }
+.ad-popup.corner-top-left.show { top: 16px; }
 
 .ad-popup .titlebar {
   display: flex;
@@ -1182,7 +1187,9 @@ html, body { overflow-x: hidden; }
      если админ в панели поставил высоту побольше — жёстко ограничиваем
      видимую высоту (!important против инлайновых width/height из
      js/ad-popup.js), лишнее у фото просто обрежется object-fit'ом. */
-  .ad-popup { width: 210px !important; right: 8px; max-height: 170px; overflow: hidden; }
+  .ad-popup { width: 210px !important; max-height: 170px; overflow: hidden; }
+  .ad-popup.corner-bottom-right, .ad-popup.corner-top-right { right: 8px; }
+  .ad-popup.corner-bottom-left, .ad-popup.corner-top-left { left: 8px; }
   .ad-popup .adslot { max-height: 148px !important; height: auto !important; }
   .ad-popup .adslot img { max-height: 110px !important; object-fit: cover; }
 }
@@ -1265,6 +1272,36 @@ html, body { overflow-x: hidden; }
   background: #d9534f;
   opacity: .8;
   border: 1px solid #7c7c7c;
+}
+
+/* ---------- превью заявки на рекламу в очереди на рассмотрение — не
+   просто размер, а то же оформление, что и у настоящего поп-апа ---------- */
+.ad-review-box {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  background: repeating-linear-gradient(45deg, #fdf8e9, #fdf8e9 6px, #faf2d8 6px, #faf2d8 12px);
+  border: 1px solid #7c7c7c;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+.ad-review-box img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ad-review-box .tag {
+  position: absolute;
+  top: 1px; left: 2px;
+  font: 5px/1 var(--font);
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: #a89a6a;
+}
+.ad-review-box .txt {
+  font: bold 7px/1.25 var(--font-head);
+  color: #7a6a34;
+  padding: 3px 4px 0;
+  overflow: hidden;
 }
 
 @media (max-width: 860px) {
