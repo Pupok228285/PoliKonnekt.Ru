@@ -26,6 +26,14 @@
     return d.innerHTML;
   }
 
+  // Z-index у попапа и так выше рекламного блока (550 против 90) — реклама
+  // его никогда не закроет. Но если оба в одном углу (bottom-right), чтобы
+  // не наезжать друг на друга текстом, поднимаем попап над рекламой.
+  function adjustPosition(h) {
+    var ad = document.querySelector('.ad-popup.corner-bottom-right.show');
+    h.style.bottom = ad ? (window.innerHeight - ad.getBoundingClientRect().top + 10) + 'px' : '10px';
+  }
+
   // opts: { title, body, href, avatar, icon, reply: { table, payload } }
   function show(opts) {
     var el = document.createElement('div');
@@ -42,7 +50,9 @@
       '</div>' +
       '<i class="pk-toast-x" title="Скрыть">&times;</i>' +
       (opts.reply ? '<form class="pk-toast-reply"><input type="text" maxlength="500" placeholder="Ответить..."><button type="submit" title="Отправить">&#10148;</button></form>' : '');
-    host().appendChild(el);
+    var h = host();
+    adjustPosition(h);
+    h.appendChild(el);
     requestAnimationFrame(function () { el.classList.add('show'); });
 
     var timer = null;
