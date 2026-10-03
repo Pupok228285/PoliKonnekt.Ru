@@ -104,6 +104,12 @@
           if (res.error) { target.textContent = 'Не удалось загрузить.'; return; }
           if (!res.data.length) { target.textContent = 'Изменений пока не было.'; return; }
           target.innerHTML = res.data.map(function (row) {
+            if (field === 'avatar_url') {
+              var thumb = row.old_value
+                ? '<span style="display:inline-block;width:28px;height:28px;border-radius:50%;vertical-align:middle;background-size:cover;background-position:center;border:1px solid #ccc;background-image:url(' + escapeHtml(row.old_value) + ')"></span>'
+                : '<span class="hint" style="vertical-align:middle">(пусто)</span>';
+              return thumb + ' <span style="vertical-align:middle">— до ' + fmtDate(row.changed_at) + '</span>';
+            }
             var val = row.old_value ? escapeHtml(row.old_value) : '(пусто)';
             return val + ' — до ' + fmtDate(row.changed_at);
           }).join(' &nbsp;&middot;&nbsp; ');
