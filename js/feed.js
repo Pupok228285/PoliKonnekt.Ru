@@ -56,10 +56,11 @@
     if (delBtn) {
       delBtn.addEventListener('click', function (e) {
         e.preventDefault();
-        if (!confirm('Удалить этот пост из Ленты?')) return;
-        window.supa.from('feed_posts').delete().eq('id', row.id).then(function (res) {
-          if (res.error) { alert(res.error.message); return; }
-          div.remove();
+        window.pkConfirm('Удалить этот пост из Ленты?', function () {
+          window.supa.from('feed_posts').delete().eq('id', row.id).then(function (res) {
+            if (res.error) { alert(res.error.message); return; }
+            div.remove();
+          });
         });
       });
     }

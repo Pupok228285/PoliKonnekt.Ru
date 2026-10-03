@@ -190,11 +190,12 @@
   }
 
   function deleteListing(id) {
-    if (!confirm('Удалить объявление? Это нельзя отменить.')) return;
-    window.supa.from('listings').delete().eq('id', id).then(function (r) {
-      if (r.error) { alert(r.error.message); return; }
-      loadMyListings().then(render);
-      loadListings();
+    window.pkConfirm('Удалить объявление? Это нельзя отменить.', function () {
+      window.supa.from('listings').delete().eq('id', id).then(function (r) {
+        if (r.error) { alert(r.error.message); return; }
+        loadMyListings().then(render);
+        loadListings();
+      });
     });
   }
 

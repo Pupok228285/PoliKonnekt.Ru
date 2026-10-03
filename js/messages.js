@@ -393,11 +393,12 @@
         groupMembersList.querySelectorAll('[data-rm]').forEach(function (a) {
           a.addEventListener('click', function (e) {
             e.preventDefault();
-            if (!confirm('Убрать этого человека из группы?')) return;
-            window.supa.from('chat_group_members').delete().eq('group_id', gid).eq('profile_id', a.getAttribute('data-rm')).then(function (r) {
-              if (r.error) { alert(r.error.message); return; }
-              loadGroupMembers();
-              loadInbox();
+            window.pkConfirm('Убрать этого человека из группы?', function () {
+              window.supa.from('chat_group_members').delete().eq('group_id', gid).eq('profile_id', a.getAttribute('data-rm')).then(function (r) {
+                if (r.error) { alert(r.error.message); return; }
+                loadGroupMembers();
+                loadInbox();
+              });
             });
           });
         });
@@ -457,11 +458,12 @@
     groupLeaveLink.addEventListener('click', function (e) {
       e.preventDefault();
       if (!current || current.kind !== 'group') return;
-      if (!confirm('Покинуть группу «' + current.title + '»? Вернуть вас сможет только кто-то из участников.')) return;
-      window.supa.from('chat_group_members').delete().eq('group_id', current.id).eq('profile_id', myId).then(function (r) {
-        if (r.error) { alert(r.error.message); return; }
-        closeConversation();
-        loadInbox();
+      window.pkConfirm('Покинуть группу «' + current.title + '»? Вернуть вас сможет только кто-то из участников.', function () {
+        window.supa.from('chat_group_members').delete().eq('group_id', current.id).eq('profile_id', myId).then(function (r) {
+          if (r.error) { alert(r.error.message); return; }
+          closeConversation();
+          loadInbox();
+        });
       });
     });
   }
@@ -470,11 +472,12 @@
     groupDeleteLink.addEventListener('click', function (e) {
       e.preventDefault();
       if (!current || current.kind !== 'group') return;
-      if (!confirm('Удалить группу «' + current.title + '» вместе со всей перепиской? Это нельзя отменить.')) return;
-      window.supa.from('chat_groups').delete().eq('id', current.id).then(function (r) {
-        if (r.error) { alert(r.error.message); return; }
-        closeConversation();
-        loadInbox();
+      window.pkConfirm('Удалить группу «' + current.title + '» вместе со всей перепиской? Это нельзя отменить.', function () {
+        window.supa.from('chat_groups').delete().eq('id', current.id).then(function (r) {
+          if (r.error) { alert(r.error.message); return; }
+          closeConversation();
+          loadInbox();
+        });
       });
     });
   }

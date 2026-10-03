@@ -160,9 +160,10 @@
             makeLeader.textContent = 'сделать главарём';
             makeLeader.addEventListener('click', function (e) {
               e.preventDefault();
-              if (!confirm('Назначить «' + nickname + '» главарём?')) return;
-              window.supa.rpc('set_artel_leader_admin', { p_artel_id: Number(artelId), p_profile_id: m.profile_id })
-                .then(function (r) { if (r.error) { alert(r.error.message); return; } loadArtel().then(loadRoster); });
+              window.pkConfirm('Назначить «' + nickname + '» главарём?', function () {
+                window.supa.rpc('set_artel_leader_admin', { p_artel_id: Number(artelId), p_profile_id: m.profile_id })
+                  .then(function (r) { if (r.error) { alert(r.error.message); return; } loadArtel().then(loadRoster); });
+              });
             });
             el.appendChild(makeLeader);
           }
@@ -220,11 +221,12 @@
         wallBox.querySelectorAll('.post-delete').forEach(function (a) {
           a.addEventListener('click', function (e) {
             e.preventDefault();
-            if (!confirm('Удалить запись со стены?')) return;
             var pid = a.getAttribute('data-pid');
-            window.supa.from('artel_posts').delete().eq('id', pid).then(function (r) {
-              if (r.error) { alert(r.error.message); return; }
-              loadWall();
+            window.pkConfirm('Удалить запись со стены?', function () {
+              window.supa.from('artel_posts').delete().eq('id', pid).then(function (r) {
+                if (r.error) { alert(r.error.message); return; }
+                loadWall();
+              });
             });
           });
         });
@@ -311,11 +313,12 @@
   if (deleteArtelBtn) {
     deleteArtelBtn.addEventListener('click', function () {
       if (!artel) return;
-      if (!confirm('Удалить артель «' + artel.name + '» вместе со всем составом и стеной? Это нельзя отменить.')) return;
-      deleteArtelBtn.disabled = true;
-      window.supa.from('artels').delete().eq('id', artelId).then(function (r) {
-        if (r.error) { alert(r.error.message); deleteArtelBtn.disabled = false; return; }
-        window.location.href = 'artel.html';
+      window.pkConfirm('Удалить артель «' + artel.name + '» вместе со всем составом и стеной? Это нельзя отменить.', function () {
+        deleteArtelBtn.disabled = true;
+        window.supa.from('artels').delete().eq('id', artelId).then(function (r) {
+          if (r.error) { alert(r.error.message); deleteArtelBtn.disabled = false; return; }
+          window.location.href = 'artel.html';
+        });
       });
     });
   }

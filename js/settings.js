@@ -248,18 +248,19 @@
   if (deleteBtn) {
     deleteBtn.addEventListener('click', function () {
       if (!myId) return;
-      if (!confirm('Отправить запрос на удаление аккаунта в поддержку?')) return;
-      deleteBtn.disabled = true;
-      window.supa.from('support_messages').insert({
-        author_id: myId,
-        kind: 'question',
-        subject: 'Запрос на удаление аккаунта',
-        body: 'Прошу удалить мой аккаунт и связанные с ним данные.',
-        context_url: window.location.href
-      }).then(function (res) {
-        deleteBtn.disabled = false;
-        if (res.error) { setHint(deleteHint, res.error.message, false); return; }
-        setHint(deleteHint, 'Отправлено — ответ придёт в Поддержке.', true);
+      window.pkConfirm('Отправить запрос на удаление аккаунта в поддержку?', function () {
+        deleteBtn.disabled = true;
+        window.supa.from('support_messages').insert({
+          author_id: myId,
+          kind: 'question',
+          subject: 'Запрос на удаление аккаунта',
+          body: 'Прошу удалить мой аккаунт и связанные с ним данные.',
+          context_url: window.location.href
+        }).then(function (res) {
+          deleteBtn.disabled = false;
+          if (res.error) { setHint(deleteHint, res.error.message, false); return; }
+          setHint(deleteHint, 'Отправлено — ответ придёт в Поддержке.', true);
+        });
       });
     });
   }
@@ -339,13 +340,15 @@
   if (tgDisconnectBtn) {
     tgDisconnectBtn.addEventListener('click', function (e) {
       e.preventDefault();
-      if (!myId || !confirm('Отключить уведомления в Telegram?')) return;
-      window.supa.from('telegram_links').delete().eq('profile_id', myId).then(function (r) {
-        if (r.error) { alert(r.error.message); return; }
-        tgOpenLink.style.display = 'none';
-        tgConnectBtn.style.display = '';
-        setHint(tgConnectHint, '', true);
-        renderTelegram(null);
+      if (!myId) return;
+      window.pkConfirm('Отключить уведомления в Telegram?', function () {
+        window.supa.from('telegram_links').delete().eq('profile_id', myId).then(function (r) {
+          if (r.error) { alert(r.error.message); return; }
+          tgOpenLink.style.display = 'none';
+          tgConnectBtn.style.display = '';
+          setHint(tgConnectHint, '', true);
+          renderTelegram(null);
+        });
       });
     });
   }

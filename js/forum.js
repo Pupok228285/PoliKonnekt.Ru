@@ -78,10 +78,11 @@
     root.querySelectorAll('.del-section').forEach(function (a) {
       a.addEventListener('click', function (e) {
         e.preventDefault();
-        if (!confirm('Удалить раздел «' + a.getAttribute('data-name') + '» из списка? Уже созданные темы в нём никуда не денутся, просто раздел исчезнет из каталога.')) return;
-        window.supa.from('forum_sections').delete().eq('id', a.getAttribute('data-id')).then(function (r) {
-          if (r.error) { alert(r.error.message); return; }
-          loadAll();
+        window.pkConfirm('Удалить раздел «' + a.getAttribute('data-name') + '» из списка? Уже созданные темы в нём никуда не денутся, просто раздел исчезнет из каталога.', function () {
+          window.supa.from('forum_sections').delete().eq('id', a.getAttribute('data-id')).then(function (r) {
+            if (r.error) { alert(r.error.message); return; }
+            loadAll();
+          });
         });
       });
     });

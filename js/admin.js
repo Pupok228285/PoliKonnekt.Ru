@@ -352,10 +352,11 @@
     delBtn.href = '#'; delBtn.className = 'hint'; delBtn.textContent = 'удалить альбом';
     delBtn.addEventListener('click', function (e) {
       e.preventDefault();
-      if (!confirm('Удалить альбом «' + a.title + '» вместе со всеми фото?')) return;
-      window.supa.from('albums').delete().eq('id', a.id).then(function (r) {
-        if (r.error) { alert(r.error.message); return; }
-        loadAlbumsAdmin();
+      window.pkConfirm('Удалить альбом «' + a.title + '» вместе со всеми фото?', function () {
+        window.supa.from('albums').delete().eq('id', a.id).then(function (r) {
+          if (r.error) { alert(r.error.message); return; }
+          loadAlbumsAdmin();
+        });
       });
     });
     head.appendChild(delBtn);
@@ -505,10 +506,11 @@
     rejectBtn.href = '#'; rejectBtn.className = 'hint'; rejectBtn.style.marginLeft = '10px'; rejectBtn.textContent = 'отклонить';
     rejectBtn.addEventListener('click', function (e) {
       e.preventDefault();
-      if (!confirm('Отклонить эту заявку? Файл удалится.')) return;
-      window.supa.from('album_submissions').delete().eq('id', s.id).then(function (r) {
-        if (r.error) { alert(r.error.message); return; }
-        loadAlbumSubs();
+      window.pkConfirm('Отклонить эту заявку? Файл удалится.', function () {
+        window.supa.from('album_submissions').delete().eq('id', s.id).then(function (r) {
+          if (r.error) { alert(r.error.message); return; }
+          loadAlbumSubs();
+        });
       });
     });
     actRow.appendChild(rejectBtn);
@@ -748,10 +750,11 @@
       });
       adsPendingList.querySelectorAll('.ad-cancel').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          if (!confirm('Отменить заявку совсем? Ссылка-доступ сразу перестанет работать.')) return;
-          window.supa.rpc('review_ad', { p_ad_id: Number(btn.getAttribute('data-id')), p_action: 'cancel' }).then(function (r) {
-            if (r.error) { alert(r.error.message); return; }
-            loadAdsPending(); loadAdGrants();
+          window.pkConfirm('Отменить заявку совсем? Ссылка-доступ сразу перестанет работать.', function () {
+            window.supa.rpc('review_ad', { p_ad_id: Number(btn.getAttribute('data-id')), p_action: 'cancel' }).then(function (r) {
+              if (r.error) { alert(r.error.message); return; }
+              loadAdsPending(); loadAdGrants();
+            });
           });
         });
       });

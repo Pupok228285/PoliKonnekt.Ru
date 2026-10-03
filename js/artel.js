@@ -126,10 +126,11 @@
     e.preventDefault();
     var id = delA.getAttribute('data-id');
     var artel = all.filter(function (a) { return String(a.id) === String(id); })[0];
-    if (!confirm('Удалить артель «' + (artel ? artel.name : id) + '» вместе со всем составом и стеной? Это нельзя отменить.')) return;
-    window.supa.from('artels').delete().eq('id', id).then(function (r) {
-      if (r.error) { alert(r.error.message); return; }
-      load();
+    window.pkConfirm('Удалить артель «' + (artel ? artel.name : id) + '» вместе со всем составом и стеной? Это нельзя отменить.', function () {
+      window.supa.from('artels').delete().eq('id', id).then(function (r) {
+        if (r.error) { alert(r.error.message); return; }
+        load();
+      });
     });
   });
 
