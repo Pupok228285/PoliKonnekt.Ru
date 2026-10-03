@@ -6,7 +6,7 @@
 <title>Настройки — ПолиКоннект.ru</title>
 <meta name="description" content="Микрофон в Библиотеке, аккаунт.">
 <link rel="icon" type="image/svg+xml" href="img/logo-mark.svg?v=2">
-<link rel="stylesheet" href="css/style.css?v=57">
+<link rel="stylesheet" href="css/style.css?v=58">
 </head>
 <body>
 <div id="wrap">
@@ -141,6 +141,12 @@
         <p class="hint" style="padding:4px 2px 0">Отпустите ползунок — звук проиграется на выбранной громкости. Звук и громкость — только этого браузера, на других устройствах можно выбрать свои.</p>
 
         <div class="p-row" style="margin-top:10px">
+          <span class="lbl">Всплывающие уведомления</span>
+          <span class="val"><div class="seg" id="popupSeg"><button type="button" data-on="1">Показывать</button><button type="button" data-on="0">Нет</button></div></span>
+        </div>
+        <p class="hint" style="padding:0 2px 4px">Попап в углу экрана с текстом и ссылкой — виден даже если звук в браузере не играет (так бывает, пока не кликнули по странице после захода). У личных сообщений и групп в самом попапе есть поле для быстрого ответа.</p>
+
+        <div class="p-row">
           <span class="lbl">Комментарии (форум и лента)</span>
           <span class="val"><div class="seg sound-seg" data-key="comments"><button type="button" data-on="1">Звук</button><button type="button" data-on="0">Тихо</button></div></span>
         </div>
@@ -311,9 +317,10 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/supabase-client.js?v=1"></script>
 <script src="js/auth-ui.js?v=6"></script>
 <script src="js/presence.js?v=3"></script>
-<script src="js/notify-sound.js?v=3"></script>
+<script src="js/notify-toast.js?v=1"></script>
+<script src="js/notify-sound.js?v=4"></script>
 <script src="js/pm-badge.js?v=3"></script>
-<script src="js/settings.js?v=9"></script>
+<script src="js/settings.js?v=10"></script>
 <script src="js/confirm-dialog.js?v=1"></script>
 <script src="js/report.js?v=3"></script>
 <script src="js/dev-switch.js?v=1"></script>

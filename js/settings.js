@@ -113,6 +113,19 @@
       window.PKNotifySound.play(document.querySelector('#soundPickList button.on') ? document.querySelector('#soundPickList button.on').getAttribute('data-id') : window.PKNotifySound.readSound(), Number(soundVolume.value));
     });
   }
+  var popupSeg = document.getElementById('popupSeg');
+  if (popupSeg) {
+    popupSeg.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!myId) return;
+        var on = b.getAttribute('data-on');
+        applySeg(popupSeg, on);
+        window.supa.from('profiles').update({ popup_notify_enabled: on === '1' }).eq('id', myId).then(function (r) {
+          if (r.error) alert(r.error.message);
+        });
+      });
+    });
+  }
   document.querySelectorAll('.sound-seg').forEach(function (seg) {
     seg.querySelectorAll('button').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -399,12 +412,13 @@
     window.supa.from('profiles').select('group_invite_policy').eq('id', myId).single().then(function (r) {
       applySeg(groupInviteSeg, (r.data && r.data.group_invite_policy) || 'all');
     });
-    window.supa.from('profiles').select('sound_notify_comments, sound_notify_messages, sound_notify_groups').eq('id', myId).single().then(function (r) {
+    window.supa.from('profiles').select('sound_notify_comments, sound_notify_messages, sound_notify_groups, popup_notify_enabled').eq('id', myId).single().then(function (r) {
       if (!r.data) return;
       document.querySelectorAll('.sound-seg').forEach(function (seg) {
         var col = 'sound_notify_' + seg.getAttribute('data-key');
         applySeg(seg, r.data[col] !== false ? '1' : '0');
       });
+      if (popupSeg) applySeg(popupSeg, r.data.popup_notify_enabled !== false ? '1' : '0');
     });
     loadBlocked();
   });

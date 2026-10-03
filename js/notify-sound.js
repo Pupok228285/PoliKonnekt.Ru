@@ -164,20 +164,57 @@
   // ---------- реальное время: играть звук на новых событиях ----------
   if (!window.supa) return;
 
-  function ding(categoryFlag) {
-    if (categoryFlag === false) return; // настройка аккаунта — не присылать эту категорию
-    playSound(readSound(), readVolume());
-  }
-
   var myId = null;
   var prefs = { comments: true, messages: true, groups: true };
+  var popupEnabled = true;
   var myContentIds = { feed_post: null, quote_post: null, canteen_post: null, artel_post: null, diary_post: null };
   var myTopicIds = null;      // Set: мои темы форума
   var myReviewTopicIds = null; // Set: мои темы отзывов
   var myReviewCommentIds = null; // Set: мои комментарии в отзывах (чтобы поймать ответ на них)
+  var myConversationIds = {}; // Set: мои личные переписки
+  var myGroupIds = {};        // Set: мои группы
   var mutedGroups = {};       // group_id -> true
   var mutedConvs = {};        // conversation_id -> true
   var channel = null;
+
+  var COMMENT_LINKS = {
+    feed_post: function () { return 'index.html#lenta'; },
+    quote_post: function () { return 'quotes.html'; },
+    canteen_post: function () { return 'canteen.html'; },
+    artel_post: function () { return 'artel.html'; },
+    diary_post: function () { return 'diary.html'; }
+  };
+  var COMMENT_ICONS = {
+    feed_post: 'img/icons/i-arrow.svg',
+    quote_post: 'img/icons/i-quote.svg',
+    canteen_post: 'img/icons/i-canteen.svg',
+    artel_post: 'img/icons/i-artel.svg',
+    diary_post: 'img/icons/i-user.svg'
+  };
+
+  // Попап показываем только если включён в настройках и реально загружен
+  // модуль; звук — как и раньше, по категориям.
+  function notify(categoryFlag, buildToast) {
+    if (categoryFlag === false) return;
+    playSound(readSound(), readVolume());
+    if (popupEnabled && buildToast && window.PKNotifyToast) buildToast();
+  }
+
+  function loadMyConversationIds() {
+    return window.supa.from('conversations').select('id').or('user_a.eq.' + myId + ',user_b.eq.' + myId).then(function (r) {
+      var set = {};
+      (r.data || []).forEach(function (row) { set[row.id] = true; });
+      myConversationIds = set;
+    });
+  }
+
+  function loadMyGroupIds() {
+    return window.supa.from('chat_group_members').select('group_id').eq('profile_id', myId).then(function (r) {
+      var set = {};
+      (r.data || []).forEach(function (row) { set[row.group_id] = true; });
+      myGroupIds = set;
+    });
+  }
 
   function loadIdSet(table, col) {
     return window.supa.from(table).select('id').eq(col, myId).then(function (r) {
@@ -228,29 +265,79 @@
   });
   window.PKNotifyRefreshMutes = function () { if (myId) refreshMutes(); };
 
+  // Явная проверка участия (myConversationIds/myGroupIds) обязательна:
+  // staff теперь по RLS видит ЛЮБУЮ переписку (db/schema_v48.sql, досье
+  // "Чаты/Группы"), Realtime поэтому пришлёт админу вообще все личные
+  // сообщения и все группы сайта, если не отфильтровать самим на клиенте.
   function onMessageInsert(row) {
     if (row.sender_id === myId) return;
+    if (!myConversationIds[row.conversation_id]) return;
     if (mutedConvs[row.conversation_id]) return;
-    ding(prefs.messages);
+    notify(prefs.messages, function () {
+      window.supa.from('profiles').select('nickname, avatar_url').eq('id', row.sender_id).single().then(function (r) {
+        var p = r.data || {};
+        window.PKNotifyToast.show({
+          title: p.nickname || 'Сообщение',
+          body: row.body || (row.photo_path ? '📷 фото' : ''),
+          avatar: p.avatar_url,
+          href: 'messages.html?conv=' + row.conversation_id,
+          reply: { table: 'messages', payload: { conversation_id: row.conversation_id, sender_id: myId } }
+        });
+      });
+    });
   }
 
   function onGroupMessageInsert(row) {
     if (row.sender_id === myId) return;
+    if (!myGroupIds[row.group_id]) return;
     if (mutedGroups[row.group_id]) return;
-    ding(prefs.groups);
+    notify(prefs.groups, function () {
+      Promise.all([
+        window.supa.from('chat_groups').select('title').eq('id', row.group_id).single(),
+        window.supa.from('profiles').select('nickname, avatar_url').eq('id', row.sender_id).single()
+      ]).then(function (res) {
+        var g = (res[0] && res[0].data) || {};
+        var p = (res[1] && res[1].data) || {};
+        window.PKNotifyToast.show({
+          title: (g.title || 'Группа') + (p.nickname ? ' · ' + p.nickname : ''),
+          body: row.body || (row.photo_path ? '📷 фото' : ''),
+          avatar: p.avatar_url,
+          href: 'messages.html?group=' + row.group_id,
+          reply: { table: 'chat_group_messages', payload: { group_id: row.group_id, sender_id: myId } }
+        });
+      });
+    });
   }
 
   function onForumReplyInsert(row) {
     if (row.author_id === myId) return;
     if (!myTopicIds || !myTopicIds[row.topic_id]) return;
-    ding(prefs.comments);
+    notify(prefs.comments, function () {
+      window.supa.from('forum_topics').select('title').eq('id', row.topic_id).single().then(function (r) {
+        var title = r.data && r.data.title;
+        window.PKNotifyToast.show({
+          title: 'Новый ответ в теме' + (title ? ' «' + title + '»' : ''),
+          body: row.body || '',
+          icon: 'img/icons/i-feed.svg',
+          href: 'forum-topic.html?id=' + row.topic_id
+        });
+      });
+    });
   }
 
   function onCommentInsert(row) {
     if (row.author_id === myId) return;
     var mine = myContentIds[row.content_type];
     if (!mine || !mine[row.content_id]) return;
-    ding(prefs.comments);
+    notify(prefs.comments, function () {
+      var link = COMMENT_LINKS[row.content_type];
+      window.PKNotifyToast.show({
+        title: 'Новый комментарий к вашей записи',
+        body: row.body || '',
+        icon: COMMENT_ICONS[row.content_type],
+        href: link ? link() : 'index.html'
+      });
+    });
   }
 
   function onReviewCommentInsert(row) {
@@ -259,7 +346,14 @@
       ? (myReviewCommentIds && myReviewCommentIds[row.parent_id])
       : (myReviewTopicIds && myReviewTopicIds[row.topic_id]);
     if (!aboutMine) return;
-    ding(prefs.comments);
+    notify(prefs.comments, function () {
+      window.PKNotifyToast.show({
+        title: row.parent_id ? 'Ответ на ваш комментарий в Отзывах' : 'Новый комментарий в Отзывах',
+        body: row.body || '',
+        icon: 'img/icons/i-reviews.svg',
+        href: 'review-topic.html?id=' + row.topic_id
+      });
+    });
   }
 
   function subscribe() {
@@ -279,16 +373,19 @@
       if (channel) { window.supa.removeChannel(channel); channel = null; }
       if (!session) { myId = null; return; }
       myId = session.user.id;
-      window.supa.from('profiles').select('sound_notify_comments, sound_notify_messages, sound_notify_groups')
+      window.supa.from('profiles').select('sound_notify_comments, sound_notify_messages, sound_notify_groups, popup_notify_enabled')
         .eq('id', myId).single().then(function (r) {
           if (r.data) {
             prefs.comments = r.data.sound_notify_comments !== false;
             prefs.messages = r.data.sound_notify_messages !== false;
             prefs.groups = r.data.sound_notify_groups !== false;
+            popupEnabled = r.data.popup_notify_enabled !== false;
           }
         });
       refreshMyContentIds();
       refreshMutes();
+      loadMyConversationIds();
+      loadMyGroupIds();
       subscribe();
     });
   }

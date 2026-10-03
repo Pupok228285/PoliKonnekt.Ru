@@ -79,6 +79,7 @@
   var pendingPhoto = null;
   var groupsAvailable = true; // false, если schema_v42.sql ещё не применена
   var openGroupFromUrl = null;
+  var openConvFromUrl = null;
   var pendingGroupNotice = null; // кого не удалось добавить при создании группы
 
   var GROUP_ERRORS = {
@@ -210,6 +211,11 @@
         var target = groups.find(function (g) { return String(g.group_id) === openGroupFromUrl; });
         openGroupFromUrl = null;
         if (target) openGroup(target);
+      }
+      if (openConvFromUrl) {
+        var targetConv = dms.find(function (d) { return String(d.id) === openConvFromUrl; });
+        openConvFromUrl = null;
+        if (targetConv) openConversation(targetConv.id, otherOf(targetConv));
       }
     });
   }
@@ -921,6 +927,7 @@
       var to = params.get('to');
       if (to && newMsgNick) newMsgNick.value = to;
       if (params.get('group')) openGroupFromUrl = params.get('group');
+      if (params.get('conv')) openConvFromUrl = params.get('conv');
 
       loadAll();
     });
