@@ -40,7 +40,10 @@
   }
 
   // ---------- сайдбар "Статистика" ----------
-  if (statMembers) {
+  // Лёгкие count-запросы (head:true — без строк, только число) — раз в 10
+  // секунд не нагружает сайт, а числа на главной не выглядят замёршими.
+  function loadSidebarStats() {
+    if (!statMembers) return;
     window.supa.from('profiles').select('id', { count: 'exact', head: true }).then(function (res) {
       statMembers.textContent = res.count != null ? res.count : '?';
     });
@@ -58,6 +61,7 @@
       statForum.textContent = res.count != null ? res.count : '?';
     });
   }
+  loadSidebarStats();
 
   // ---------- "Активные участники" по разделам ----------
   function sectionLabel(path) {
@@ -71,35 +75,33 @@
     return path ? 'Остальное' : 'Главная';
   }
 
-  if (onlineTable) {
-    function loadOnlineTable() {
-      var since = new Date(Date.now() - 2 * 60000).toISOString();
-      window.supa.from('profiles').select('id, nickname, verified, is_admin, is_moderator, current_path')
-        .gte('last_seen_at', since)
-        .eq('hide_online', false)
-        .then(function (res) {
-          if (res.error || !res.data) { onlineCountLine.textContent = 'Не удалось загрузить.'; return; }
-          var rows = res.data;
-          onlineCountLine.innerHTML = '<span class="red">' + rows.length + '</span> ' +
-            (rows.length === 1 ? 'вошедший на сайте' : 'вошедших на сайте') + ' — за последние 2 минуты';
-          var bySection = {};
-          rows.forEach(function (r) {
-            var label = sectionLabel(r.current_path);
-            if (!bySection[label]) bySection[label] = [];
-            var color = r.is_admin ? '#b23e00' : (r.is_moderator ? '#c07a00' : (r.verified ? 'green' : '#333'));
-            var roleTag = r.is_admin ? ' (админ)' : (r.is_moderator ? ' (модератор)' : '');
-            bySection[label].push('<a class="nick" href="profile.html?id=' + r.id + '" style="color:' + color + '">' +
-              escapeHtml(r.nickname) + '</a>' + roleTag);
-          });
-          onlineTable.querySelectorAll('td[data-section]').forEach(function (td) {
-            var list = bySection[td.getAttribute('data-section')];
-            td.innerHTML = list && list.length ? list.join(', ') : '—';
-          });
+  function loadOnlineTable() {
+    if (!onlineTable) return;
+    var since = new Date(Date.now() - 2 * 60000).toISOString();
+    window.supa.from('profiles').select('id, nickname, verified, is_admin, is_moderator, current_path')
+      .gte('last_seen_at', since)
+      .eq('hide_online', false)
+      .then(function (res) {
+        if (res.error || !res.data) { onlineCountLine.textContent = 'Не удалось загрузить.'; return; }
+        var rows = res.data;
+        onlineCountLine.innerHTML = '<span class="red">' + rows.length + '</span> ' +
+          (rows.length === 1 ? 'вошедший на сайте' : 'вошедших на сайте') + ' — за последние 2 минуты';
+        var bySection = {};
+        rows.forEach(function (r) {
+          var label = sectionLabel(r.current_path);
+          if (!bySection[label]) bySection[label] = [];
+          var color = r.is_admin ? '#b23e00' : (r.is_moderator ? '#c07a00' : (r.verified ? 'green' : '#333'));
+          var roleTag = r.is_admin ? ' (админ)' : (r.is_moderator ? ' (модератор)' : '');
+          bySection[label].push('<a class="nick" href="profile.html?id=' + r.id + '" style="color:' + color + '">' +
+            escapeHtml(r.nickname) + '</a>' + roleTag);
         });
-    }
-    loadOnlineTable();
-    setInterval(loadOnlineTable, 30000);
+        onlineTable.querySelectorAll('td[data-section]').forEach(function (td) {
+          var list = bySection[td.getAttribute('data-section')];
+          td.innerHTML = list && list.length ? list.join(', ') : '—';
+        });
+      });
   }
+  loadOnlineTable();
 
   // ---------- "Свежие темы форума" — реально недавно активные темы (не только созданные,
   // но и те, в которые недавно ответили), а не нарисованные строки ----------
@@ -149,4 +151,14 @@
       });
     });
   }
+
+  // Счётчики и "кто сейчас на сайте" — раз в 10 секунд (было раз в 30),
+  // чтобы главная ощущалась живой. "Свежие темы форума" сюда сознательно
+  // не включены — там запрос тянет ВСЕ ответы форума целиком (нужно для
+  // честного счётчика), гонять его каждые 10 секунд накладно; хватает
+  // одной загрузки при заходе на страницу.
+  setInterval(function () {
+    loadSidebarStats();
+    loadOnlineTable();
+  }, 10000);
 })();
