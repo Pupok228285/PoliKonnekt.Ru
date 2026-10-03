@@ -72,29 +72,33 @@
   }
 
   if (onlineTable) {
-    var since = new Date(Date.now() - 2 * 60000).toISOString();
-    window.supa.from('profiles').select('id, nickname, verified, is_admin, is_moderator, current_path')
-      .gte('last_seen_at', since)
-      .eq('hide_online', false)
-      .then(function (res) {
-        if (res.error || !res.data) { onlineCountLine.textContent = 'Не удалось загрузить.'; return; }
-        var rows = res.data;
-        onlineCountLine.innerHTML = '<span class="red">' + rows.length + '</span> ' +
-          (rows.length === 1 ? 'вошедший на сайте' : 'вошедших на сайте') + ' — за последние 2 минуты';
-        var bySection = {};
-        rows.forEach(function (r) {
-          var label = sectionLabel(r.current_path);
-          if (!bySection[label]) bySection[label] = [];
-          var color = r.is_admin ? '#b23e00' : (r.is_moderator ? '#c07a00' : (r.verified ? 'green' : '#333'));
-          var roleTag = r.is_admin ? ' (админ)' : (r.is_moderator ? ' (модератор)' : '');
-          bySection[label].push('<a class="nick" href="profile.html?id=' + r.id + '" style="color:' + color + '">' +
-            escapeHtml(r.nickname) + '</a>' + roleTag);
+    function loadOnlineTable() {
+      var since = new Date(Date.now() - 2 * 60000).toISOString();
+      window.supa.from('profiles').select('id, nickname, verified, is_admin, is_moderator, current_path')
+        .gte('last_seen_at', since)
+        .eq('hide_online', false)
+        .then(function (res) {
+          if (res.error || !res.data) { onlineCountLine.textContent = 'Не удалось загрузить.'; return; }
+          var rows = res.data;
+          onlineCountLine.innerHTML = '<span class="red">' + rows.length + '</span> ' +
+            (rows.length === 1 ? 'вошедший на сайте' : 'вошедших на сайте') + ' — за последние 2 минуты';
+          var bySection = {};
+          rows.forEach(function (r) {
+            var label = sectionLabel(r.current_path);
+            if (!bySection[label]) bySection[label] = [];
+            var color = r.is_admin ? '#b23e00' : (r.is_moderator ? '#c07a00' : (r.verified ? 'green' : '#333'));
+            var roleTag = r.is_admin ? ' (админ)' : (r.is_moderator ? ' (модератор)' : '');
+            bySection[label].push('<a class="nick" href="profile.html?id=' + r.id + '" style="color:' + color + '">' +
+              escapeHtml(r.nickname) + '</a>' + roleTag);
+          });
+          onlineTable.querySelectorAll('td[data-section]').forEach(function (td) {
+            var list = bySection[td.getAttribute('data-section')];
+            td.innerHTML = list && list.length ? list.join(', ') : '—';
+          });
         });
-        onlineTable.querySelectorAll('td[data-section]').forEach(function (td) {
-          var list = bySection[td.getAttribute('data-section')];
-          td.innerHTML = list && list.length ? list.join(', ') : '—';
-        });
-      });
+    }
+    loadOnlineTable();
+    setInterval(loadOnlineTable, 30000);
   }
 
   // ---------- "Свежие темы форума" — реально недавно активные темы (не только созданные,

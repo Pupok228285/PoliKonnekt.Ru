@@ -114,6 +114,7 @@
         onlineList.textContent = res.data.map(function (r) { return r.nickname; }).join(', ') || '—';
       });
   }
+  setInterval(loadOnline, 30000);
 
   // ---------- очередь зачёток ----------
   function loadQueue() {
