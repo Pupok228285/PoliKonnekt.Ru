@@ -685,11 +685,14 @@ p { margin: 0 0 8px; }
 .roster { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px 2px; }
 .roster .m { width: 84px; text-align: center; font: 10px/1.4 var(--font); }
 .roster .m .av {
+  display: block;
   width: 48px; height: 48px;
   margin: 0 auto 3px;
   border: 1px solid #93a8c6;
   background: linear-gradient(#f4f8fc, #d3e0f0);
+  background-size: cover; background-position: center;
   font: bold 19px/46px var(--font-head);
+  text-align: center;
   color: #5a7fae;
   position: relative;
 }
