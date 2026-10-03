@@ -523,7 +523,20 @@
         if (pPhotoAddRow) pPhotoAddRow.style.display = 'none';
         if (pAboutEdit) pAboutEdit.hidden = true;
         if (pAboutView) { pAboutView.hidden = false; pAboutView.innerHTML = renderAboutView(p); }
-        if (!viewBumped) { viewBumped = true; window.supa.rpc('bump_profile_views', { target_id: userId }).then(function () {}); }
+        if (!viewBumped) {
+          viewBumped = true;
+          // sessionStorage, а не просто viewBumped — иначе F5 на той же
+          // странице каждый раз накручивал счётчик заново (viewBumped
+          // сбрасывается при любой перезагрузке, это обычная JS-переменная).
+          var viewKey = 'pk_viewed_' + userId;
+          var alreadyThisVisit = false;
+          try { alreadyThisVisit = sessionStorage.getItem(viewKey) === '1'; } catch (e) {}
+          if (!alreadyThisVisit) {
+            window.supa.rpc('bump_profile_views', { target_id: userId }).then(function (r) {
+              if (!r.error) { try { sessionStorage.setItem(viewKey, '1'); } catch (e) {} }
+            });
+          }
+        }
       }
       loadPhotos();
       loadRecent(userId);
