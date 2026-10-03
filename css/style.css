@@ -999,6 +999,23 @@ html, body { overflow-x: hidden; }
   font: bold 9px/16px var(--font); text-align: center; color: #5a6b82;
 }
 .chatbox .log a { color: inherit; text-decoration: underline; }
+.msg-mail { width: 14px; height: 14px; vertical-align: -2px; margin-left: 4px; }
+
+/* "прочитано" в группах — аватарки прочитавших под последним сообщением */
+.read-by { position: relative; display: flex; align-items: center; gap: 4px; margin: 4px 0 0 2px; }
+.read-by .msg-av { width: 14px; height: 14px; margin-right: -6px; border: 1px solid #fff; }
+.read-by .msg-av:last-of-type { margin-right: 0; }
+.read-by-label { font-size: 9px; color: #8a9bb0; margin-left: 4px; }
+.read-by-more {
+  font-size: 9px; color: #345f96; text-decoration: underline; cursor: pointer;
+  margin-left: 2px; background: none; border: 0; padding: 0; font-family: inherit;
+}
+.read-by-list {
+  position: absolute; z-index: 60; background: #fff; border: 1px solid #9fb9d7; border-radius: 3px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .18); padding: 6px 8px; font: 11px/1.8 var(--font);
+  min-width: 140px;
+}
+.read-by-list div { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 
 .emoji-pop {
   position: absolute; bottom: 34px; left: 6px; z-index: 50;

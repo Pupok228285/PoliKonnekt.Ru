@@ -296,7 +296,7 @@
   }
 
   function openConversation(convId, other) {
-    current = { kind: 'dm', id: convId, otherId: other.id, otherNick: other.nickname || '?', otherVerified: other.verified, otherAvatar: other.avatar_url };
+    current = { kind: 'dm', id: convId, otherId: other.id, otherNick: other.nickname || '?', otherVerified: other.verified, otherAvatar: other.avatar_url, otherLastReadAt: null };
     showDialogPane();
     markActiveRow();
     dlgNick.textContent = current.otherNick;
@@ -307,7 +307,14 @@
     if (groupMembersLink) groupMembersLink.hidden = true;
     if (groupPanel) groupPanel.hidden = true;
     refreshBlockState();
-    loadMessages();
+    // Конверт у своих сообщений зависит от того, когда собеседник последний
+    // раз открывал этот диалог — сначала узнаём это, потом рисуем историю.
+    window.supa.from('dm_read_state').select('last_read_at').eq('conversation_id', convId).eq('profile_id', other.id).maybeSingle().then(function (r) {
+      if (!current || current.kind !== 'dm' || current.id !== convId) return;
+      current.otherLastReadAt = r.data ? r.data.last_read_at : null;
+      loadMessages();
+    });
+    window.supa.rpc('mark_dm_read', { p_conversation_id: convId }).then(function () {});
     renderMuteLink(false);
     window.supa.from('dm_mutes').select('conversation_id').eq('conversation_id', convId).eq('profile_id', myId).maybeSingle().then(function (r) {
       if (current && current.kind === 'dm' && current.id === convId) renderMuteLink(!!r.data);
@@ -653,6 +660,52 @@
             }
             if (window.PKRefreshPmBadge) window.PKRefreshPmBadge();
           });
+          if (res.data.length) renderReadBy(cur, res.data[res.data.length - 1].created_at);
+        }
+      });
+  }
+
+  // Аватарки тех, кто дочитал группу хотя бы до последнего сообщения — под
+  // самим последним сообщением, как общий статус чата, а не у каждой
+  // реплики по отдельности.
+  function renderReadBy(cur, lastAt) {
+    window.supa.from('chat_group_members')
+      .select('profile_id, last_read_at, profiles(nickname, avatar_url)')
+      .eq('group_id', cur.id)
+      .then(function (res) {
+        if (current !== cur || res.error) return;
+        var readers = (res.data || []).filter(function (m) {
+          return m.profile_id !== myId && m.last_read_at && new Date(m.last_read_at) >= new Date(lastAt);
+        });
+        if (!readers.length) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'read-by';
+        var shown = readers.slice(0, 4);
+        wrap.innerHTML = shown.map(function (m) {
+          var p = m.profiles || {};
+          var av = p.avatar_url ? ' style="background-image:url(' + escapeHtml(p.avatar_url) + ')"' : '';
+          return '<span class="msg-av"' + av + ' title="' + escapeHtml(p.nickname || '?') + '">' +
+            (p.avatar_url ? '' : escapeHtml((p.nickname || '?').charAt(0).toUpperCase())) + '</span>';
+        }).join('') +
+        (readers.length > shown.length ? '<button type="button" class="read-by-more">+' + (readers.length - shown.length) + '</button>' : '') +
+        '<span class="read-by-label">' + (readers.length === 1 ? 'прочитал(а)' : 'прочитали') + '</span>';
+        chatLog.appendChild(wrap);
+        chatLog.scrollTop = chatLog.scrollHeight;
+
+        var moreBtn = wrap.querySelector('.read-by-more');
+        if (moreBtn) {
+          moreBtn.addEventListener('click', function () {
+            var existing = wrap.querySelector('.read-by-list');
+            if (existing) { existing.remove(); return; }
+            var list = document.createElement('div');
+            list.className = 'read-by-list';
+            list.innerHTML = readers.map(function (m) {
+              var p = m.profiles || {};
+              var av = p.avatar_url ? ' style="background-image:url(' + escapeHtml(p.avatar_url) + ')"' : '';
+              return '<div><span class="msg-av"' + av + '>' + (p.avatar_url ? '' : escapeHtml((p.nickname || '?').charAt(0).toUpperCase())) + '</span>' + escapeHtml(p.nickname || '?') + '</div>';
+            }).join('');
+            wrap.appendChild(list);
+          });
         }
       });
   }
@@ -673,7 +726,12 @@
     var avHtml = '<span class="msg-av"' + (whoAvatar ? ' style="background-image:url(' + escapeHtml(whoAvatar) + ')"' : '') + '>' +
       (whoAvatar ? '' : escapeHtml((who || '?').charAt(0).toUpperCase())) + '</span>';
     var nameHtml = whoId ? '<a href="profile.html?id=' + whoId + '">' + escapeHtml(who) + '</a>' : escapeHtml(who);
-    p.innerHTML = avHtml + '<b' + (!mine && current.kind === 'group' ? ' class="who"' : '') + '>' + nameHtml + ':</b>' + (row.body ? ' ' + escapeHtml(row.body) : '');
+    var mailHtml = '';
+    if (mine && current.kind === 'dm') {
+      var read = current.otherLastReadAt && new Date(row.created_at) <= new Date(current.otherLastReadAt);
+      mailHtml = '<img class="msg-mail" src="img/icons/i-mail-' + (read ? 'open' : 'sent') + '.svg" alt="" title="' + (read ? 'Прочитано' : 'Отправлено') + '">';
+    }
+    p.innerHTML = avHtml + '<b' + (!mine && current.kind === 'group' ? ' class="who"' : '') + '>' + nameHtml + ':</b>' + (row.body ? ' ' + escapeHtml(row.body) : '') + mailHtml;
     chatLog.appendChild(p);
     if (row.photo_path) {
       var img = document.createElement('img');
