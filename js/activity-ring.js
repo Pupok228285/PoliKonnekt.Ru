@@ -26,6 +26,8 @@
   var nextBtn = document.getElementById('wbNext');
   var yearPrevBtn = document.getElementById('wbYearPrev');
   var yearNextBtn = document.getElementById('wbYearNext');
+  var scaleEl = document.getElementById('wbScale');
+  var scale = 'days'; // 'days' | 'months' | 'hours'
   var MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
   var MONTHS_FULL = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
@@ -41,6 +43,10 @@
 
   var monthCounts = [];
   var monthMax = 0;
+  var yearCounts = []; // по месяцам текущего года (для масштаба "Месяцы")
+  var yearMax = 0;
+  var hourCounts = []; // по часам выбранного дня (для масштаба "Часы")
+  var hourMax = 0;
 
   function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
   function sameDate(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
@@ -83,16 +89,13 @@
     { table: 'listings', field: 'title', label: 'новое объявление', href: 'index.html#uslugi' }
   ];
 
-  // Настоящие записи за конкретный день по ВСЕМ разделам сайта сразу.
-  function loadRealDayInfo(d) {
+  // Настоящие записи за конкретный промежуток времени по ВСЕМ разделам
+  // сайта сразу — общий код для попапа дня и попапа часа.
+  function loadRealRangeInfo(start, end) {
     if (!window.supa) return Promise.resolve(null);
-    var start = d.toISOString();
-    var next = new Date(d);
-    next.setDate(d.getDate() + 1);
-    var end = next.toISOString();
     return Promise.all(DAY_SOURCES.map(function (src) {
       return window.supa.from(src.table).select('id, ' + src.field + ', created_at')
-        .gte('created_at', start).lt('created_at', end)
+        .gte('created_at', start.toISOString()).lt('created_at', end.toISOString())
         .order('created_at', { ascending: false }).limit(3)
         .then(function (res) {
           return (res.data || []).map(function (row) {
@@ -104,6 +107,18 @@
       var all = [].concat.apply([], lists);
       return all.length ? all : null;
     });
+  }
+  function loadRealDayInfo(d) {
+    var next = new Date(d);
+    next.setDate(d.getDate() + 1);
+    return loadRealRangeInfo(d, next);
+  }
+  function loadRealHourInfo(d, hour) {
+    var start = new Date(d);
+    start.setHours(hour, 0, 0, 0);
+    var end = new Date(start);
+    end.setHours(end.getHours() + 1);
+    return loadRealRangeInfo(start, end);
   }
 
   // Настоящая плотность по ОДНОМУ показанному месяцу — не по всей истории
@@ -138,7 +153,104 @@
     });
   }
 
+  // Плотность по МЕСЯЦАМ текущего года — узнать, какой месяц был самым
+  // активным (масштаб "Месяцы").
+  function loadYearData(cb) {
+    if (!window.supa) { yearCounts = new Array(12).fill(0); yearMax = 0; if (cb) cb(); return; }
+    var yStart = new Date(viewYear, 0, 1);
+    var yEnd = new Date(viewYear + 1, 0, 1);
+    Promise.all(DAY_SOURCES.map(function (src) {
+      return window.supa.from(src.table).select('created_at')
+        .gte('created_at', yStart.toISOString()).lt('created_at', yEnd.toISOString())
+        .then(function (res) { return res.data || []; })
+        .catch(function () { return []; });
+    })).then(function (lists) {
+      var counts = new Array(12).fill(0);
+      lists.forEach(function (rows) {
+        rows.forEach(function (row) { counts[new Date(row.created_at).getMonth()]++; });
+      });
+      yearCounts = counts;
+      yearMax = Math.max.apply(null, counts);
+      if (cb) cb();
+    });
+  }
+
+  // Плотность по ЧАСАМ одного выбранного дня — в какое время было больше
+  // всего активности (масштаб "Часы").
+  function loadHourData(d, cb) {
+    if (!window.supa) { hourCounts = new Array(24).fill(0); hourMax = 0; if (cb) cb(); return; }
+    var dStart = new Date(d); dStart.setHours(0, 0, 0, 0);
+    var dEnd = new Date(dStart); dEnd.setDate(dEnd.getDate() + 1);
+    Promise.all(DAY_SOURCES.map(function (src) {
+      return window.supa.from(src.table).select('created_at')
+        .gte('created_at', dStart.toISOString()).lt('created_at', dEnd.toISOString())
+        .then(function (res) { return res.data || []; })
+        .catch(function () { return []; });
+    })).then(function (lists) {
+      var counts = new Array(24).fill(0);
+      lists.forEach(function (rows) {
+        rows.forEach(function (row) { counts[new Date(row.created_at).getHours()]++; });
+      });
+      hourCounts = counts;
+      hourMax = Math.max.apply(null, counts);
+      if (cb) cb();
+    });
+  }
+
+  // Подгрузить данные под текущий масштаб (вызывается при смене масштаба
+  // и при навигации, если сменился охватываемый период).
+  function reloadForScale(cb) {
+    if (scale === 'months') loadYearData(cb);
+    else if (scale === 'hours') loadHourData(selDate, cb);
+    else loadMonthData(cb);
+  }
+
   function renderBars() {
+    if (scale === 'months') { renderMonthBars(); return; }
+    if (scale === 'hours') { renderHourBars(); return; }
+    renderDayBars();
+  }
+
+  function renderMonthBars() {
+    barsEl.innerHTML = '';
+    var by = siteBirth.getFullYear(), bm = siteBirth.getMonth();
+    var ty = today.getFullYear(), tm = today.getMonth();
+    for (var m = 0; m < 12; m++) {
+      var outside = viewYear < by || viewYear > ty || (viewYear === ty && m > tm) || (viewYear === by && m < bm);
+      var count = yearCounts[m] || 0;
+      var slot = document.createElement('div');
+      slot.className = 'wb-slot' + (outside ? ' outside' : (count ? '' : ' empty')) +
+        (!outside && viewYear === selDate.getFullYear() && m === selDate.getMonth() ? ' selected' : '');
+      slot.title = MONTHS_FULL[m] + ' ' + viewYear + (outside ? '' : (count ? ' — ' + count + (count === 1 ? ' запись' : ' записей') : ' — тихо'));
+      if (!outside) slot.setAttribute('data-month-bar', String(m));
+      var bar = document.createElement('div');
+      bar.className = 'wb-bar';
+      var norm = yearMax > 0 ? count / yearMax : 0;
+      bar.style.height = (!outside && count ? BAR_MIN + norm * (BAR_MAX - BAR_MIN) : 2) + 'px';
+      slot.appendChild(bar);
+      barsEl.appendChild(slot);
+    }
+  }
+
+  function renderHourBars() {
+    barsEl.innerHTML = '';
+    for (var h = 0; h < 24; h++) {
+      var count = hourCounts[h] || 0;
+      var hh = (h < 10 ? '0' : '') + h;
+      var slot = document.createElement('div');
+      slot.className = 'wb-slot' + (count ? '' : ' empty');
+      slot.title = hh + ':00–' + hh + ':59' + (count ? ' — ' + count + (count === 1 ? ' запись' : ' записей') : ' — тихо');
+      slot.setAttribute('data-hour-bar', String(h));
+      var bar = document.createElement('div');
+      bar.className = 'wb-bar';
+      var norm = hourMax > 0 ? count / hourMax : 0;
+      bar.style.height = (count ? BAR_MIN + norm * (BAR_MAX - BAR_MIN) : 2) + 'px';
+      slot.appendChild(bar);
+      barsEl.appendChild(slot);
+    }
+  }
+
+  function renderDayBars() {
     barsEl.innerHTML = '';
     var nDays = daysInMonth(viewYear, viewMonth);
     for (var day = 1; day <= nDays; day++) {
@@ -251,6 +363,36 @@
     });
   }
 
+  // Попап по конкретному часу выбранного дня (масштаб "Часы").
+  function renderHourPopContent(hour, info) {
+    var hh = (hour < 10 ? '0' : '') + hour;
+    var head = (sameDate(selDate, today) ? 'Сегодня' : fmtDateObj(selDate)) + ', ' + hh + ':00–' + hh + ':59';
+    if (info && info.length) {
+      var html = '<b>' + head + '</b>';
+      html += info.slice(0, 14).map(function (r) {
+        return '<a class="day-item" href="' + escapeHtml(r.href) + '">«' + escapeHtml(trim60(r.text)) +
+          '»<span class="cat">' + escapeHtml(r.label) + '</span></a>';
+      }).join('');
+      if (info.length > 14) html += '<span style="opacity:.6">…и ещё ' + (info.length - 14) + '</span>';
+      return html + CLOSE_BTN;
+    }
+    return '<b>' + head + '</b><span style="opacity:.65">В этот час на сайте не было активности.</span>' + CLOSE_BTN;
+  }
+
+  function openHourPopup(hour) {
+    popRequestId++;
+    var myRequest = popRequestId;
+    if (popTimer) { clearTimeout(popTimer); popTimer = null; }
+    var hh = (hour < 10 ? '0' : '') + hour;
+    popEl.innerHTML = '<b>' + hh + ':00–' + hh + ':59</b>Загрузка...';
+    popEl.hidden = false;
+    loadRealHourInfo(selDate, hour).then(function (info) {
+      if (myRequest !== popRequestId) return;
+      popEl.innerHTML = renderHourPopContent(hour, info);
+      popTimer = setTimeout(hidePop, POP_LIFETIME);
+    });
+  }
+
   function afterSelect(showPop) {
     renderBars();
     renderMonths();
@@ -258,15 +400,21 @@
     if (showPop) openPopupFor(selDate); else hidePop();
   }
 
-  // Выбрать день — если он в другом месяце, сначала подгружаем этот месяц.
+  // Выбрать день — если под текущий масштаб сменился охватываемый период
+  // (месяц для "Дней", год для "Месяцев", сам день для "Часов"), сначала
+  // подгружаем его данные.
   function selectDate(d, showPop) {
     d = clampDate(d);
-    var reload = d.getFullYear() !== viewYear || d.getMonth() !== viewMonth;
+    var prevYear = viewYear, prevMonth = viewMonth;
+    var dayChanged = !sameDate(d, selDate);
     selDate = d;
+    viewYear = d.getFullYear();
+    viewMonth = d.getMonth();
+    var reload = scale === 'months' ? (viewYear !== prevYear)
+      : scale === 'hours' ? dayChanged
+      : (viewYear !== prevYear || viewMonth !== prevMonth);
     if (reload) {
-      viewYear = d.getFullYear();
-      viewMonth = d.getMonth();
-      loadMonthData(function () { afterSelect(showPop); });
+      reloadForScale(function () { afterSelect(showPop); });
     } else {
       afterSelect(showPop);
     }
@@ -280,11 +428,46 @@
     selectDate(new Date(c.y, c.m, day), false);
   }
 
+  function updateScaleButtons() {
+    if (!scaleEl) return;
+    var links = scaleEl.querySelectorAll('a');
+    for (var i = 0; i < links.length; i++) {
+      links[i].classList.toggle('on', links[i].getAttribute('data-scale') === scale);
+    }
+  }
+
+  function setScale(s) {
+    if (scale === s) return;
+    scale = s;
+    updateScaleButtons();
+    hidePop();
+    reloadForScale(function () { renderBars(); });
+  }
+
   barsEl.addEventListener('click', function (e) {
-    var el = e.target.closest('[data-day]');
-    if (!el) return;
-    selectDate(new Date(viewYear, viewMonth, parseInt(el.getAttribute('data-day'), 10)), true);
+    var dEl = e.target.closest('[data-day]');
+    if (dEl) { selectDate(new Date(viewYear, viewMonth, parseInt(dEl.getAttribute('data-day'), 10)), true); return; }
+    var mEl = e.target.closest('[data-month-bar]');
+    if (mEl) {
+      // Клик по месяцу — проваливаемся в него по дням, чтобы посмотреть детали.
+      scale = 'days';
+      updateScaleButtons();
+      hidePop();
+      navigateToMonth(viewYear, parseInt(mEl.getAttribute('data-month-bar'), 10));
+      return;
+    }
+    var hEl = e.target.closest('[data-hour-bar]');
+    if (hEl) { openHourPopup(parseInt(hEl.getAttribute('data-hour-bar'), 10)); return; }
   });
+
+  if (scaleEl) {
+    scaleEl.addEventListener('click', function (e) {
+      var a = e.target.closest('a[data-scale]');
+      if (!a) return;
+      e.preventDefault();
+      setScale(a.getAttribute('data-scale'));
+    });
+  }
 
   if (monthsEl) {
     monthsEl.addEventListener('click', function (e) {

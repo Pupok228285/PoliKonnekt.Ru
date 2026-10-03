@@ -753,6 +753,19 @@ html, body { overflow-x: hidden; }
 .wb-months a.on { background: #ffe680; color: #6b5700; }
 .wb-months a.disabled { color: #b7c3d4; pointer-events: none; }
 
+.wb-scale { display: flex; gap: 2px; margin-left: auto; flex: none; padding-left: 8px; }
+.wb-scale a {
+  color: #345f96;
+  font-weight: bold;
+  font-size: 10px;
+  text-decoration: none;
+  padding: 2px 6px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.wb-scale a:hover { text-decoration: underline; }
+.wb-scale a.on { background: #ffe680; color: #6b5700; }
+
 /* Столбик есть у КАЖДОГО дня текущего месяца и не исчезает: у пустого дня
    минимальная высота 2px, у активного пропорционально выше. Дни вне
    реального возраста сайта (до его "рождения") или в будущем — не

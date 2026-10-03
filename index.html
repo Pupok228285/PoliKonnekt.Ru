@@ -6,7 +6,7 @@
 <title>ПолиКоннект.ru — сайт студентов</title>
 <meta name="description" content="Услуги, вещи, лента и форум студентов и выпускников. Помощь с учёбой и бытом, обмен и подарки.">
 <link rel="icon" type="image/svg+xml" href="img/logo-mark.svg?v=2">
-<link rel="stylesheet" href="css/style.css?v=53">
+<link rel="stylesheet" href="css/style.css?v=54">
 </head>
 <body>
 <div id="wrap">
@@ -22,6 +22,11 @@
   <div class="wb-widget" id="ringWidget" role="group" aria-label="Активность сайта по дням — гистограмма в духе Wayback Machine, листайте месяцы/годы или кликните по столбику" tabindex="0">
     <div class="wb-top">
       <div class="wb-months" id="wbMonths"></div>
+      <div class="wb-scale" id="wbScale">
+        <a href="#" data-scale="days" class="on">Дни</a>
+        <a href="#" data-scale="months">Месяцы</a>
+        <a href="#" data-scale="hours">Часы</a>
+      </div>
     </div>
     <div class="wb-bars" id="ringTicks"></div>
     <div class="wb-bottom">
@@ -323,7 +328,7 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=1"></script>
 <script src="js/activity-ticker.js?v=2"></script>
-<script src="js/activity-ring.js?v=15"></script>
+<script src="js/activity-ring.js?v=16"></script>
 <script src="js/auth-ui.js?v=6"></script>
 <script src="js/presence.js?v=3"></script>
 <script src="js/notify-sound.js?v=3"></script>
