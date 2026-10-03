@@ -165,6 +165,37 @@
     return row.querySelector('[data-status]');
   }
 
+  // Рисует реальную переписку как чат (пузыри слева/справа, фото по
+  // подписанной ссылке) — тем же стилем .chatbox/.log/.me/.them, что и у
+  // живого диалога в messages.html, чтобы админ видел ровно то же самое,
+  // что видит сам участник.
+  function renderMessageList(logEl, msgs, isRight, bucket) {
+    logEl.innerHTML = '';
+    if (!msgs.length) { logEl.innerHTML = '<p class="hint" style="margin:4px 0">Сообщений нет.</p>'; return; }
+    msgs.forEach(function (m2) {
+      var p = document.createElement('p');
+      p.className = isRight(m2.sender_id) ? 'me' : 'them';
+      p.innerHTML = '<b' + (!isRight(m2.sender_id) ? ' class="who"' : '') + '>' + escapeHtml(m2.who) + ':</b>' +
+        (m2.body ? ' ' + escapeHtml(m2.body) : '') +
+        '<br><span class="hint" style="margin:0;font-size:9px">' + fmtDateTime(m2.created_at) + '</span>';
+      logEl.appendChild(p);
+      if (m2.photo_path) {
+        var img = document.createElement('img');
+        img.className = 'msg-photo';
+        img.alt = 'фото';
+        img.title = 'Открыть в полный размер';
+        p.insertBefore(img, p.lastChild);
+        window.supa.storage.from(bucket).createSignedUrl(m2.photo_path, 600).then(function (signed) {
+          if (signed.data && signed.data.signedUrl) {
+            img.src = signed.data.signedUrl;
+            img.addEventListener('click', function () { window.open(signed.data.signedUrl, '_blank'); });
+          }
+        });
+      }
+    });
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
   // Переписка/группа — двухуровневое раскрытие: сама запись в списке тоже
   // кликабельна и подгружает настоящие сообщения только при первом клике.
   function renderConversationsHist(container, rows, userId) {
@@ -179,8 +210,9 @@
         (row.status === 'pending' ? 'заявка, ' : '') + fmtDateTime(row.last_message_at) + '</span>';
       var body = document.createElement('div');
       body.hidden = true;
-      body.style.cssText = 'margin:4px 0 6px 10px;padding:4px 8px;background:#fff;border:1px solid #e3e9f0;max-height:260px;overflow:auto';
-      body.innerHTML = '<span class="hint">Загрузка...</span>';
+      body.className = 'chatbox';
+      body.style.cssText = 'margin:4px 0 6px 10px';
+      body.innerHTML = '<div class="log" style="max-height:300px;overflow:auto"><p class="hint" style="margin:4px 0">Загрузка...</p></div>';
       line.appendChild(head);
       line.appendChild(body);
       container.appendChild(line);
@@ -191,19 +223,17 @@
         body.hidden = !body.hidden;
         if (body.hidden || loaded) return;
         loaded = true;
+        var logEl = body.querySelector('.log');
         window.supa.from('messages')
           .select('id, sender_id, body, photo_path, created_at')
           .eq('conversation_id', row.id).order('created_at', { ascending: true }).limit(300)
           .then(function (res) {
-            if (res.error) { body.innerHTML = '<span class="hint">не удалось: ' + escapeHtml(res.error.message) + '</span>'; return; }
-            var msgs = res.data || [];
-            if (!msgs.length) { body.innerHTML = '<span class="hint">Сообщений нет.</span>'; return; }
-            body.innerHTML = msgs.map(function (m2) {
-              var who = String(m2.sender_id) === String(userId) ? targetNick : (other.nickname || '?');
-              return '<p style="margin:2px 0"><b>' + escapeHtml(who) + ':</b> ' + (m2.body ? escapeHtml(m2.body) : '') +
-                (m2.photo_path ? ' <span class="hint">[фото]</span>' : '') +
-                ' <span class="hint" style="margin:0">' + fmtDateTime(m2.created_at) + '</span></p>';
-            }).join('');
+            if (res.error) { logEl.innerHTML = '<p class="hint">не удалось: ' + escapeHtml(res.error.message) + '</p>'; return; }
+            var msgs = (res.data || []).map(function (m2) {
+              return { sender_id: m2.sender_id, body: m2.body, photo_path: m2.photo_path, created_at: m2.created_at,
+                who: String(m2.sender_id) === String(userId) ? targetNick : (other.nickname || '?') };
+            });
+            renderMessageList(logEl, msgs, function (sid) { return String(sid) === String(userId); }, 'pm-photos');
           });
       });
     });
@@ -220,8 +250,9 @@
       head.innerHTML = '<b>' + escapeHtml(g.title || '?') + '</b> <span class="hint" style="margin:0">— ' + fmtDateTime(g.last_message_at) + '</span>';
       var body = document.createElement('div');
       body.hidden = true;
-      body.style.cssText = 'margin:4px 0 6px 10px;padding:4px 8px;background:#fff;border:1px solid #e3e9f0;max-height:260px;overflow:auto';
-      body.innerHTML = '<span class="hint">Загрузка...</span>';
+      body.className = 'chatbox';
+      body.style.cssText = 'margin:4px 0 6px 10px';
+      body.innerHTML = '<div class="log" style="max-height:300px;overflow:auto"><p class="hint" style="margin:4px 0">Загрузка...</p></div>';
       line.appendChild(head);
       line.appendChild(body);
       container.appendChild(line);
@@ -232,19 +263,17 @@
         body.hidden = !body.hidden;
         if (body.hidden || loaded || !g.id) return;
         loaded = true;
+        var logEl = body.querySelector('.log');
         window.supa.from('chat_group_messages')
           .select('id, sender_id, body, photo_path, created_at, profiles!sender_id(nickname)')
           .eq('group_id', g.id).order('created_at', { ascending: true }).limit(300)
           .then(function (res) {
-            if (res.error) { body.innerHTML = '<span class="hint">не удалось: ' + escapeHtml(res.error.message) + '</span>'; return; }
-            var msgs = res.data || [];
-            if (!msgs.length) { body.innerHTML = '<span class="hint">Сообщений нет.</span>'; return; }
-            body.innerHTML = msgs.map(function (m2) {
-              var who = (m2.profiles && m2.profiles.nickname) || '?';
-              return '<p style="margin:2px 0"><b>' + escapeHtml(who) + ':</b> ' + (m2.body ? escapeHtml(m2.body) : '') +
-                (m2.photo_path ? ' <span class="hint">[фото]</span>' : '') +
-                ' <span class="hint" style="margin:0">' + fmtDateTime(m2.created_at) + '</span></p>';
-            }).join('');
+            if (res.error) { logEl.innerHTML = '<p class="hint">не удалось: ' + escapeHtml(res.error.message) + '</p>'; return; }
+            var msgs = (res.data || []).map(function (m2) {
+              return { sender_id: m2.sender_id, body: m2.body, photo_path: m2.photo_path, created_at: m2.created_at,
+                who: (m2.profiles && m2.profiles.nickname) || '?' };
+            });
+            renderMessageList(logEl, msgs, function (sid) { return String(sid) === String(userId); }, 'group-photos');
           });
       });
     });
