@@ -11,6 +11,8 @@
   var composer = document.getElementById('feedComposer');
   var textEl = document.getElementById('feedText');
   var feedStatusEl = document.getElementById('feedStatus');
+  var isStaff = false;
+  var currentUserId = null;
 
   function escapeHtml(s) {
     var d = document.createElement('div');
@@ -48,7 +50,19 @@
         '</span>' +
         '<a href="#" class="comment-toggle" data-ctype="feed_post" data-cid="' + row.id + '">Комментарии (' + (row.comment_count || 0) + ')</a>' +
         '<a href="#" class="fav-toggle" data-ftype="feed_post" data-fid="' + row.id + '">В избранное</a><a href="#">Пожаловаться</a>' +
+        ((isStaff || (currentUserId && currentUserId === prof.id)) ? '<a href="#" class="feed-del" data-id="' + row.id + '" style="color:#b23e00">Удалить</a>' : '') +
       '</div>';
+    var delBtn = div.querySelector('.feed-del');
+    if (delBtn) {
+      delBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (!confirm('Удалить этот пост из Ленты?')) return;
+        window.supa.from('feed_posts').delete().eq('id', row.id).then(function (res) {
+          if (res.error) { alert(res.error.message); return; }
+          div.remove();
+        });
+      });
+    }
     return div;
   }
 
@@ -73,7 +87,15 @@
       });
   }
 
-  loadFeed();
+  window.supa.auth.getSession().then(function (res) {
+    var session = res.data && res.data.session;
+    if (!session) { loadFeed(); return; }
+    currentUserId = session.user.id;
+    window.supa.from('profiles').select('is_admin, is_moderator').eq('id', session.user.id).single().then(function (pr) {
+      isStaff = !!(pr.data && (pr.data.is_admin || pr.data.is_moderator));
+      loadFeed();
+    });
+  });
 
   if (composer) {
     composer.addEventListener('submit', function (e) {

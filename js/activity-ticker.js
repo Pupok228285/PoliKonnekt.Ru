@@ -30,23 +30,32 @@
 
   var SOURCES = [
     { table: 'feed_posts', select: 'id, body, created_at, profiles(nickname)', icon: 'i-arrow.svg',
-      verb: function () { return 'написал(а) в Ленте'; }, body: function (r) { return r.body; } },
-    { table: 'forum_replies', select: 'id, body, created_at, profiles(nickname)', icon: 'i-feed.svg',
-      verb: function () { return 'ответил(а) на форуме'; }, body: function (r) { return r.body; } },
+      verb: function () { return 'написал(а) в Ленте'; }, body: function (r) { return r.body; },
+      link: function () { return 'index.html#lenta'; } },
+    { table: 'forum_replies', select: 'id, topic_id, body, created_at, profiles(nickname)', icon: 'i-feed.svg',
+      verb: function () { return 'ответил(а) на форуме'; }, body: function (r) { return r.body; },
+      link: function (r) { return 'forum-topic.html?id=' + r.topic_id; } },
     { table: 'forum_topics', select: 'id, title, created_at, profiles(nickname)', icon: 'i-feed.svg',
-      verb: function () { return 'создал(а) тему на форуме'; }, body: function (r) { return r.title; } },
+      verb: function () { return 'создал(а) тему на форуме'; }, body: function (r) { return r.title; },
+      link: function (r) { return 'forum-topic.html?id=' + r.id; } },
     { table: 'quote_posts', select: 'id, body, kind, created_at, profiles(nickname)', icon: 'i-quote.svg',
-      verb: function (r) { return r.kind === 'creative' ? 'поделился(лась) креативом' : 'добавил(а) цитату'; }, body: function (r) { return r.body; } },
+      verb: function (r) { return r.kind === 'creative' ? 'поделился(лась) креативом' : 'добавил(а) цитату'; }, body: function (r) { return r.body; },
+      link: function () { return 'quotes.html'; } },
     { table: 'canteen_posts', select: 'id, body, created_at, profiles(nickname)', icon: 'i-canteen.svg',
-      verb: function () { return 'написал(а) в Столовой'; }, body: function (r) { return r.body; } },
-    { table: 'artel_posts', select: 'id, body, created_at, profiles(nickname)', icon: 'i-artel.svg',
-      verb: function () { return 'написал(а) на стене артели'; }, body: function (r) { return r.body; } },
-    { table: 'diary_posts', select: 'id, title, body, created_at, profiles(nickname)', icon: 'i-user.svg',
-      verb: function () { return 'написал(а) в Дневнике'; }, body: function (r) { return r.title || r.body; } },
+      verb: function () { return 'написал(а) в Столовой'; }, body: function (r) { return r.body; },
+      link: function () { return 'canteen.html'; } },
+    { table: 'artel_posts', select: 'id, artel_id, body, created_at, profiles(nickname)', icon: 'i-artel.svg',
+      verb: function () { return 'написал(а) на стене артели'; }, body: function (r) { return r.body; },
+      link: function (r) { return 'artel-view.html?id=' + r.artel_id; } },
+    { table: 'diary_posts', select: 'id, author_id, title, body, created_at, profiles(nickname)', icon: 'i-user.svg',
+      verb: function () { return 'написал(а) в Дневнике'; }, body: function (r) { return r.title || r.body; },
+      link: function (r) { return 'diary.html?id=' + r.author_id; } },
     { table: 'listings', select: 'id, title, kind, created_at, profiles(nickname)', icon: 'i-service.svg',
-      verb: function (r) { return r.kind === 'thing' ? 'разместил(а) вещь' : 'разместил(а) услугу'; }, body: function (r) { return r.title; } },
+      verb: function (r) { return r.kind === 'thing' ? 'разместил(а) вещь' : 'разместил(а) услугу'; }, body: function (r) { return r.title; },
+      link: function () { return 'index.html#uslugi'; } },
     { table: 'lost_found_posts', select: 'id, title, kind, created_at, profiles(nickname)', icon: 'i-lost.svg',
-      verb: function (r) { return r.kind === 'found' ? 'нашёл(нашла)' : 'потерял(а)'; }, body: function (r) { return r.title; } }
+      verb: function (r) { return r.kind === 'found' ? 'нашёл(нашла)' : 'потерял(а)'; }, body: function (r) { return r.title; },
+      link: function () { return 'lostfound.html'; } }
   ];
 
   Promise.all(SOURCES.map(function (src) {
@@ -69,7 +78,9 @@
     var prof = best.row.profiles || {};
     var nick = prof.nickname || 'Студент';
     nameEl.innerHTML = '<b>' + escapeHtml(nick) + '</b> (' + fmtTime(best.row.created_at) + ')';
-    textEl.innerHTML = escapeHtml(best.src.verb(best.row)) + ': «' + escapeHtml(snippet(best.src.body(best.row))) + '»' +
-      ' <img src="img/icons/' + best.src.icon + '" width="16" height="16" alt="">';
+    var href = escapeHtml(best.src.link(best.row));
+    textEl.innerHTML = '<a href="' + href + '" style="color:inherit;text-decoration:none">' +
+      escapeHtml(best.src.verb(best.row)) + ': «' + escapeHtml(snippet(best.src.body(best.row))) + '»' +
+      ' <img src="img/icons/' + best.src.icon + '" width="16" height="16" alt=""></a>';
   });
 })();

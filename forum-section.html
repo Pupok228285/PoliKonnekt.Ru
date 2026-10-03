@@ -6,7 +6,7 @@
 <title>Раздел форума — ПолиКоннект.ru</title>
 <meta name="description" content="Темы внутри одного раздела форума.">
 <link rel="icon" type="image/svg+xml" href="img/logo-mark.svg?v=2">
-<link rel="stylesheet" href="css/style.css?v=52">
+<link rel="stylesheet" href="css/style.css?v=53">
 </head>
 <body>
 <div id="wrap">
@@ -30,6 +30,7 @@
         <input class="field" type="email" name="email" id="authEmail" placeholder="почта" aria-label="Почта" style="width:150px">
         <img src="img/icons/i-key.svg" width="16" height="16" alt="" style="margin-left:10px">
         <input class="field" type="password" name="pass" id="authPass" placeholder="пароль, от 6 символов" aria-label="Пароль" style="width:170px">
+        <a href="#" id="authForgot" class="forgot" hidden>Забыли пароль?</a>
         <button class="submit" type="submit" style="margin-left:5px">Вход</button>
         <button class="submit" type="button" id="authRegister">Регистрация</button>
       </span>
@@ -156,7 +157,7 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=1"></script>
-<script src="js/auth-ui.js?v=4"></script>
+<script src="js/auth-ui.js?v=6"></script>
 <script src="js/presence.js?v=3"></script>
 <script src="js/notify-sound.js?v=3"></script>
 <script src="js/pm-badge.js?v=3"></script>

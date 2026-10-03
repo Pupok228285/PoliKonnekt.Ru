@@ -843,7 +843,22 @@ html, body { overflow-x: hidden; }
   color: #333;
   text-align: left;
   z-index: 21;
+  transform-origin: top;
+  transition: max-height .22s ease, opacity .18s ease, transform .22s ease;
 }
+/* Сворачивание вверх перед hidden — иначе пропадает рывком. */
+.ring-pop.closing { max-height: 0; opacity: 0; transform: scaleY(.85); overflow: hidden; padding-top: 0; padding-bottom: 0; border-width: 0; }
+.ring-pop .pop-close {
+  display: block;
+  margin: 4px 0 0;
+  padding: 2px 0 0;
+  border-top: 1px dashed #e4e9ef;
+  color: #8a9bb0;
+  font-size: 9px;
+  text-align: center;
+  cursor: pointer;
+}
+.ring-pop .pop-close:hover { color: #2c4568; }
 .ring-pop b { display: block; margin-bottom: 2px; color: #2c4568; font-size: 11px; }
 .ring-pop a.day-item { display: block; padding: 2px 0; color: #333; text-decoration: none; border-top: 1px dashed #e4e9ef; }
 .ring-pop a.day-item:first-of-type { border-top: 0; }

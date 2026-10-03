@@ -198,11 +198,16 @@
   }
 
   var popTimer = null;
-  var POP_LIFETIME = 9000; // плашка сама прячется через 9 секунд
+  var POP_LIFETIME = 5000; // плашка сама прячется через 5 секунд без взаимодействия
 
   function hidePop() {
-    popEl.hidden = true;
     if (popTimer) { clearTimeout(popTimer); popTimer = null; }
+    if (popEl.hidden) return;
+    popEl.classList.add('closing'); // сворачивается вверх, а не пропадает рывком
+    setTimeout(function () {
+      popEl.hidden = true;
+      popEl.classList.remove('closing');
+    }, 220);
   }
 
   popEl.addEventListener('mouseenter', function () {
@@ -211,6 +216,11 @@
   popEl.addEventListener('mouseleave', function () {
     if (!popEl.hidden && !popTimer) popTimer = setTimeout(hidePop, POP_LIFETIME);
   });
+  popEl.addEventListener('click', function (e) {
+    if (e.target.closest('.pop-close')) hidePop();
+  });
+
+  var CLOSE_BTN = '<span class="pop-close">Скрыть</span>';
 
   function renderPopContent(d, info) {
     var head = sameDate(d, today) ? 'Сегодня' : fmtDateObj(d);
@@ -221,9 +231,9 @@
           '»<span class="cat">' + escapeHtml(r.label) + '</span></a>';
       }).join('');
       if (info.length > 14) html += '<span style="opacity:.6">…и ещё ' + (info.length - 14) + '</span>';
-      return html;
+      return html + CLOSE_BTN;
     }
-    return '<b>' + head + '</b><span style="opacity:.65">В этот день на сайте не было активности.</span>';
+    return '<b>' + head + '</b><span style="opacity:.65">В этот день на сайте не было активности.</span>' + CLOSE_BTN;
   }
 
   var popRequestId = 0;

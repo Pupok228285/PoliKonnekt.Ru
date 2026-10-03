@@ -14,6 +14,7 @@
   var emailInput = document.getElementById('authEmail');
   var passInput = document.getElementById('authPass');
   var registerBtn = document.getElementById('authRegister');
+  var forgotLink = document.getElementById('authForgot');
   var logoutLink = document.getElementById('authLogout');
   var statusEl = document.getElementById('authStatus');
   var nickEl = document.getElementById('authNick');
@@ -61,6 +62,8 @@
     if (session) { showLoggedIn(session); } else { showLoggedOut(); }
   });
 
+  var failCount = 0;
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var email = (emailInput.value || '').trim();
@@ -68,7 +71,12 @@
     if (!email || !pass) { setStatus('Заполните почту и пароль.', true); return; }
     setStatus('Входим...');
     window.supa.auth.signInWithPassword({ email: email, password: pass }).then(function (res) {
-      if (res.error) { setStatus(res.error.message, true); return; }
+      if (res.error) {
+        failCount++;
+        if (failCount >= 2 && forgotLink) forgotLink.hidden = false;
+        setStatus(res.error.message, true);
+        return;
+      }
       setStatus('Готово, вы вошли.');
       passInput.value = '';
     });
@@ -89,6 +97,19 @@
           setStatus('Почти готово: проверьте почту и подтвердите регистрацию по ссылке, потом войдите.');
         }
         passInput.value = '';
+      });
+    });
+  }
+
+  if (forgotLink) {
+    forgotLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      var email = (emailInput.value || '').trim();
+      if (!email) { setStatus('Сначала введите почту выше.', true); emailInput.focus(); return; }
+      setStatus('Отправляем...');
+      var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'reset-password.html';
+      window.supa.auth.resetPasswordForEmail(email, { redirectTo: redirectTo }).then(function () {
+        setStatus('Если такая почта зарегистрирована — письмо со ссылкой для восстановления уже отправлено.');
       });
     });
   }
