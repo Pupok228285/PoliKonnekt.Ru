@@ -231,7 +231,7 @@
           '<button class="submit" type="button" id="cardLikeBtn">Лайк</button>' +
           '<button class="submit" type="button" id="cardDislikeBtn">Дизлайк</button>' +
           (prof.id ? '<a href="messages.html?to=' + encodeURIComponent(prof.nickname || '') + '">Написать</a>' : '') +
-          '<a href="#">Пожаловаться</a>' +
+          '<a href="#" data-target-user="' + (prof.id || '') + '">Пожаловаться</a>' +
         '</div>' +
       '</div>';
     cardsBox.innerHTML = '';
@@ -306,6 +306,8 @@
     chatFindRow.style.display = 'none';
     chatBox.hidden = false;
     chatFootHint.hidden = false;
+    var chatReportLink = chatFootHint.querySelector('a');
+    if (chatReportLink) chatReportLink.setAttribute('data-target-user', otherId || '');
     chatLog.innerHTML = '<p class="hint" style="margin:2px 0">Собеседник найден — переписка только текстом.</p>';
     pollMessages();
     msgTimer = setInterval(pollMessages, 2500);

@@ -46,7 +46,7 @@
           '<button type="button" class="vote-down" title="В минус репутации">&#9660;</button>' +
         '</span>' +
         '<a href="#" class="comment-toggle" data-ctype="canteen_post" data-cid="' + row.id + '">Комментарии (' + (row.comment_count || 0) + ')</a>' +
-        '<a href="#">Пожаловаться</a>' +
+        '<a href="#" data-target-user="' + (prof.id || '') + '">Пожаловаться</a>' +
       '</div>';
     return div;
   }

@@ -23,6 +23,7 @@
   var targetId = new URLSearchParams(window.location.search).get('id');
   var myId = null;
   var myIsAdmin = false;
+  var targetNick = '';
 
   function escapeHtml(s) {
     var d = document.createElement('div');
@@ -60,6 +61,8 @@
 
   var CONTENT_SECTIONS = [
     { kind: 'photos', label: 'Фото в профиле' },
+    { kind: 'conversations', label: 'Личные переписки', anchorId: 'chats' },
+    { kind: 'groups', label: 'Группы' },
     { kind: 'forum', label: 'Ответы на форуме' },
     { kind: 'list', table: 'feed_posts', label: 'Лента', body: 'body' },
     { kind: 'list', table: 'quote_posts', label: 'Цитаты и Креатив', body: 'body', hasKind: true },
@@ -74,6 +77,18 @@
   function buildQuery(sec, userId) {
     if (sec.kind === 'photos') {
       return window.supa.from('profile_photos').select('url, caption, created_at').eq('profile_id', userId).order('created_at', { ascending: false });
+    }
+    if (sec.kind === 'conversations') {
+      return window.supa.from('conversations')
+        .select('id, user_a, user_b, status, last_message_at, a:profiles!user_a(id,nickname), b:profiles!user_b(id,nickname)')
+        .or('user_a.eq.' + userId + ',user_b.eq.' + userId)
+        .order('last_message_at', { ascending: false }).limit(100);
+    }
+    if (sec.kind === 'groups') {
+      return window.supa.from('chat_group_members')
+        .select('group_id, joined_at, chat_groups(id, title, last_message_at)')
+        .eq('profile_id', userId)
+        .order('joined_at', { ascending: false }).limit(100);
     }
     if (sec.kind === 'forum') {
       return window.supa.from('forum_replies').select('id, body, created_at, topic_id, forum_topics(title)').eq('author_id', userId).order('created_at', { ascending: false }).limit(100);
@@ -144,15 +159,101 @@
   function renderSectionRow(sec) {
     var row = document.createElement('div');
     row.className = 'p-row';
+    if (sec.anchorId) row.id = sec.anchorId;
     row.innerHTML = '<span class="lbl"><a href="#" class="hist-toggle" style="text-decoration:none;color:inherit;cursor:default">' + escapeHtml(sec.label) + '</a></span><span class="val" data-status>Загрузка...</span>';
     sectionsBox.appendChild(row);
     return row.querySelector('[data-status]');
   }
 
+  // Переписка/группа — двухуровневое раскрытие: сама запись в списке тоже
+  // кликабельна и подгружает настоящие сообщения только при первом клике.
+  function renderConversationsHist(container, rows, userId) {
+    rows.forEach(function (row) {
+      var other = (String(row.user_a) === String(userId) ? row.b : row.a) || {};
+      var line = document.createElement('div');
+      line.style.cssText = 'padding:3px 0;border-bottom:1px dashed #e4e9ef';
+      var head = document.createElement('a');
+      head.href = '#';
+      head.style.cssText = 'color:inherit;text-decoration:none;cursor:pointer;display:block';
+      head.innerHTML = '<b>' + escapeHtml(other.nickname || '?') + '</b> <span class="hint" style="margin:0">— ' +
+        (row.status === 'pending' ? 'заявка, ' : '') + fmtDateTime(row.last_message_at) + '</span>';
+      var body = document.createElement('div');
+      body.hidden = true;
+      body.style.cssText = 'margin:4px 0 6px 10px;padding:4px 8px;background:#fff;border:1px solid #e3e9f0;max-height:260px;overflow:auto';
+      body.innerHTML = '<span class="hint">Загрузка...</span>';
+      line.appendChild(head);
+      line.appendChild(body);
+      container.appendChild(line);
+
+      var loaded = false;
+      head.addEventListener('click', function (e) {
+        e.preventDefault();
+        body.hidden = !body.hidden;
+        if (body.hidden || loaded) return;
+        loaded = true;
+        window.supa.from('messages')
+          .select('id, sender_id, body, photo_path, created_at')
+          .eq('conversation_id', row.id).order('created_at', { ascending: true }).limit(300)
+          .then(function (res) {
+            if (res.error) { body.innerHTML = '<span class="hint">не удалось: ' + escapeHtml(res.error.message) + '</span>'; return; }
+            var msgs = res.data || [];
+            if (!msgs.length) { body.innerHTML = '<span class="hint">Сообщений нет.</span>'; return; }
+            body.innerHTML = msgs.map(function (m2) {
+              var who = String(m2.sender_id) === String(userId) ? targetNick : (other.nickname || '?');
+              return '<p style="margin:2px 0"><b>' + escapeHtml(who) + ':</b> ' + (m2.body ? escapeHtml(m2.body) : '') +
+                (m2.photo_path ? ' <span class="hint">[фото]</span>' : '') +
+                ' <span class="hint" style="margin:0">' + fmtDateTime(m2.created_at) + '</span></p>';
+            }).join('');
+          });
+      });
+    });
+  }
+
+  function renderGroupsHist(container, rows, userId) {
+    rows.forEach(function (row) {
+      var g = row.chat_groups || {};
+      var line = document.createElement('div');
+      line.style.cssText = 'padding:3px 0;border-bottom:1px dashed #e4e9ef';
+      var head = document.createElement('a');
+      head.href = '#';
+      head.style.cssText = 'color:inherit;text-decoration:none;cursor:pointer;display:block';
+      head.innerHTML = '<b>' + escapeHtml(g.title || '?') + '</b> <span class="hint" style="margin:0">— ' + fmtDateTime(g.last_message_at) + '</span>';
+      var body = document.createElement('div');
+      body.hidden = true;
+      body.style.cssText = 'margin:4px 0 6px 10px;padding:4px 8px;background:#fff;border:1px solid #e3e9f0;max-height:260px;overflow:auto';
+      body.innerHTML = '<span class="hint">Загрузка...</span>';
+      line.appendChild(head);
+      line.appendChild(body);
+      container.appendChild(line);
+
+      var loaded = false;
+      head.addEventListener('click', function (e) {
+        e.preventDefault();
+        body.hidden = !body.hidden;
+        if (body.hidden || loaded || !g.id) return;
+        loaded = true;
+        window.supa.from('chat_group_messages')
+          .select('id, sender_id, body, photo_path, created_at, profiles!sender_id(nickname)')
+          .eq('group_id', g.id).order('created_at', { ascending: true }).limit(300)
+          .then(function (res) {
+            if (res.error) { body.innerHTML = '<span class="hint">не удалось: ' + escapeHtml(res.error.message) + '</span>'; return; }
+            var msgs = res.data || [];
+            if (!msgs.length) { body.innerHTML = '<span class="hint">Сообщений нет.</span>'; return; }
+            body.innerHTML = msgs.map(function (m2) {
+              var who = (m2.profiles && m2.profiles.nickname) || '?';
+              return '<p style="margin:2px 0"><b>' + escapeHtml(who) + ':</b> ' + (m2.body ? escapeHtml(m2.body) : '') +
+                (m2.photo_path ? ' <span class="hint">[фото]</span>' : '') +
+                ' <span class="hint" style="margin:0">' + fmtDateTime(m2.created_at) + '</span></p>';
+            }).join('');
+          });
+      });
+    });
+  }
+
   // Раздел по умолчанию показывает только число — сам список того, что
   // человек писал (или фото), открывается по клику на название раздела,
   // чтобы страница сразу не была длиннющей простынёй у активных авторов.
-  function renderSectionResult(sec, statusEl, res) {
+  function renderSectionResult(sec, statusEl, res, userId) {
     var row = statusEl.closest('.p-row');
     var toggle = row.querySelector('.hist-toggle');
     toggle.addEventListener('click', function (e) { e.preventDefault(); });
@@ -178,6 +279,10 @@
         var topic = r.forum_topics || {};
         return escapeHtml((r.body || '').slice(0, 90)) + ' <span class="hint" style="margin:0">— в теме «' + escapeHtml(topic.title || '?') + '», ' + fmtDateTime(r.created_at) + '</span>';
       }).join('<br>');
+    } else if (sec.kind === 'conversations') {
+      renderConversationsHist(hist, rows, userId);
+    } else if (sec.kind === 'groups') {
+      renderGroupsHist(hist, rows, userId);
     } else {
       hist.innerHTML = rows.slice(0, 30).map(function (r) {
         var text = sec.title && r[sec.title] ? r[sec.title] + (r[sec.body] ? ' — ' + r[sec.body] : '') : (r[sec.body] || '');
@@ -205,6 +310,7 @@
           return;
         }
         m = res.data;
+        targetNick = m.nickname || '';
         renderHeader(m);
       })
       .then(function () {
@@ -221,11 +327,17 @@
           chain = chain.then(function () {
             var statusEl = renderSectionRow(sec);
             return withTimeout(function () { return buildQuery(sec, userId); }, 8000, sec.label).then(function (res) {
-              renderSectionResult(sec, statusEl, res);
+              renderSectionResult(sec, statusEl, res, userId);
             });
           });
         });
         return chain;
+      })
+      .then(function () {
+        if (window.location.hash === '#chats') {
+          var toggle = document.querySelector('#chats .hist-toggle');
+          if (toggle) { toggle.click(); toggle.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        }
       });
   }
 

@@ -35,6 +35,7 @@
   var pFavoritesList = document.getElementById('pFavoritesList');
   var pAnonBtn = document.getElementById('pAnonBtn');
   var pDossierLink = document.getElementById('pDossierLink');
+  var pChatsLink = document.getElementById('pChatsLink');
   var pAnonComposeBox = document.getElementById('pAnonComposeBox');
   var pAnonText = document.getElementById('pAnonText');
   var pAnonHint = document.getElementById('pAnonHint');
@@ -545,12 +546,12 @@
         // если смотрящий сам админ/модератор и смотрит НЕ на себя. Один
         // простой запрос по уже готовому паттерну (как amStaff в
         // artel-view.js), без единого лишнего похода в базу.
-        if (pDossierLink && myId && myId !== urlId) {
+        if ((pDossierLink || pChatsLink) && myId && myId !== urlId) {
           window.supa.from('profiles').select('is_admin, is_moderator').eq('id', myId).single().then(function (r) {
             if (r.error || !r.data) return;
             if (r.data.is_admin || r.data.is_moderator) {
-              pDossierLink.style.display = '';
-              pDossierLink.href = 'account-history.html?id=' + urlId;
+              if (pDossierLink) { pDossierLink.style.display = ''; pDossierLink.href = 'account-history.html?id=' + urlId; }
+              if (pChatsLink) { pChatsLink.style.display = ''; pChatsLink.href = 'account-history.html?id=' + urlId + '#chats'; }
             }
           });
         }

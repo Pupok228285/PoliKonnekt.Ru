@@ -49,7 +49,7 @@
           '<button type="button" class="vote-down" title="В минус репутации">&#9660;</button>' +
         '</span>' +
         '<a href="#" class="comment-toggle" data-ctype="feed_post" data-cid="' + row.id + '">Комментарии (' + (row.comment_count || 0) + ')</a>' +
-        '<a href="#" class="fav-toggle" data-ftype="feed_post" data-fid="' + row.id + '">В избранное</a><a href="#">Пожаловаться</a>' +
+        '<a href="#" class="fav-toggle" data-ftype="feed_post" data-fid="' + row.id + '">В избранное</a><a href="#" data-target-user="' + (prof.id || '') + '">Пожаловаться</a>' +
         ((isStaff || (currentUserId && currentUserId === prof.id)) ? '<a href="#" class="feed-del" data-id="' + row.id + '" style="color:#b23e00">Удалить</a>' : '') +
       '</div>';
     var delBtn = div.querySelector('.feed-del');

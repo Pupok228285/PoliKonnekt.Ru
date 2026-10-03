@@ -294,7 +294,7 @@
     dlgNick.textContent = current.otherNick;
     dlgTick.style.display = other.verified ? '' : 'none';
     blockLink.style.display = '';
-    if (dlgReportLink) dlgReportLink.style.display = '';
+    if (dlgReportLink) { dlgReportLink.style.display = ''; dlgReportLink.setAttribute('data-target-user', other.id || ''); }
     if (dlgFirstMsgHint) dlgFirstMsgHint.hidden = false;
     if (groupMembersLink) groupMembersLink.hidden = true;
     if (groupPanel) groupPanel.hidden = true;

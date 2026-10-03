@@ -213,7 +213,7 @@
                 '<button type="button" class="vote-down" title="В минус репутации">&#9660;</button>' +
               '</span>' +
               '<a href="#" class="comment-toggle" data-ctype="artel_post" data-cid="' + p.id + '">Комментарии (' + (p.comment_count || 0) + ')</a>' +
-              '<a href="#">Пожаловаться</a>' +
+              '<a href="#" data-target-user="' + (prof.id || '') + '">Пожаловаться</a>' +
               ((amStaff || prof.id === myId) ? '<a href="#" class="post-delete" data-pid="' + p.id + '">Удалить</a>' : '') +
             '</div>';
           wallBox.insertBefore(el, catend);

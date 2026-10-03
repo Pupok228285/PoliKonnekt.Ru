@@ -20,6 +20,7 @@
   var topicAuthorLink = document.getElementById('topicAuthorLink');
   var topicAuthorTick = document.getElementById('topicAuthorTick');
   var topicAuthorAv = document.getElementById('topicAuthorAv');
+  var topicReportLink = document.getElementById('topicReportLink');
   var voteWidget = document.querySelector('.vote-widget');
   var commentsList = document.getElementById('commentsList');
   var newCommentInput = document.getElementById('newCommentInput');
@@ -125,6 +126,7 @@
         topicAuthorAv.textContent = (prof.nickname || '?').charAt(0).toUpperCase();
         topicAuthorLink.textContent = prof.nickname || '?';
         if (prof.id) { topicAuthorLink.href = 'profile.html?id=' + prof.id; }
+        if (topicReportLink) topicReportLink.setAttribute('data-target-user', prof.id || '');
         topicAuthorTick.style.display = prof.verified ? '' : 'none';
         if (sbAuthor) sbAuthor.innerHTML = prof.id ? ('<a href="profile.html?id=' + prof.id + '">' + escapeHtml(prof.nickname || '?') + '</a>') : escapeHtml(prof.nickname || '?');
         voteWidget.setAttribute('data-vid', t.id);

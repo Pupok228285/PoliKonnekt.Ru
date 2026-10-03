@@ -18,13 +18,13 @@
     var a = e.target.closest('a');
     if (a && REPORT_TEXTS.indexOf((a.textContent || '').trim()) !== -1) {
       e.preventDefault();
-      openReportPop(a);
+      openReportPop(a, a.getAttribute('data-target-user') || null);
       return;
     }
     if (openPop && !openPop.contains(e.target) && e.target !== a) closePop();
   });
 
-  function openReportPop(anchor) {
+  function openReportPop(anchor, targetUserId) {
     closePop();
     var rect = anchor.getBoundingClientRect();
     var pop = document.createElement('div');
@@ -58,7 +58,8 @@
           kind: 'complaint',
           subject: 'Жалоба со страницы «' + document.title + '»',
           body: body,
-          context_url: window.location.href
+          context_url: window.location.href,
+          target_user_id: targetUserId || null
         }).then(function (r) {
           btn.disabled = false;
           if (r.error) { msgEl.textContent = r.error.message; msgEl.style.color = '#b23e00'; return; }

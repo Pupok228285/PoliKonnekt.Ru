@@ -100,7 +100,7 @@
           '<button type="button" class="vote-down" title="В минус репутации">&#9660;</button>' +
         '</span>' +
         '<a href="#" class="reply-quote" data-nick="' + escapeHtml(nickname) + '" data-body="' + escapeHtml(row.body) + '">Цитата</a>' +
-        '<a href="#">Пожаловаться</a>' +
+        '<a href="#" data-target-user="' + (prof.id || '') + '">Пожаловаться</a>' +
       '</div>';
     postsList.insertBefore(el, catend);
   }

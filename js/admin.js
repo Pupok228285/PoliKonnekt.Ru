@@ -174,7 +174,7 @@
   // отдельной карточке.
   function loadSupport() {
     window.supa.from('support_messages')
-      .select('id, author_id, kind, subject, body, status, context_url, created_at, profiles!author_id(nickname)')
+      .select('id, author_id, kind, subject, body, status, context_url, target_user_id, created_at, profiles!author_id(nickname)')
       .eq('status', 'open')
       .order('created_at', { ascending: true })
       .then(function (res) {
@@ -209,6 +209,7 @@
         '<div class="acts">' +
           (resolved ? '' : '<button class="submit" type="button" data-resolve>Решено</button> ') +
           '<a class="submit" href="messages.html?to=' + encodeURIComponent(prof.nickname || '') + '">Написать</a>' +
+          (row.target_user_id ? ' <a class="submit" href="account-history.html?id=' + row.target_user_id + '#chats" target="_blank">Переписка того, на кого жалоба</a>' : '') +
         '</div>' +
       '</div>';
     supportBox.appendChild(card);
@@ -272,7 +273,7 @@
   function loadSupportHistory() {
     supportHistoryPanel.innerHTML = '<p class="hint" style="padding:4px 2px">Загрузка истории...</p>';
     window.supa.from('support_messages')
-      .select('id, author_id, kind, subject, body, status, created_at, profiles!author_id(nickname), support_replies(id, author_id, body, created_at, profiles!author_id(nickname, is_admin, is_moderator))')
+      .select('id, author_id, kind, subject, body, status, target_user_id, created_at, profiles!author_id(nickname), support_replies(id, author_id, body, created_at, profiles!author_id(nickname, is_admin, is_moderator))')
       .order('created_at', { ascending: false })
       .then(function (res) {
         if (res.error || !res.data) { supportHistoryPanel.innerHTML = '<p class="hint">Не удалось загрузить историю.</p>'; return; }
@@ -290,8 +291,9 @@
               var who = (rprof.is_admin || rprof.is_moderator) ? 'Поддержка' : ('<a href="profile.html?id=' + r.author_id + '" target="_blank">' + escapeHtml(rprof.nickname || '?') + '</a>');
               return '<p class="hint" style="margin:2px 0 2px 12px">&#8618; <b>' + who + ':</b> ' + escapeHtml(r.body) + '</p>';
             }).join('');
+          var targetLink = t.target_user_id ? ' · <a href="account-history.html?id=' + t.target_user_id + '#chats" target="_blank">переписка того, на кого жалоба</a>' : '';
           return '<div style="padding:6px 4px;border-bottom:1px solid #e3e9f0">' +
-            '<b>' + tKind + ': ' + escapeHtml(t.subject) + '</b> <span class="hint" style="margin:0">— ' + tNickHtml + ', ' + tStatus + ', ' + fmtDateTime(t.created_at) + '</span>' +
+            '<b>' + tKind + ': ' + escapeHtml(t.subject) + '</b> <span class="hint" style="margin:0">— ' + tNickHtml + ', ' + tStatus + ', ' + fmtDateTime(t.created_at) + targetLink + '</span>' +
             '<div class="hint" style="margin:2px 0">' + escapeHtml(t.body) + '</div>' +
             replies +
           '</div>';
