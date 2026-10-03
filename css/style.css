@@ -989,6 +989,13 @@ html, body { overflow-x: hidden; }
 .chatbox .row2 .field { flex: 1; height: 24px; font-size: 12px; }
 .chatbox .log .msg-photo { display: block; max-width: 220px; max-height: 220px; margin-top: 3px; border: 1px solid #cdd9e8; border-radius: 3px; cursor: zoom-in; }
 .chatbox .log .me .msg-photo { margin-left: auto; }
+.chatbox .log .msg-av {
+  display: inline-block; width: 16px; height: 16px; border-radius: 50%; overflow: hidden;
+  vertical-align: -3px; margin-right: 4px;
+  background-color: #c7d3e0; background-size: cover; background-position: center;
+  font: bold 9px/16px var(--font); text-align: center; color: #5a6b82;
+}
+.chatbox .log a { color: inherit; text-decoration: underline; }
 
 .emoji-pop {
   position: absolute; bottom: 34px; left: 6px; z-index: 50;

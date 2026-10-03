@@ -52,12 +52,13 @@
     var initial = nick.charAt(0).toUpperCase();
     var tick = prof.verified ? '<img class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён">' : '';
     var nickHtml = prof.id ? '<a class="nick" href="profile.html?id=' + prof.id + '">' + escapeHtml(nick) + '</a>' : '<span class="nick">' + escapeHtml(nick) + '</span>';
+    var avStyle = prof.avatar_url ? ' style="background-image:url(' + escapeHtml(prof.avatar_url) + ');background-size:cover;background-position:center"' : '';
     var div = document.createElement('div');
     div.className = 'post';
     div.innerHTML =
       '<div class="who">' +
         nickHtml + tick +
-        '<span class="av">' + escapeHtml(initial) + '</span>' +
+        '<span class="av"' + avStyle + '>' + (prof.avatar_url ? '' : escapeHtml(initial)) + '</span>' +
       '</div>' +
       '<div class="top"><span class="no">' + (row.kind === 'creative' ? 'Креатив' : 'Цитата') + '</span><span>' + fmtDate(row.created_at) + '</span></div>' +
       '<div class="body' + (row.kind === 'creative' ? '' : ' is-quote') + '">' + escapeHtml(row.body).replace(/\n/g, '<br>') + '</div>' +
@@ -88,7 +89,7 @@
 
   function loadFeed() {
     window.supa.from('quote_posts')
-      .select('id, body, kind, created_at, score, comment_count, profiles(id, nickname, verified)')
+      .select('id, body, kind, created_at, score, comment_count, profiles(id, nickname, verified, avatar_url)')
       .order('created_at', { ascending: false })
       .limit(100)
       .then(function (res) {

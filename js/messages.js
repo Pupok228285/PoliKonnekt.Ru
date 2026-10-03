@@ -72,6 +72,7 @@
   if (!pmArea) return;
 
   var myId = null;
+  var myAvatar = null;
   // { kind: 'dm', id, otherId, otherNick, otherVerified } или
   // { kind: 'group', id, title, ownerId, memberCount }
   var current = null;
@@ -182,7 +183,7 @@
   function loadInbox() {
     Promise.all([
       window.supa.from('conversations')
-        .select('id, user_a, user_b, last_message_at, a:profiles!user_a(id,nickname,verified), b:profiles!user_b(id,nickname,verified)')
+        .select('id, user_a, user_b, last_message_at, a:profiles!user_a(id,nickname,verified,avatar_url), b:profiles!user_b(id,nickname,verified,avatar_url)')
         .eq('status', 'accepted')
         .or('user_a.eq.' + myId + ',user_b.eq.' + myId)
         .order('last_message_at', { ascending: false }),
@@ -240,12 +241,13 @@
   function renderInboxRow(row) {
     var other = otherOf(row);
     var nickname = other.nickname || '?';
+    var avStyle = other.avatar_url ? ' style="background-image:url(' + escapeHtml(other.avatar_url) + ');background-size:cover;background-position:center"' : '';
     var el = document.createElement('div');
     el.className = 'match-card';
     el.setAttribute('data-conv-id', row.id);
     if (current && current.kind === 'dm' && current.id === row.id) el.classList.add('active');
     el.innerHTML =
-      '<div class="ph">' + escapeHtml(nickname.charAt(0).toUpperCase()) + '</div>' +
+      '<div class="ph"' + avStyle + '>' + (other.avatar_url ? '' : escapeHtml(nickname.charAt(0).toUpperCase())) + '</div>' +
       '<div class="body">' +
         '<div class="name">' + escapeHtml(nickname) +
           (row.muted ? ' <span class="muted-ico" title="Звук выключен">🔕</span>' : '') + '</div>' +
@@ -288,7 +290,7 @@
   }
 
   function openConversation(convId, other) {
-    current = { kind: 'dm', id: convId, otherId: other.id, otherNick: other.nickname || '?', otherVerified: other.verified };
+    current = { kind: 'dm', id: convId, otherId: other.id, otherNick: other.nickname || '?', otherVerified: other.verified, otherAvatar: other.avatar_url };
     showDialogPane();
     markActiveRow();
     dlgNick.textContent = current.otherNick;
@@ -625,7 +627,7 @@
   function loadMessages() {
     var cur = current;
     var q = cur.kind === 'group'
-      ? window.supa.from('chat_group_messages').select('id, sender_id, body, photo_path, created_at, profiles!sender_id(nickname)').eq('group_id', cur.id)
+      ? window.supa.from('chat_group_messages').select('id, sender_id, body, photo_path, created_at, profiles!sender_id(nickname, avatar_url)').eq('group_id', cur.id)
       : window.supa.from('messages').select('id, sender_id, body, photo_path, created_at').eq('conversation_id', cur.id);
     q.order('created_at', { ascending: true })
       .then(function (res) {
@@ -653,9 +655,19 @@
     var p = document.createElement('p');
     var mine = row.sender_id === myId;
     p.className = mine ? 'me' : 'them';
-    var who = mine ? 'Вы'
-      : (current.kind === 'group' ? ((row.profiles && row.profiles.nickname) || '?') : current.otherNick);
-    p.innerHTML = '<b' + (!mine && current.kind === 'group' ? ' class="who"' : '') + '>' + escapeHtml(who) + ':</b>' + (row.body ? ' ' + escapeHtml(row.body) : '');
+    var who, whoId, whoAvatar;
+    if (mine) {
+      who = 'Вы'; whoId = null; whoAvatar = myAvatar;
+    } else if (current.kind === 'group') {
+      var sp = row.profiles || {};
+      who = sp.nickname || '?'; whoId = row.sender_id; whoAvatar = sp.avatar_url;
+    } else {
+      who = current.otherNick; whoId = current.otherId; whoAvatar = current.otherAvatar;
+    }
+    var avHtml = '<span class="msg-av"' + (whoAvatar ? ' style="background-image:url(' + escapeHtml(whoAvatar) + ')"' : '') + '>' +
+      (whoAvatar ? '' : escapeHtml((who || '?').charAt(0).toUpperCase())) + '</span>';
+    var nameHtml = whoId ? '<a href="profile.html?id=' + whoId + '">' + escapeHtml(who) + '</a>' : escapeHtml(who);
+    p.innerHTML = avHtml + '<b' + (!mine && current.kind === 'group' ? ' class="who"' : '') + '>' + nameHtml + ':</b>' + (row.body ? ' ' + escapeHtml(row.body) : '');
     chatLog.appendChild(p);
     if (row.photo_path) {
       var img = document.createElement('img');
@@ -901,6 +913,9 @@
       myId = session.user.id;
       guestNotice.hidden = true;
       pmArea.hidden = false;
+      window.supa.from('profiles').select('avatar_url').eq('id', myId).single().then(function (r) {
+        if (r.data) myAvatar = r.data.avatar_url;
+      });
 
       var params = new URLSearchParams(window.location.search);
       var to = params.get('to');

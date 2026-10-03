@@ -73,25 +73,24 @@
     replyText.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  var nextNo = 1;
-
-  function renderReply(row) {
+  function renderReply(row, no) {
     if (!postsList) return;
     var prof = row.profiles || {};
     var nickname = prof.nickname || 'Гость';
     var nickHtml = prof.id
       ? '<a class="nick' + (prof.verified ? ' ok' : '') + '" href="profile.html?id=' + prof.id + '">' + escapeHtml(nickname) + '</a>'
       : '<span class="nick' + (prof.verified ? ' ok' : '') + '">' + escapeHtml(nickname) + '</span>';
+    var avStyle = prof.avatar_url ? ' style="background-image:url(' + escapeHtml(prof.avatar_url) + ');background-size:cover;background-position:center"' : '';
     var el = document.createElement('div');
     el.className = 'post';
     el.innerHTML =
       '<div class="who">' +
         nickHtml +
         (prof.verified ? '<img class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён">' : '') +
-        '<span class="av">' + escapeHtml(nickname.charAt(0).toUpperCase()) + '</span>' +
+        '<span class="av"' + avStyle + '>' + (prof.avatar_url ? '' : escapeHtml(nickname.charAt(0).toUpperCase())) + '</span>' +
         '<span class="st">На сайте с ' + fmtDate(prof.created_at) + '</span>' +
       '</div>' +
-      '<div class="top"><span class="no">Сообщение №' + (nextNo++) + '</span><span>' + fmtDateTime(row.created_at) + '</span></div>' +
+      '<div class="top"><span class="no">Сообщение №' + no + '</span><span>' + fmtDateTime(row.created_at) + '</span></div>' +
       '<div class="body">' + escapeHtml(row.body) + '</div>' +
       '<div class="acts">' +
         '<span class="vote-widget" data-vtype="forum_reply" data-vid="' + row.id + '">' +
@@ -116,13 +115,16 @@
 
   function loadReplies() {
     window.supa.from('forum_replies')
-      .select('id, body, created_at, score, profiles!author_id(id, nickname, verified, created_at)')
+      .select('id, body, created_at, score, profiles!author_id(id, nickname, verified, created_at, avatar_url)')
       .eq('topic_id', topicId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .then(function (res) {
         if (res.error || !res.data) return;
-        res.data.forEach(renderReply);
-        if (sbCount) sbCount.textContent = String(res.data.length);
+        var total = res.data.length;
+        // нумерация — по настоящему порядку написания (№1 всегда первый
+        // ответ), а не по порядку показа (теперь новые сверху)
+        res.data.forEach(function (row, i) { renderReply(row, total - i); });
+        if (sbCount) sbCount.textContent = String(total);
         if (window.PKSocial) window.PKSocial.scan(postsList);
       });
   }

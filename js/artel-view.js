@@ -183,9 +183,9 @@
 
   function loadWall() {
     window.supa.from('artel_posts')
-      .select('id, body, created_at, score, comment_count, profiles!author_id(id, nickname, verified)')
+      .select('id, body, created_at, score, comment_count, profiles!author_id(id, nickname, verified, avatar_url)')
       .eq('artel_id', artelId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .then(function (res) {
         if (res.error || !res.data || !wallBox) return;
         var catend = wallBox.querySelector('.catend');
@@ -196,13 +196,14 @@
           var nickHtml = prof.id
             ? '<a class="nick' + (prof.verified ? ' ok' : '') + '" href="profile.html?id=' + prof.id + '">' + escapeHtml(nickname) + '</a>'
             : '<span class="nick' + (prof.verified ? ' ok' : '') + '">' + escapeHtml(nickname) + '</span>';
+          var avStyle = prof.avatar_url ? ' style="background-image:url(' + escapeHtml(prof.avatar_url) + ');background-size:cover;background-position:center"' : '';
           var el = document.createElement('div');
           el.className = 'post';
           el.innerHTML =
             '<div class="who">' +
               nickHtml +
               (prof.verified ? '<img class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён">' : '') +
-              '<span class="av">' + escapeHtml(nickname.charAt(0).toUpperCase()) + '</span>' +
+              '<span class="av"' + avStyle + '>' + (prof.avatar_url ? '' : escapeHtml(nickname.charAt(0).toUpperCase())) + '</span>' +
             '</div>' +
             '<div class="top"><span class="no">Запись</span><span>' + fmtDateTime(p.created_at) + '</span></div>' +
             '<div class="body">' + escapeHtml(p.body) + '</div>' +
