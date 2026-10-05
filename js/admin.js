@@ -19,6 +19,7 @@
   var onlineList = document.getElementById('onlineList');
   var queueBox = document.getElementById('queueBox');
   var supportBox = document.getElementById('supportBox');
+  var deletedConvsBox = document.getElementById('deletedConvsBox');
   var memberRows = document.getElementById('memberRows');
   var memberCount = document.getElementById('memberCount');
   var memberSearch = document.getElementById('memberSearch');
@@ -100,6 +101,7 @@
         loadOnline();
         loadQueue();
         loadSupport();
+        loadDeletedConversations();
       });
     });
   }
@@ -254,6 +256,47 @@
         window.supa.from('support_messages').update({ status: 'resolved' }).eq('id', row.id).then(loadSupport);
       });
     }
+  }
+
+  // ---------- удалённые переписки (soft-delete, 14 дней на восстановление) ----------
+  function loadDeletedConversations() {
+    if (!deletedConvsBox) return;
+    // Ленивая чистка просроченных (как close_artel_election_if_due) — раз
+    // зашли в этот раздел, заодно подчистим то, чему пора насовсем уйти.
+    window.supa.rpc('purge_old_deleted_conversations').then(function () {
+      window.supa.from('conversations')
+        .select('id, deleted_at, a:profiles!user_a(id,nickname), b:profiles!user_b(id,nickname)')
+        .not('deleted_at', 'is', null)
+        .order('deleted_at', { ascending: false })
+        .then(function (res) {
+          if (res.error) { deletedConvsBox.innerHTML = '<p class="hint">' + escapeHtml(res.error.message) + '</p>'; return; }
+          var rows = res.data || [];
+          if (!rows.length) { deletedConvsBox.innerHTML = '<p class="hint" style="padding:4px 2px">Удалённых переписок нет.</p>'; return; }
+          deletedConvsBox.innerHTML = '';
+          rows.forEach(function (row) {
+            var a = row.a || {}, b = row.b || {};
+            var card = document.createElement('div');
+            card.className = 'queue-card';
+            card.innerHTML =
+              '<div class="ph" style="background:none;display:flex;align-items:center;justify-content:center;font-size:20px">💬</div>' +
+              '<div class="body">' +
+                '<div class="name">' + escapeHtml(a.nickname || '?') + ' &harr; ' + escapeHtml(b.nickname || '?') + '</div>' +
+                '<div class="meta">Удалена: ' + fmtDateTime(row.deleted_at) + '</div>' +
+                '<div class="acts"><button class="submit" type="button" data-restore="' + row.id + '">Восстановить</button></div>' +
+              '</div>';
+            deletedConvsBox.appendChild(card);
+          });
+          deletedConvsBox.querySelectorAll('[data-restore]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              btn.disabled = true;
+              window.supa.rpc('admin_restore_conversation', { p_conversation_id: Number(btn.getAttribute('data-restore')) }).then(function (r) {
+                if (r.error) { alert(r.error.message); btn.disabled = false; return; }
+                loadDeletedConversations();
+              });
+            });
+          });
+        });
+    });
   }
 
   // Одна общая кнопка вместо кнопки на каждой карточке — открывает историю

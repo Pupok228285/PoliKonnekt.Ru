@@ -231,6 +231,7 @@
       window.supa.from('conversations')
         .select('id, user_a, user_b, last_message_at, a:profiles!user_a(id,nickname,verified,avatar_url), b:profiles!user_b(id,nickname,verified,avatar_url)')
         .eq('status', 'accepted')
+        .is('deleted_at', null)
         .or('user_a.eq.' + myId + ',user_b.eq.' + myId)
         .order('last_message_at', { ascending: false }),
       window.supa.rpc('my_chat_groups'),
@@ -397,8 +398,8 @@
       if (!current || current.kind !== 'dm') return;
       var convId = current.id;
       var nick = current.otherNick;
-      window.pkConfirm('Удалить переписку с «' + nick + '» насовсем? Сообщения исчезнут у обоих, это нельзя отменить.', function () {
-        window.supa.from('conversations').delete().eq('id', convId).then(function (r) {
+      window.pkConfirm('Удалить переписку с «' + nick + '»? Пропадёт из списка у вас обоих. Ещё 14 дней хранится в базе — если передумаете, через Поддержку можно попросить восстановить.', function () {
+        window.supa.rpc('soft_delete_conversation', { p_conversation_id: convId }).then(function (r) {
           if (r.error) { alert(r.error.message); return; }
           if (current && current.kind === 'dm' && current.id === convId) closeConversation();
           loadInbox();
