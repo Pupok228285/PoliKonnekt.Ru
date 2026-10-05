@@ -127,7 +127,13 @@
       });
   }
 
-  if (showAllBtn) showAllBtn.addEventListener('click', function () { expanded = true; render(); });
+  if (showAllBtn) {
+    showAllBtn.addEventListener('click', function () {
+      expanded = true;
+      render();
+      if (hideBtn) hideBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
   if (hideBtn) {
     hideBtn.addEventListener('click', function () {
       expanded = false;
