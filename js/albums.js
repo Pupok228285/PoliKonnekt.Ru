@@ -14,6 +14,51 @@
   var crumbCurrent = document.getElementById('crumbCurrent');
   if (!listEl) return;
 
+  // ---------- лайтбокс: увеличенный просмотр фото альбома ----------
+  var lightbox = document.getElementById('lightbox');
+  var lbImg = document.getElementById('lbImg');
+  var lbClose = document.getElementById('lbClose');
+  var lbPrev = document.getElementById('lbPrev');
+  var lbNext = document.getElementById('lbNext');
+  var lbCount = document.getElementById('lbCount');
+  var lbUrls = [];
+  var lbIndex = 0;
+
+  function showLb(i) {
+    if (!lbUrls.length) return;
+    lbIndex = (i + lbUrls.length) % lbUrls.length;
+    lbImg.src = lbUrls[lbIndex];
+    if (lbCount) lbCount.textContent = (lbIndex + 1) + ' из ' + lbUrls.length;
+  }
+
+  function openLightbox(urls, index) {
+    lbUrls = urls;
+    if (!lightbox) return;
+    lightbox.hidden = false;
+    showLb(index);
+  }
+
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.hidden = true;
+    lbImg.src = '';
+  }
+
+  if (lbClose) lbClose.addEventListener('click', closeLightbox);
+  if (lbPrev) lbPrev.addEventListener('click', function () { showLb(lbIndex - 1); });
+  if (lbNext) lbNext.addEventListener('click', function () { showLb(lbIndex + 1); });
+  if (lightbox) {
+    lightbox.addEventListener('click', function (e) {
+      if (e.target === lightbox) closeLightbox(); // клик по тёмному фону вокруг фото
+    });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (!lightbox || lightbox.hidden) return;
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowLeft') showLb(lbIndex - 1);
+    else if (e.key === 'ArrowRight') showLb(lbIndex + 1);
+  });
+
   var id = new URLSearchParams(window.location.search).get('id');
 
   function compressImage(file, maxDim, quality) {
@@ -70,13 +115,15 @@
         return;
       }
       photosEl.innerHTML = '';
-      photosRes.data.forEach(function (p) {
+      var urls = photosRes.data.map(function (p) { return p.url; });
+      photosRes.data.forEach(function (p, i) {
         var fig = document.createElement('figure');
         var ph = document.createElement('div');
         ph.className = 'ph';
         ph.style.backgroundImage = 'url(' + p.url + ')';
         ph.style.backgroundSize = 'cover';
         ph.style.backgroundPosition = 'center';
+        ph.addEventListener('click', function () { openLightbox(urls, i); });
         fig.appendChild(ph);
         photosEl.appendChild(fig);
       });

@@ -976,8 +976,66 @@ html, body { overflow-x: hidden; }
   width: 108px; height: 108px;
   border: 1px solid #93a8c6;
   background: linear-gradient(135deg, #eef3f9, #cfe0f0);
+  cursor: pointer;
 }
 .p-photos figcaption { margin-top: 3px; font: 10px/1.4 var(--font); color: #555; text-align: center; }
+
+/* ---------- лайтбокс (увеличенный просмотр фото) ---------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(10, 14, 20, .88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox[hidden] { display: none; }
+.lightbox img {
+  max-width: 90vw;
+  max-height: 86vh;
+  border: 2px solid #334;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, .65);
+}
+.lightbox button {
+  position: absolute;
+  background: rgba(20, 24, 32, .55);
+  border: 1px solid rgba(255, 255, 255, .3);
+  color: #fff;
+  cursor: pointer;
+  line-height: 1;
+}
+.lightbox button:hover { background: rgba(40, 46, 58, .8); }
+.lb-close {
+  top: 14px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 20px;
+}
+.lb-nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 26px;
+}
+.lb-prev { left: 12px; }
+.lb-next { right: 12px; }
+.lb-count {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font: 11px/1.4 var(--font);
+  background: rgba(20, 24, 32, .55);
+  padding: 3px 10px;
+  border-radius: 10px;
+}
 
 /* ---------- знакомства ---------- */
 
