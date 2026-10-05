@@ -36,6 +36,7 @@
   var allListings = [];
   var myListings = [];
   var myListingsLoaded = false;
+  var isStaff = false;
   var editingId = null; // id объявления, которое сейчас редактируем (null — форма создаёт новое)
   var editingPhotoUrl = null; // старое фото редактируемого объявления — сохраняем, если новое не выбрали
   var activeTab = '';
@@ -196,19 +197,34 @@
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  // Фото объявления хранится отдельно от записи в БД — после удаления
+  // самого объявления файл в сторадже так и останется висеть, если не
+  // убрать его явно (место на бакете не освобождается само по себе).
+  function removePhotoFile(photoUrl) {
+    if (!photoUrl) return;
+    var path = photoUrl.split('/listing-photos/')[1];
+    if (path) window.supa.storage.from('listing-photos').remove([path]);
+  }
+
   function deleteListing(id) {
     window.pkConfirm('Удалить объявление? Это нельзя отменить.', function () {
       var item = myListings.filter(function (x) { return x.id === id; })[0];
       window.supa.from('listings').delete().eq('id', id).then(function (r) {
         if (r.error) { alert(r.error.message); return; }
-        // Фото объявления хранится отдельно от записи в БД — после удаления
-        // самого объявления файл в сторадже так и останется висеть, если не
-        // убрать его явно (место на бакете не освобождается само по себе).
-        if (item && item.photo_url) {
-          var path = item.photo_url.split('/listing-photos/')[1];
-          if (path) window.supa.storage.from('listing-photos').remove([path]);
-        }
+        if (item) removePhotoFile(item.photo_url);
         loadMyListings().then(render);
+        loadListings();
+      });
+    });
+  }
+
+  // Удаление любого (не только своего) объявления — только для админа/
+  // модератора, кнопка видна исключительно им (см. renderRow).
+  function staffDeleteListing(item) {
+    window.pkConfirm('Удалить это объявление? Это нельзя отменить.', function () {
+      window.supa.from('listings').delete().eq('id', item.id).then(function (r) {
+        if (r.error) { alert(r.error.message); return; }
+        removePhotoFile(item.photo_url);
         loadListings();
       });
     });
@@ -232,9 +248,12 @@
     tr.innerHTML =
       '<td class="row2 ic">' + iconCell + '</td>' +
       '<td class="row1"><a class="ttl" href="' + view + '">' + escapeHtml(item.title) + '</a><span class="desc">' + escapeHtml(item.category) + ' · ' + escapeHtml(item.description) + '</span></td>' +
-      '<td class="row2"><span class="nick' + (prof.verified ? ' ok' : '') + '">' + escapeHtml(nickname) + '</span>' + tick + '<br><a href="' + to + '" style="font-size:10px">Написать</a></td>' +
+      '<td class="row2"><span class="nick' + (prof.verified ? ' ok' : '') + '">' + escapeHtml(nickname) + '</span>' + tick + '<br><a href="' + to + '" style="font-size:10px">Написать</a>' +
+        (isStaff ? '<br><a href="#" class="staff-del" style="font-size:10px;color:#b23e00">Удалить</a>' : '') + '</td>' +
       '<td class="row1 c">' + priceHtml + '</td>' +
       '<td class="row2 upd hide-m">' + fmtDateTime(item.created_at) + '</td>';
+    var staffDelA = tr.querySelector('a.staff-del');
+    if (staffDelA) staffDelA.addEventListener('click', function (e) { e.preventDefault(); staffDeleteListing(item); });
     return tr;
   }
 
@@ -401,4 +420,16 @@
   }
 
   loadListings();
+
+  // Статус админа/модератора — не блокирует показ объявлений (они видны и
+  // гостю), просто досрочно перерисовывает список с кнопкой «Удалить»,
+  // как только придёт ответ.
+  window.supa.auth.getSession().then(function (res) {
+    var session = res.data && res.data.session;
+    if (!session) return;
+    window.supa.from('profiles').select('is_admin, is_moderator').eq('id', session.user.id).single().then(function (pr) {
+      isStaff = !!(pr.data && (pr.data.is_admin || pr.data.is_moderator));
+      if (isStaff && activeTab !== 'mine') render();
+    });
+  });
 })();

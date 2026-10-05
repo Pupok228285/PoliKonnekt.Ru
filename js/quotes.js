@@ -28,6 +28,7 @@
   };
   var allPosts = [];
   var activeKind = '';
+  var isStaff = false;
 
   function syncComposerKind() {
     if (!kindSelect) return;
@@ -70,7 +71,21 @@
         '</span>' +
         '<a href="#" class="comment-toggle" data-ctype="quote_post" data-cid="' + row.id + '">Комментарии (' + (row.comment_count || 0) + ')</a>' +
         '<a href="#" data-target-user="' + (prof.id || '') + '">Пожаловаться</a>' +
+        (isStaff ? '<a href="#" class="quote-del" style="color:#b23e00">Удалить</a>' : '') +
       '</div>';
+    var delA = div.querySelector('a.quote-del');
+    if (delA) {
+      delA.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.pkConfirm('Удалить эту запись? Это нельзя отменить.', function () {
+          window.supa.from('quote_posts').delete().eq('id', row.id).then(function (r) {
+            if (r.error) { alert(r.error.message); return; }
+            allPosts = allPosts.filter(function (p) { return p.id !== row.id; });
+            div.remove();
+          });
+        });
+      });
+    }
     return div;
   }
 
@@ -121,6 +136,17 @@
   if (kindSelect) kindSelect.addEventListener('change', syncComposerKind);
 
   loadFeed();
+
+  // Статус админа/модератора — не блокирует показ (видно и гостю), просто
+  // досрочно перерисовывает список с кнопкой «Удалить», как придёт ответ.
+  window.supa.auth.getSession().then(function (res) {
+    var session = res.data && res.data.session;
+    if (!session) return;
+    window.supa.from('profiles').select('is_admin, is_moderator').eq('id', session.user.id).single().then(function (pr) {
+      isStaff = !!(pr.data && (pr.data.is_admin || pr.data.is_moderator));
+      if (isStaff) render();
+    });
+  });
 
   if (composer) {
     composer.addEventListener('submit', function (e) {

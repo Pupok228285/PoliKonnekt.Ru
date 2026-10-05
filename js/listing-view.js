@@ -68,5 +68,32 @@
         document.getElementById('lvPhoto').src = item.photo_url;
         document.getElementById('lvPhotoWrap').hidden = false;
       }
+
+      // Удалить может только админ/модератор (не сам автор — для своих
+      // объявлений редактирование/удаление уже есть во вкладке «Мои
+      // объявления» на listings.html).
+      window.supa.auth.getSession().then(function (sres) {
+        var session = sres.data && sres.data.session;
+        if (!session) return;
+        window.supa.from('profiles').select('is_admin, is_moderator').eq('id', session.user.id).single().then(function (pr) {
+          var isStaff = !!(pr.data && (pr.data.is_admin || pr.data.is_moderator));
+          if (!isStaff) return;
+          var delBtn = document.getElementById('lvDeleteBtn');
+          if (!delBtn) return;
+          delBtn.hidden = false;
+          delBtn.addEventListener('click', function () {
+            window.pkConfirm('Удалить это объявление? Это нельзя отменить.', function () {
+              window.supa.from('listings').delete().eq('id', item.id).then(function (r) {
+                if (r.error) { alert(r.error.message); return; }
+                if (item.photo_url) {
+                  var path = item.photo_url.split('/listing-photos/')[1];
+                  if (path) window.supa.storage.from('listing-photos').remove([path]);
+                }
+                window.location.href = 'listings.html';
+              });
+            });
+          });
+        });
+      });
     });
 })();
