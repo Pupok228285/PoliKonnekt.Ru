@@ -842,9 +842,11 @@ html, body { overflow-x: hidden; }
   font: bold 20px/1 var(--font-head);
   color: #2c4568;
   transition: opacity .12s;
+  min-width: 48px;
+  text-align: center;
 }
 .wb-daynum.flash { opacity: .25; }
-.wb-datesub { font: 10px var(--font); color: #7c8aa0; }
+.wb-datesub { font: 10px var(--font); color: #7c8aa0; min-width: 44px; text-align: center; }
 .wb-year { font: bold 13px/1 var(--font-head); color: #2c4568; min-width: 34px; text-align: center; }
 .wb-today {
   flex: none;
