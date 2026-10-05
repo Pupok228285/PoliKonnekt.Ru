@@ -565,6 +565,20 @@ p { margin: 0 0 8px; }
 .post .acts a.fa-goto { margin-left: 16px; }
 .post-wrap { grid-column: 2; }
 
+.fa-float-top {
+  position: fixed;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 3px;
+}
+
 /* ---------- «Активные участники» ---------- */
 
 .online-count { padding: 2px 4px 6px; font: 12px/1.6 Tahoma, var(--font); }

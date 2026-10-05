@@ -11,12 +11,17 @@
   var body = document.getElementById('forumActivityBody');
   var showAllBtn = document.getElementById('forumActivityShowAll');
   var hideBtn = document.getElementById('forumActivityHide');
-  var toTopBtn = document.getElementById('forumActivityToTop');
+  var floatTopBtn = document.getElementById('forumActivityFloatTop');
   if (!body) return;
 
   var INITIAL = 10;
   var allRows = [];
   var expanded = false;
+  var boxInView = false;
+
+  function updateFloatBtn() {
+    if (floatTopBtn) floatTopBtn.hidden = !(expanded && boxInView);
+  }
 
   function escapeHtml(s) {
     var d = document.createElement('div');
@@ -98,7 +103,7 @@
     if (window.PKSocial) window.PKSocial.scan(body);
     if (showAllBtn) showAllBtn.hidden = expanded || allRows.length <= INITIAL;
     if (hideBtn) hideBtn.hidden = !expanded;
-    if (toTopBtn) toTopBtn.hidden = !expanded;
+    updateFloatBtn();
   }
 
   function load() {
@@ -130,10 +135,16 @@
   }
 
   if (showAllBtn) showAllBtn.addEventListener('click', function () { expanded = true; render(); });
-  if (toTopBtn) {
-    toTopBtn.addEventListener('click', function () {
+  if (floatTopBtn) {
+    floatTopBtn.addEventListener('click', function () {
       if (box) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+  }
+  if (box && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      boxInView = entries[entries.length - 1].isIntersecting;
+      updateFloatBtn();
+    }).observe(box);
   }
   if (hideBtn) {
     hideBtn.addEventListener('click', function () {
