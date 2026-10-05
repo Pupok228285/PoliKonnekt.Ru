@@ -11,6 +11,7 @@
   var body = document.getElementById('forumActivityBody');
   var showAllBtn = document.getElementById('forumActivityShowAll');
   var hideBtn = document.getElementById('forumActivityHide');
+  var toTopBtn = document.getElementById('forumActivityToTop');
   if (!body) return;
 
   var INITIAL = 10;
@@ -97,6 +98,7 @@
     if (window.PKSocial) window.PKSocial.scan(body);
     if (showAllBtn) showAllBtn.hidden = expanded || allRows.length <= INITIAL;
     if (hideBtn) hideBtn.hidden = !expanded;
+    if (toTopBtn) toTopBtn.hidden = !expanded;
   }
 
   function load() {
@@ -127,11 +129,10 @@
       });
   }
 
-  if (showAllBtn) {
-    showAllBtn.addEventListener('click', function () {
-      expanded = true;
-      render();
-      if (hideBtn) hideBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (showAllBtn) showAllBtn.addEventListener('click', function () { expanded = true; render(); });
+  if (toTopBtn) {
+    toTopBtn.addEventListener('click', function () {
+      if (box) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
   if (hideBtn) {
