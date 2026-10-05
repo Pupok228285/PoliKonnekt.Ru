@@ -29,6 +29,11 @@
       ' - ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   }
 
+  function trim90(s) {
+    s = s || '';
+    return s.length > 90 ? s.slice(0, 90) + '…' : s;
+  }
+
   function renderPost(row) {
     var prof = row.profiles || {};
     var topic = row.forum_topics || {};
@@ -47,7 +52,9 @@
         nickHtml + tick +
         '<span class="av"' + avStyle + '>' + (prof.avatar_url ? '' : escapeHtml(initial)) + '</span>' +
       '</div>' +
-      '<div class="top"><span class="no">в теме «' + escapeHtml(topic.title || '?') + '»</span><span>' + fmtDateTime(row.created_at) + '</span></div>' +
+      '<div class="top"><span class="no">в теме «' + escapeHtml(topic.title || '?') + '»</span><span>' + fmtDateTime(row.created_at) + '</span>' +
+        (row.replyToBody ? '<span class="fa-quote">«' + escapeHtml(row.replyToNick) + '» писал(а): «' + escapeHtml(trim90(row.replyToBody)) + '»</span>' : '') +
+      '</div>' +
       '<div class="body">' + escapeHtml(row.body).replace(/\n/g, '<br>') + '</div>' +
       '<div class="acts">' +
         '<span class="vote-widget" data-vtype="forum_reply" data-vid="' + row.id + '">' +
@@ -112,15 +119,27 @@
         var rows = res.data;
         var topicIds = [];
         rows.forEach(function (r) { if (topicIds.indexOf(r.topic_id) === -1) topicIds.push(r.topic_id); });
-        // Первое сообщение темы (её "открывающий" пост) — отдельная подпись
-        // кнопки ("Перейти в тему" вместо "Перейти к ответу").
-        window.supa.from('forum_replies').select('id, topic_id').in('topic_id', topicIds).order('id', { ascending: true })
+        // Полный порядок сообщений по вовлечённым темам — чтобы у каждого
+        // найти именно ПРЕДЫДУЩЕЕ по хронологии сообщение (на что оно
+        // отвечает), а не всегда открывающий пост темы.
+        window.supa.from('forum_replies').select('id, topic_id, body, profiles!author_id(nickname)')
+          .in('topic_id', topicIds).order('id', { ascending: true })
           .then(function (allRes) {
-            var firstIdByTopic = {};
+            var byTopic = {};
             (allRes.data || []).forEach(function (r) {
-              if (!(r.topic_id in firstIdByTopic)) firstIdByTopic[r.topic_id] = r.id;
+              (byTopic[r.topic_id] = byTopic[r.topic_id] || []).push(r);
             });
-            rows.forEach(function (r) { r.isFirst = firstIdByTopic[r.topic_id] === r.id; });
+            rows.forEach(function (r) {
+              var list = byTopic[r.topic_id] || [];
+              var idx = -1;
+              for (var i = 0; i < list.length; i++) { if (list[i].id === r.id) { idx = i; break; } }
+              r.isFirst = idx === 0;
+              if (idx > 0) {
+                var prev = list[idx - 1];
+                r.replyToNick = (prev.profiles && prev.profiles.nickname) || '?';
+                r.replyToBody = prev.body;
+              }
+            });
             allRows = rows;
             render();
           });
