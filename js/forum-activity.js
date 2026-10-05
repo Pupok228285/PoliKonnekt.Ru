@@ -103,7 +103,7 @@
     window.supa.from('forum_replies')
       .select('id, topic_id, body, created_at, score, profiles!author_id(id, nickname, verified, avatar_url), forum_topics!topic_id(id, title, section)')
       .order('created_at', { ascending: false })
-      .limit(10)
+      .limit(50)
       .then(function (res) {
         if (res.error || !res.data || !res.data.length) {
           body.innerHTML = '<p class="hint" style="padding:8px 2px">Сообщений пока нет.</p>';
