@@ -48,6 +48,7 @@
   var newMsgPhotoPreview = document.getElementById('newMsgPhotoPreview');
   var newMsgPendingPhoto = null;
   var dlgReportLink = document.getElementById('dlgReportLink');
+  var dlgDeleteLink = document.getElementById('dlgDeleteLink');
   var dlgMuteLink = document.getElementById('dlgMuteLink');
   var dlgFirstMsgHint = document.getElementById('dlgFirstMsgHint');
   var newGroupBtn = document.getElementById('newGroupBtn');
@@ -70,6 +71,9 @@
   var groupLeaveLink = document.getElementById('groupLeaveLink');
   var groupDeleteLink = document.getElementById('groupDeleteLink');
   if (!pmArea) return;
+
+  attachNickAutocomplete(newMsgNick, document.getElementById('newMsgNickSuggest'));
+  attachNickAutocomplete(groupAddNick, document.getElementById('groupAddNickSuggest'));
 
   var myId = null;
   var myAvatar = null;
@@ -103,6 +107,47 @@
     var d = document.createElement('div');
     d.textContent = s == null ? '' : String(s);
     return d.innerHTML;
+  }
+
+  // Подсказки похожих ников при вводе — переиспользуется и для «Написать
+  // новому человеку», и для «Добавить» в группу.
+  function attachNickAutocomplete(input, suggestBox) {
+    if (!input || !suggestBox) return;
+    var timer = null;
+
+    function hide() { suggestBox.hidden = true; suggestBox.innerHTML = ''; }
+    function pick(nick) { input.value = nick; hide(); input.focus(); }
+
+    input.addEventListener('input', function () {
+      var q = input.value.trim();
+      clearTimeout(timer);
+      if (q.length < 2) { hide(); return; }
+      timer = setTimeout(function () {
+        window.supa.from('profiles').select('id, nickname, avatar_url')
+          .ilike('nickname', '%' + q + '%')
+          .neq('id', myId || '00000000-0000-0000-0000-000000000000')
+          .limit(6)
+          .then(function (res) {
+            if (input.value.trim() !== q) return; // пока грузилось, текст сменился
+            var rows = res.data || [];
+            if (!rows.length) { hide(); return; }
+            suggestBox.innerHTML = rows.map(function (p) {
+              var av = p.avatar_url ? ' style="background-image:url(' + escapeHtml(p.avatar_url) + ')"' : '';
+              return '<a href="#" data-nick="' + escapeHtml(p.nickname) + '"><span class="msg-av"' + av + '>' +
+                (p.avatar_url ? '' : escapeHtml(p.nickname.charAt(0).toUpperCase())) + '</span>' + escapeHtml(p.nickname) + '</a>';
+            }).join('');
+            suggestBox.hidden = false;
+          });
+      }, 250);
+    });
+    suggestBox.addEventListener('mousedown', function (e) {
+      var a = e.target.closest('a[data-nick]');
+      if (!a) return;
+      e.preventDefault();
+      pick(a.getAttribute('data-nick'));
+    });
+    input.addEventListener('blur', function () { setTimeout(hide, 150); });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
   }
 
   function fmtShort(iso) {
@@ -303,6 +348,7 @@
     dlgTick.style.display = other.verified ? '' : 'none';
     blockLink.style.display = '';
     if (dlgReportLink) { dlgReportLink.style.display = ''; dlgReportLink.setAttribute('data-target-user', other.id || ''); }
+    if (dlgDeleteLink) dlgDeleteLink.hidden = false;
     if (dlgFirstMsgHint) dlgFirstMsgHint.hidden = false;
     if (groupMembersLink) groupMembersLink.hidden = true;
     if (groupPanel) groupPanel.hidden = true;
@@ -345,6 +391,22 @@
     });
   }
 
+  if (dlgDeleteLink) {
+    dlgDeleteLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (!current || current.kind !== 'dm') return;
+      var convId = current.id;
+      var nick = current.otherNick;
+      window.pkConfirm('Удалить переписку с «' + nick + '» насовсем? Сообщения исчезнут у обоих, это нельзя отменить.', function () {
+        window.supa.from('conversations').delete().eq('id', convId).then(function (r) {
+          if (r.error) { alert(r.error.message); return; }
+          if (current && current.kind === 'dm' && current.id === convId) closeConversation();
+          loadInbox();
+        });
+      });
+    });
+  }
+
   function openGroup(g) {
     current = { kind: 'group', id: g.group_id, title: g.title, ownerId: g.owner_id, memberCount: g.member_count };
     showDialogPane();
@@ -353,6 +415,7 @@
     dlgTick.style.display = 'none';
     blockLink.style.display = 'none';
     if (dlgReportLink) dlgReportLink.style.display = 'none';
+    if (dlgDeleteLink) dlgDeleteLink.hidden = true;
     if (dlgFirstMsgHint) dlgFirstMsgHint.hidden = true;
     blockedNote.hidden = true;
     chatRow.style.display = '';

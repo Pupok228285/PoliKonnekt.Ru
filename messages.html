@@ -6,7 +6,7 @@
 <title>Сообщения — ПолиКоннект.ru</title>
 <meta name="description" content="Личные сообщения: заявки на одобрение, входящие, блокировка.">
 <link rel="icon" type="image/svg+xml" href="img/logo-mark.svg?v=2">
-<link rel="stylesheet" href="css/style.css?v=59">
+<link rel="stylesheet" href="css/style.css?v=60">
 </head>
 <body>
 <div id="wrap">
@@ -143,11 +143,15 @@
                 <span class="sp2"></span>
                 <a href="#" class="danger" id="blockLink">Заблокировать</a>
                 <a href="#" class="danger" id="dlgReportLink">Пожаловаться</a>
+                <a href="#" class="danger" id="dlgDeleteLink" hidden>Удалить переписку</a>
               </div>
               <div class="pm-group-panel" id="groupPanel" hidden>
                 <div id="groupMembersList"></div>
                 <div class="p-row"><span class="lbl">Добавить</span><span class="val">
-                  <input class="field" type="text" id="groupAddNick" placeholder="ник" style="width:160px">
+                  <span class="nick-ac-wrap" style="width:160px">
+                    <input class="field" type="text" id="groupAddNick" placeholder="ник" style="width:100%" autocomplete="off">
+                    <div class="nick-suggest" id="groupAddNickSuggest" hidden></div>
+                  </span>
                   <button class="submit" type="button" id="groupAddBtn">Добавить</button>
                   <span class="hint" id="groupAddHint" style="margin-left:6px"></span>
                 </span></div>
@@ -185,7 +189,10 @@
         <div class="ipb">
           <div class="maintitle">Новому человеку</div>
           <form class="composer" id="newMsgForm" action="#" style="padding:8px" onsubmit="return false">
-            <input class="field" type="text" id="newMsgNick" placeholder="Ник получателя" style="width:220px;margin-bottom:6px">
+            <div class="nick-ac-wrap" style="width:220px;margin-bottom:6px">
+              <input class="field" type="text" id="newMsgNick" placeholder="Ник получателя" style="width:100%" autocomplete="off">
+              <div class="nick-suggest" id="newMsgNickSuggest" hidden></div>
+            </div>
             <textarea id="newMsgBody" placeholder="Первое сообщение..."></textarea>
             <div id="newMsgPhotoPreview" class="hint" style="display:none;padding:4px 2px 0"></div>
             <div class="row" style="position:relative">
@@ -247,7 +254,7 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/notify-toast.js?v=2"></script>
 <script src="js/notify-sound.js?v=4"></script>
 <script src="js/pm-badge.js?v=3"></script>
-<script src="js/messages.js?v=11"></script>
+<script src="js/messages.js?v=12"></script>
 <script src="js/confirm-dialog.js?v=1"></script>
 <script src="js/report.js?v=3"></script>
 <script src="js/dev-switch.js?v=1"></script>
