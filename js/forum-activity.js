@@ -1,5 +1,5 @@
 /*
- * «Лента сообщений форума» внизу форума — настоящие последние сообщения
+ * «Ответы на форуме» внизу forum.html — настоящие последние сообщения
  * (не декоративная сводка по темам), в том же виде, что посты в Ленте:
  * аватар, текст, голос за репутацию, можно сразу ответить в теме не уходя
  * со страницы, или перейти в саму тему прямо к этому сообщению.
@@ -38,7 +38,7 @@
     var nickHtml = prof.id ? '<a class="nick" href="profile.html?id=' + prof.id + '">' + escapeHtml(nick) + '</a>' : '<span class="nick">' + escapeHtml(nick) + '</span>';
     var avStyle = prof.avatar_url ? ' style="background-image:url(' + escapeHtml(prof.avatar_url) + ');background-size:cover;background-position:center"' : '';
     var topicHref = 'forum-topic.html?id=' + topic.id + '#reply-' + row.id;
-    var gotoLabel = row.isFirst ? 'Перейти в тему →' : 'Перейти к ответу →';
+    var gotoLabel = row.isFirst ? 'В тему' : 'К ответу';
 
     var div = document.createElement('div');
     div.className = 'post';

@@ -561,7 +561,7 @@ p { margin: 0 0 8px; }
 }
 .post .who .st { color: #3a4f6c; }
 .post .acts { padding: 3px 8px; background: #d1dceb; font-size: 10px; display: flex; gap: 12px; }
-.post .acts a { color: var(--head-text); text-decoration: underline; font-weight: normal; }
+.post .acts a { color: var(--head-text); text-decoration: underline; font-weight: normal; white-space: nowrap; }
 .post-wrap { grid-column: 2; }
 
 /* ---------- «Активные участники» ---------- */
