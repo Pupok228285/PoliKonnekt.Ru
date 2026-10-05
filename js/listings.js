@@ -14,6 +14,8 @@
   var searchInput = document.getElementById('listingSearch');
   var searchCategory = document.getElementById('listingSearchCategory');
   var searchBtn = document.getElementById('listingSearchBtn');
+  var seeAllBtn = document.getElementById('listingsSeeAll');
+  var CAP = 5; // ограничение действует только там, где есть кнопка «Показать все» (сейчас — главная)
 
   var openBtn = document.getElementById('newListingOpenBtn');
   var section = document.getElementById('newListingSection');
@@ -125,6 +127,7 @@
     listingsBody.innerHTML = '';
 
     if (activeTab === 'mine') {
+      if (seeAllBtn) seeAllBtn.hidden = true;
       if (!myListings.length) {
         listingsBody.innerHTML = '<tr><td colspan="5" class="hint" style="padding:8px">У вас пока нет объявлений.</td></tr>';
         return;
@@ -136,9 +139,12 @@
     var list = allListings.filter(matches);
     if (!list.length) {
       listingsBody.innerHTML = '<tr><td colspan="5" class="hint" style="padding:8px">Пока ничего не нашлось.</td></tr>';
+      if (seeAllBtn) seeAllBtn.hidden = true;
       return;
     }
-    list.forEach(function (item) { listingsBody.appendChild(renderRow(item)); });
+    var shown = seeAllBtn ? list.slice(0, CAP) : list;
+    shown.forEach(function (item) { listingsBody.appendChild(renderRow(item)); });
+    if (seeAllBtn) seeAllBtn.hidden = list.length <= CAP;
   }
 
   function renderMyRow(item) {
