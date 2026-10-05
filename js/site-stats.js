@@ -22,6 +22,7 @@
   var statNewestNick = document.getElementById('statNewestNick');
   var statFeed = document.getElementById('statFeedCount');
   var statForum = document.getElementById('statForumCount');
+  var statForumReplies = document.getElementById('statForumRepliesCount');
   var onlineCountLine = document.getElementById('onlineCountLine');
   var onlineTable = document.getElementById('onlineTable');
   var recentTopicsBody = document.getElementById('recentTopicsBody');
@@ -60,6 +61,11 @@
     window.supa.from('forum_topics').select('id', { count: 'exact', head: true }).then(function (res) {
       statForum.textContent = res.count != null ? res.count : '?';
     });
+    if (statForumReplies) {
+      window.supa.from('forum_replies').select('id', { count: 'exact', head: true }).then(function (res) {
+        statForumReplies.textContent = res.count != null ? res.count : '?';
+      });
+    }
   }
   loadSidebarStats();
 
