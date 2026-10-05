@@ -52,7 +52,7 @@
       link: function (r) { return 'diary.html?id=' + r.author_id; } },
     { table: 'listings', select: 'id, title, kind, created_at, profiles(nickname)', icon: 'i-service.svg',
       verb: function (r) { return r.kind === 'thing' ? 'разместил(а) вещь' : 'разместил(а) услугу'; }, body: function (r) { return r.title; },
-      link: function () { return 'index.html#uslugi'; } },
+      link: function (r) { return 'listing-view.html?id=' + r.id; } },
     { table: 'lost_found_posts', select: 'id, title, kind, created_at, profiles(nickname)', icon: 'i-lost.svg',
       verb: function (r) { return r.kind === 'found' ? 'нашёл(нашла)' : 'потерял(а)'; }, body: function (r) { return r.title; },
       link: function () { return 'lostfound.html'; } }
