@@ -860,6 +860,7 @@ html, body { overflow-x: hidden; }
 }
 .wb-today:hover { background: #f2f6fb; }
 
+.ring-pop[hidden] { display: none; } /* [hidden] и .ring-pop{display:flex} ниже — одна специфичность, без этого правила атрибут hidden не действует */
 .ring-pop {
   position: absolute;
   top: 100%;
