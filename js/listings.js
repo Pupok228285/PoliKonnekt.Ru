@@ -154,12 +154,13 @@
     if (item.deal_type === 'free') priceHtml = '<span class="price free">даром</span>';
     else if (item.deal_type === 'wanted') priceHtml = '<span class="price wanted">ищу</span>';
     else priceHtml = '<span class="price">' + escapeHtml(item.price_text || '—') + '</span>';
+    var view = 'listing-view.html?id=' + item.id;
     var iconCell = item.photo_url
-      ? '<img class="listing-photo" src="' + escapeHtml(item.photo_url) + '" alt="">'
-      : '<img src="' + icon + '" alt="">';
+      ? '<a href="' + view + '"><img class="listing-photo" src="' + escapeHtml(item.photo_url) + '" alt=""></a>'
+      : '<a href="' + view + '"><img src="' + icon + '" alt=""></a>';
     tr.innerHTML =
       '<td class="row2 ic">' + iconCell + '</td>' +
-      '<td class="row1"><span class="ttl">' + escapeHtml(item.title) + '</span> ' + (STATUS_LABELS[item.status] || '') +
+      '<td class="row1"><a class="ttl" href="' + view + '">' + escapeHtml(item.title) + '</a> ' + (STATUS_LABELS[item.status] || '') +
         '<span class="desc">' + escapeHtml(item.category) + ' · ' + escapeHtml(item.description) + '</span></td>' +
       '<td class="row2"><a href="#" class="my-edit" data-id="' + item.id + '" style="font-size:10px">Редактировать</a><br>' +
         '<a href="#" class="my-delete" data-id="' + item.id + '" style="font-size:10px;color:#b23e00">Удалить</a></td>' +
@@ -197,8 +198,16 @@
 
   function deleteListing(id) {
     window.pkConfirm('Удалить объявление? Это нельзя отменить.', function () {
+      var item = myListings.filter(function (x) { return x.id === id; })[0];
       window.supa.from('listings').delete().eq('id', id).then(function (r) {
         if (r.error) { alert(r.error.message); return; }
+        // Фото объявления хранится отдельно от записи в БД — после удаления
+        // самого объявления файл в сторадже так и останется висеть, если не
+        // убрать его явно (место на бакете не освобождается само по себе).
+        if (item && item.photo_url) {
+          var path = item.photo_url.split('/listing-photos/')[1];
+          if (path) window.supa.storage.from('listing-photos').remove([path]);
+        }
         loadMyListings().then(render);
         loadListings();
       });
@@ -216,12 +225,13 @@
     var nickname = prof.nickname || '?';
     var tick = prof.verified ? '<img class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён">' : '';
     var to = 'messages.html?to=' + encodeURIComponent(nickname);
+    var view = 'listing-view.html?id=' + item.id;
     var iconCell = item.photo_url
-      ? '<img class="listing-photo" src="' + escapeHtml(item.photo_url) + '" alt="">'
-      : '<img src="' + icon + '" alt="">';
+      ? '<a href="' + view + '"><img class="listing-photo" src="' + escapeHtml(item.photo_url) + '" alt=""></a>'
+      : '<a href="' + view + '"><img src="' + icon + '" alt=""></a>';
     tr.innerHTML =
       '<td class="row2 ic">' + iconCell + '</td>' +
-      '<td class="row1"><a class="ttl" href="' + to + '">' + escapeHtml(item.title) + '</a><span class="desc">' + escapeHtml(item.category) + ' · ' + escapeHtml(item.description) + '</span></td>' +
+      '<td class="row1"><a class="ttl" href="' + view + '">' + escapeHtml(item.title) + '</a><span class="desc">' + escapeHtml(item.category) + ' · ' + escapeHtml(item.description) + '</span></td>' +
       '<td class="row2"><span class="nick' + (prof.verified ? ' ok' : '') + '">' + escapeHtml(nickname) + '</span>' + tick + '<br><a href="' + to + '" style="font-size:10px">Написать</a></td>' +
       '<td class="row1 c">' + priceHtml + '</td>' +
       '<td class="row2 upd hide-m">' + fmtDateTime(item.created_at) + '</td>';
