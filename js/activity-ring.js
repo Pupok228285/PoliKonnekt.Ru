@@ -34,12 +34,14 @@
   var BAR_MIN = 4, BAR_MAX = 32; // px — высота столбика: минимум/по максимуму месяца
 
   var today = new Date();
+  var nowHour = today.getHours(); // текущий час нужно взять ДО обнуления today ниже
   today.setHours(0, 0, 0, 0);
   var siteBirth = new Date(today); // уточнится в determineSiteBirth()
 
   var viewYear = today.getFullYear();
   var viewMonth = today.getMonth(); // какой месяц сейчас показан в гистограмме
   var selDate = new Date(today); // какой день выбран (большая цифра + попап)
+  var selHour = null; // выбранный час в масштабе "Часы" — ставится при первом переключении на него
 
   var monthCounts = [];
   var monthMax = 0;
@@ -238,7 +240,7 @@
       var count = hourCounts[h] || 0;
       var hh = (h < 10 ? '0' : '') + h;
       var slot = document.createElement('div');
-      slot.className = 'wb-slot' + (count ? '' : ' empty');
+      slot.className = 'wb-slot' + (count ? '' : ' empty') + (h === selHour ? ' selected' : '');
       slot.title = hh + ':00–' + hh + ':59' + (count ? ' — ' + count + (count === 1 ? ' запись' : ' записей') : ' — тихо');
       slot.setAttribute('data-hour-bar', String(h));
       var bar = document.createElement('div');
@@ -291,9 +293,23 @@
     }
   }
 
+  // Текст большого числа и подписи под ним, а также то, что мотают стрелки
+  // ◀/▶ — зависит от масштаба: в "Месяцах" стрелки должны листать месяцы,
+  // в "Часах" — часы, а не всегда день, как было раньше независимо от
+  // выбранного масштаба.
   function updateBottom() {
-    var dayText = String(selDate.getDate());
-    var subText = sameDate(selDate, today) ? 'сегодня' : MONTHS_SHORT[selDate.getMonth()];
+    var dayText, subText;
+    if (scale === 'months') {
+      dayText = MONTHS_SHORT[selDate.getMonth()];
+      subText = String(viewYear);
+    } else if (scale === 'hours') {
+      var hh = (selHour < 10 ? '0' : '') + selHour;
+      dayText = hh + ':00';
+      subText = sameDate(selDate, today) ? 'сегодня' : (selDate.getDate() + ' ' + MONTHS_SHORT[selDate.getMonth()]);
+    } else {
+      dayText = String(selDate.getDate());
+      subText = sameDate(selDate, today) ? 'сегодня' : MONTHS_SHORT[selDate.getMonth()];
+    }
     if (dayEl.textContent !== dayText || subEl.textContent !== subText) {
       dayEl.textContent = dayText;
       subEl.textContent = subText;
@@ -303,10 +319,21 @@
       setTimeout(function () { dayEl.classList.remove('flash'); }, 150);
     }
     if (yearEl) yearEl.textContent = String(viewYear);
-    if (prevBtn) prevBtn.disabled = sameDate(selDate, siteBirth);
-    if (nextBtn) nextBtn.disabled = sameDate(selDate, today);
+    if (scale === 'months') {
+      if (prevBtn) prevBtn.disabled = (viewYear === siteBirth.getFullYear() && viewMonth === siteBirth.getMonth());
+      if (nextBtn) nextBtn.disabled = (viewYear === today.getFullYear() && viewMonth === today.getMonth());
+    } else if (scale === 'hours') {
+      if (prevBtn) prevBtn.disabled = sameDate(selDate, siteBirth) && selHour === 0;
+      if (nextBtn) nextBtn.disabled = sameDate(selDate, today) && selHour === 23;
+    } else {
+      if (prevBtn) prevBtn.disabled = sameDate(selDate, siteBirth);
+      if (nextBtn) nextBtn.disabled = sameDate(selDate, today);
+    }
     if (yearPrevBtn) yearPrevBtn.disabled = viewYear <= siteBirth.getFullYear();
     if (yearNextBtn) yearNextBtn.disabled = viewYear >= today.getFullYear();
+    var unitLabel = scale === 'months' ? 'месяц' : scale === 'hours' ? 'час' : 'день';
+    if (prevBtn) prevBtn.setAttribute('aria-label', 'Предыдущий ' + unitLabel);
+    if (nextBtn) nextBtn.setAttribute('aria-label', 'Следующий ' + unitLabel);
   }
 
   var popTimer = null;
@@ -336,16 +363,18 @@
 
   function renderPopContent(d, info) {
     var head = sameDate(d, today) ? 'Сегодня' : fmtDateObj(d);
+    var body;
     if (info && info.length) {
-      var html = '<b>' + head + '</b>';
-      html += info.slice(0, 14).map(function (r) {
+      body = '<b>' + head + '</b>';
+      body += info.slice(0, 14).map(function (r) {
         return '<a class="day-item" href="' + escapeHtml(r.href) + '">«' + escapeHtml(trim60(r.text)) +
           '»<span class="cat">' + escapeHtml(r.label) + '</span></a>';
       }).join('');
-      if (info.length > 14) html += '<span style="opacity:.6">…и ещё ' + (info.length - 14) + '</span>';
-      return html + CLOSE_BTN;
+      if (info.length > 14) body += '<span style="opacity:.6">…и ещё ' + (info.length - 14) + '</span>';
+    } else {
+      body = '<b>' + head + '</b><span style="opacity:.65">В этот день на сайте не было активности.</span>';
     }
-    return '<b>' + head + '</b><span style="opacity:.65">В этот день на сайте не было активности.</span>' + CLOSE_BTN;
+    return '<div class="ring-pop-body">' + body + '</div>' + CLOSE_BTN;
   }
 
   var popRequestId = 0;
@@ -439,9 +468,12 @@
   function setScale(s) {
     if (scale === s) return;
     scale = s;
+    if (scale === 'hours' && selHour === null) {
+      selHour = sameDate(selDate, today) ? nowHour : 0;
+    }
     updateScaleButtons();
     hidePop();
-    reloadForScale(function () { renderBars(); });
+    reloadForScale(function () { renderBars(); updateBottom(); });
   }
 
   barsEl.addEventListener('click', function (e) {
@@ -457,7 +489,13 @@
       return;
     }
     var hEl = e.target.closest('[data-hour-bar]');
-    if (hEl) { openHourPopup(parseInt(hEl.getAttribute('data-hour-bar'), 10)); return; }
+    if (hEl) {
+      selHour = parseInt(hEl.getAttribute('data-hour-bar'), 10);
+      renderHourBars();
+      updateBottom();
+      openHourPopup(selHour);
+      return;
+    }
   });
 
   if (scaleEl) {
@@ -478,19 +516,54 @@
     });
   }
 
-  if (prevBtn) prevBtn.addEventListener('click', function () {
-    var d = new Date(selDate); d.setDate(d.getDate() - 1); selectDate(d, true);
-  });
-  if (nextBtn) nextBtn.addEventListener('click', function () {
-    var d = new Date(selDate); d.setDate(d.getDate() + 1); selectDate(d, true);
-  });
+  // Шаг стрелок ◀/▶ — тот же, что и выбранный масштаб (день/месяц/час), а
+  // не всегда день, как было раньше независимо от масштаба.
+  function stepMonth(delta) {
+    var m = viewMonth + delta, y = viewYear;
+    if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+    navigateToMonth(y, m);
+  }
+  function stepDay(delta) {
+    var d = new Date(selDate); d.setDate(d.getDate() + delta); selectDate(d, true);
+  }
+  function stepHour(delta) {
+    var newHour = selHour + delta;
+    var d = new Date(selDate);
+    if (newHour < 0) { newHour = 23; d.setDate(d.getDate() - 1); }
+    else if (newHour > 23) { newHour = 0; d.setDate(d.getDate() + 1); }
+    d = clampDate(d);
+    var dayChanged = !sameDate(d, selDate);
+    selHour = newHour;
+    if (dayChanged) {
+      selDate = d;
+      viewYear = d.getFullYear();
+      viewMonth = d.getMonth();
+      loadHourData(selDate, function () {
+        renderHourBars();
+        updateBottom();
+        openHourPopup(selHour);
+      });
+    } else {
+      renderHourBars();
+      updateBottom();
+      openHourPopup(selHour);
+    }
+  }
+  function stepPrevNext(delta) {
+    if (scale === 'months') stepMonth(delta);
+    else if (scale === 'hours') stepHour(delta);
+    else stepDay(delta);
+  }
+
+  if (prevBtn) prevBtn.addEventListener('click', function () { stepPrevNext(-1); });
+  if (nextBtn) nextBtn.addEventListener('click', function () { stepPrevNext(1); });
   if (yearPrevBtn) yearPrevBtn.addEventListener('click', function () { navigateToMonth(viewYear - 1, viewMonth); });
   if (yearNextBtn) yearNextBtn.addEventListener('click', function () { navigateToMonth(viewYear + 1, viewMonth); });
 
   root.tabIndex = 0;
   root.addEventListener('keydown', function (e) {
-    if (e.key === 'ArrowRight') { var d = new Date(selDate); d.setDate(d.getDate() + 1); selectDate(d, true); e.preventDefault(); }
-    else if (e.key === 'ArrowLeft') { var d2 = new Date(selDate); d2.setDate(d2.getDate() - 1); selectDate(d2, true); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { stepPrevNext(1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft') { stepPrevNext(-1); e.preventDefault(); }
     else if (e.key === 'Home') { selectDate(today, true); e.preventDefault(); }
   });
 
