@@ -6,7 +6,7 @@
 <title>Форум — ПолиКоннект.ru</title>
 <meta name="description" content="Форум студентов по корпусам, факультетам и общим темам.">
 <link rel="icon" type="image/svg+xml" href="img/logo-mark.svg?v=2">
-<link rel="stylesheet" href="css/style.css?v=60">
+<link rel="stylesheet" href="css/style.css?v=62">
 </head>
 <body>
 <div id="wrap">
@@ -206,21 +206,10 @@
       </section>
 
       <section class="box" id="forumActivityBox">
-        <h2>Лента тем и ответов</h2>
+        <h2>Лента сообщений форума</h2>
+        <p style="padding:0 2px" class="hint">Последние сообщения из разных тем — можно ответить сразу отсюда или перейти в саму тему.</p>
         <div class="ipb">
-          <div class="maintitle">Последняя активность форума</div>
-          <table>
-            <thead>
-            <tr>
-              <th style="width:26px"></th>
-              <th>Тема</th>
-              <th style="width:120px" class="hide-m">Раздел</th>
-              <th class="c" style="width:64px">Ответов</th>
-              <th style="width:150px" class="hide-m">Обновление</th>
-            </tr>
-            </thead>
-            <tbody id="forumActivityBody"><tr><td colspan="5" class="hint" style="padding:8px">Загрузка...</td></tr></tbody>
-          </table>
+          <div id="forumActivityBody"><p class="hint" style="padding:8px 2px">Загрузка...</p></div>
           <div class="catend"></div>
         </div>
         <div class="btns" style="margin-top:8px">
@@ -267,7 +256,7 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/confirm-dialog.js?v=1"></script>
 <script src="js/report.js?v=3"></script>
 <script src="js/forum-stats.js?v=1"></script>
-<script src="js/forum-activity.js?v=1"></script>
+<script src="js/forum-activity.js?v=2"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>
 </html>

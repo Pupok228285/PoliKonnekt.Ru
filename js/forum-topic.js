@@ -83,6 +83,7 @@
     var avStyle = prof.avatar_url ? ' style="background-image:url(' + escapeHtml(prof.avatar_url) + ');background-size:cover;background-position:center"' : '';
     var el = document.createElement('div');
     el.className = 'post';
+    el.id = 'reply-' + row.id;
     el.innerHTML =
       '<div class="who">' +
         nickHtml +
@@ -126,6 +127,16 @@
         res.data.forEach(function (row, i) { renderReply(row, total - i); });
         if (sbCount) sbCount.textContent = String(total);
         if (window.PKSocial) window.PKSocial.scan(postsList);
+        // Пришли по ссылке на конкретный ответ (из ленты на forum.html) —
+        // проскроллить к нему и на секунду подсветить, чтобы не искать глазами.
+        if (window.location.hash.indexOf('#reply-') === 0) {
+          var target = document.getElementById(window.location.hash.slice(1));
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.classList.add('flash-target');
+            setTimeout(function () { target.classList.remove('flash-target'); }, 2000);
+          }
+        }
       });
   }
 

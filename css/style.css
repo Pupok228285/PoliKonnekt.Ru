@@ -1031,6 +1031,15 @@ html, body { overflow-x: hidden; }
 }
 .nick-suggest a:hover, .nick-suggest a.active { background: #eef3f9; }
 
+/* ---------- подсветка ответа, на который пришли по ссылке (forum-topic.js) ---------- */
+/* .post — grid-контейнер, дочерние ячейки сами красят фон, поэтому подсветка
+   через рамку/тень вокруг всей карточки, а не background на самом .post. */
+.post.flash-target { animation: postFlash 2s ease; }
+@keyframes postFlash {
+  0% { box-shadow: 0 0 0 3px #ffd84d; }
+  100% { box-shadow: 0 0 0 3px rgba(255, 216, 77, 0); }
+}
+
 .emoji-pop {
   position: absolute; bottom: 34px; left: 6px; z-index: 50;
   display: none; grid-template-columns: repeat(8, 22px); gap: 2px;
@@ -1491,5 +1500,6 @@ html, body { overflow-x: hidden; }
 .comment-thread { margin: 6px 0 2px; padding: 6px 8px; background: #f6f8fb; border: 1px solid #dbe4f0; border-radius: 3px; }
 .comment-row { font: 11px/1.6 var(--font); margin: 0 0 4px; }
 .comment-compose { display: flex; gap: 6px; margin-top: 4px; }
+.comment-compose[hidden] { display: none; }
 .comment-compose .field { flex: 1; height: 22px; font-size: 11px; }
 .comment-compose .submit { font-size: 10px; padding: 1px 8px; }

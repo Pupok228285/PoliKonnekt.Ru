@@ -1,8 +1,8 @@
 /*
- * «Лента тем и ответов» внизу форума — настоящие темы, отсортированные по
- * последней активности (создание или новый ответ), тот же принцип, что у
- * «Свежие темы форума» на главной (js/site-stats.js), но тут их 10 вместо
- * 5 и есть разворачивание в полный список.
+ * «Лента сообщений форума» внизу форума — настоящие последние сообщения
+ * (не декоративная сводка по темам), в том же виде, что посты в Ленте:
+ * аватар, текст, голос за репутацию, можно сразу ответить в теме не уходя
+ * со страницы, или перейти в саму тему прямо к этому сообщению.
  */
 (function () {
   if (!window.supa) return;
@@ -19,7 +19,7 @@
 
   function escapeHtml(s) {
     var d = document.createElement('div');
-    d.textContent = s == null ? '' : s;
+    d.textContent = s == null ? '' : String(s);
     return d.innerHTML;
   }
 
@@ -29,62 +29,105 @@
       ' - ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   }
 
-  function renderRow(info) {
-    var t = info.topic;
-    var authorProf = t.profiles || {};
-    var lastProf = info.lastAuthor || {};
-    var lastHtml = lastProf.id
-      ? '<a href="profile.html?id=' + lastProf.id + '">' + escapeHtml(lastProf.nickname || '?') + '</a>'
-      : escapeHtml(lastProf.nickname || authorProf.nickname || '?');
-    var tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td class="row2 ic"><a href="forum-topic.html?id=' + t.id + '"><img src="img/icons/i-arrow.svg" alt=""></a></td>' +
-      '<td class="row1"><a class="ttl" href="forum-topic.html?id=' + t.id + '">' + escapeHtml(t.title) + '</a>' +
-        '<span class="desc">начал ' + escapeHtml(authorProf.nickname || '?') + '</span></td>' +
-      '<td class="row2 hide-m"><a href="forum-section.html?name=' + encodeURIComponent(t.section) + '">' + escapeHtml(t.section) + '</a></td>' +
-      '<td class="row1 c">' + info.replyCount + '</td>' +
-      '<td class="row2 upd hide-m">' + fmtDateTime(info.lastAt) + '<br>Автор: ' + lastHtml + '</td>';
-    return tr;
+  function renderPost(row) {
+    var prof = row.profiles || {};
+    var topic = row.forum_topics || {};
+    var nick = prof.nickname || 'студент';
+    var initial = nick.charAt(0).toUpperCase();
+    var tick = prof.verified ? '<img class="tick" src="img/icons/i-verified.svg" alt="" title="Студент подтверждён">' : '';
+    var nickHtml = prof.id ? '<a class="nick" href="profile.html?id=' + prof.id + '">' + escapeHtml(nick) + '</a>' : '<span class="nick">' + escapeHtml(nick) + '</span>';
+    var avStyle = prof.avatar_url ? ' style="background-image:url(' + escapeHtml(prof.avatar_url) + ');background-size:cover;background-position:center"' : '';
+    var topicHref = 'forum-topic.html?id=' + topic.id + '#reply-' + row.id;
+    var gotoLabel = row.isFirst ? 'Перейти в тему →' : 'Перейти к ответу →';
+
+    var div = document.createElement('div');
+    div.className = 'post';
+    div.innerHTML =
+      '<div class="who">' +
+        nickHtml + tick +
+        '<span class="av"' + avStyle + '>' + (prof.avatar_url ? '' : escapeHtml(initial)) + '</span>' +
+      '</div>' +
+      '<div class="top"><span class="no">в теме «' + escapeHtml(topic.title || '?') + '»</span><span>' + fmtDateTime(row.created_at) + '</span></div>' +
+      '<div class="body">' + escapeHtml(row.body).replace(/\n/g, '<br>') + '</div>' +
+      '<div class="acts">' +
+        '<span class="vote-widget" data-vtype="forum_reply" data-vid="' + row.id + '">' +
+          '<button type="button" class="vote-up" title="В плюс репутации">&#9650;</button>' +
+          '<b class="vote-score">' + (row.score || 0) + '</b>' +
+          '<button type="button" class="vote-down" title="В минус репутации">&#9660;</button>' +
+        '</span>' +
+        '<a href="#" class="fa-reply-toggle">Ответить</a>' +
+        '<a href="' + topicHref + '">' + gotoLabel + '</a>' +
+      '</div>' +
+      '<div class="comment-compose fa-reply-box" hidden>' +
+        '<input class="field" type="text" placeholder="Ответ в теме «' + escapeHtml(topic.title || '?') + '»..." maxlength="4000">' +
+        '<button class="submit" type="button">Отправить</button>' +
+      '</div>';
+
+    var toggle = div.querySelector('.fa-reply-toggle');
+    var composeBox = div.querySelector('.fa-reply-box');
+    var input = composeBox.querySelector('input');
+    var sendBtn = composeBox.querySelector('button');
+    toggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      composeBox.hidden = !composeBox.hidden;
+      if (!composeBox.hidden) input.focus();
+    });
+    sendBtn.addEventListener('click', function () {
+      var text = (input.value || '').trim();
+      if (!text) return;
+      window.supa.auth.getSession().then(function (res) {
+        if (!res.data.session) { alert('Сначала войдите вверху страницы.'); return; }
+        sendBtn.disabled = true;
+        window.supa.from('forum_replies').insert({ topic_id: topic.id, author_id: res.data.session.user.id, body: text }).then(function (r) {
+          sendBtn.disabled = false;
+          if (r.error) { alert(r.error.message); return; }
+          input.value = '';
+          composeBox.innerHTML = '<span class="hint" style="color:#1d7813">Отправлено — загляните в тему, чтобы увидеть ответ.</span>';
+        });
+      });
+    });
+
+    return div;
   }
 
   function render() {
     var list = expanded ? allRows : allRows.slice(0, INITIAL);
     body.innerHTML = '';
-    list.forEach(function (info) { body.appendChild(renderRow(info)); });
+    list.forEach(function (row) { body.appendChild(renderPost(row)); });
+    if (window.PKSocial) window.PKSocial.scan(body);
     if (showAllBtn) showAllBtn.hidden = expanded || allRows.length <= INITIAL;
     if (hideBtn) hideBtn.hidden = !expanded;
   }
 
-  Promise.all([
-    window.supa.from('forum_topics').select('id, section, title, created_at, profiles!author_id(id, nickname)'),
-    window.supa.from('forum_replies').select('topic_id, created_at, profiles!author_id(id, nickname)')
-  ]).then(function (results) {
-    var topicsRes = results[0], repliesRes = results[1];
-    if (topicsRes.error || !topicsRes.data || !topicsRes.data.length) {
-      body.innerHTML = '<tr><td colspan="5" class="hint" style="padding:8px">Тем пока нет — станьте первым.</td></tr>';
-      return;
-    }
-    var byTopic = {};
-    topicsRes.data.forEach(function (t) {
-      byTopic[t.id] = { topic: t, replyCount: 0, lastAt: t.created_at, lastAuthor: t.profiles };
-    });
-    (repliesRes.data || []).forEach(function (r) {
-      var info = byTopic[r.topic_id];
-      if (!info) return;
-      info.replyCount++;
-      if (new Date(r.created_at) > new Date(info.lastAt)) {
-        info.lastAt = r.created_at;
-        info.lastAuthor = r.profiles;
-      }
-    });
-    allRows = Object.keys(byTopic).map(function (id) { return byTopic[id]; })
-      .sort(function (a, b) { return new Date(b.lastAt) - new Date(a.lastAt); });
-    render();
-  });
-
-  if (showAllBtn) {
-    showAllBtn.addEventListener('click', function () { expanded = true; render(); });
+  function load() {
+    window.supa.from('forum_replies')
+      .select('id, topic_id, body, created_at, score, profiles!author_id(id, nickname, verified, avatar_url), forum_topics!topic_id(id, title, section)')
+      .order('created_at', { ascending: false })
+      .limit(10)
+      .then(function (res) {
+        if (res.error || !res.data || !res.data.length) {
+          body.innerHTML = '<p class="hint" style="padding:8px 2px">Сообщений пока нет.</p>';
+          return;
+        }
+        var rows = res.data;
+        var topicIds = [];
+        rows.forEach(function (r) { if (topicIds.indexOf(r.topic_id) === -1) topicIds.push(r.topic_id); });
+        // Первое сообщение темы (её "открывающий" пост) — отдельная подпись
+        // кнопки ("Перейти в тему" вместо "Перейти к ответу").
+        window.supa.from('forum_replies').select('id, topic_id').in('topic_id', topicIds).order('id', { ascending: true })
+          .then(function (allRes) {
+            var firstIdByTopic = {};
+            (allRes.data || []).forEach(function (r) {
+              if (!(r.topic_id in firstIdByTopic)) firstIdByTopic[r.topic_id] = r.id;
+            });
+            rows.forEach(function (r) { r.isFirst = firstIdByTopic[r.topic_id] === r.id; });
+            allRows = rows;
+            render();
+          });
+      });
   }
+
+  if (showAllBtn) showAllBtn.addEventListener('click', function () { expanded = true; render(); });
   if (hideBtn) {
     hideBtn.addEventListener('click', function () {
       expanded = false;
@@ -92,4 +135,6 @@
       if (box) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
+
+  load();
 })();
