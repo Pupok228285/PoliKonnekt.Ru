@@ -47,7 +47,7 @@
   </div>
 
   <nav class="navigatore" aria-label="Разделы">
-    <a class="t-red" href="#uslugi">Услуги и вещи</a><a class="t-yellow" href="#lenta">Лента</a><a class="t-green" href="forum.html">Форум</a><a class="t-blue" href="diary.html">Дневник</a><a class="t-violet" href="albums.html">Альбомы</a>
+    <a class="t-red" href="#uslugi">Услуги и вещи</a><a class="t-yellow" href="lenta.html">Лента</a><a class="t-green" href="forum.html">Форум</a><a class="t-blue" href="diary.html">Дневник</a><a class="t-violet" href="albums.html">Альбомы</a>
   </nav>
 
   <div class="urlobar">
@@ -85,7 +85,7 @@
 
         <div class="row"><a class="item now" href="index.html"><img src="img/icons/i-home.svg" alt="">Главная</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Коротко обо всём новом: лента и свежие темы форума.</div></div>
 
-        <div class="row"><a class="item" href="#lenta"><img src="img/icons/i-arrow.svg" alt="">Лента</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Короткие посты обо всём: вопросы, находки, объявления, мысли.</div></div>
+        <div class="row"><a class="item" href="lenta.html"><img src="img/icons/i-arrow.svg" alt="">Лента</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Короткие посты обо всём: вопросы, находки, объявления, мысли.</div></div>
 
         <div class="row"><a class="item" href="forum.html"><img src="img/icons/i-feed.svg" alt="">Форум</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Обсуждения по факультетам, корпусам и общим темам.</div></div>
 
@@ -241,7 +241,7 @@
           <a class="on" href="#" title="Пока единственный режим — сортировка по свежести">Новые</a>
         </div>
         <div class="ipb">
-          <div class="maintitle"><a class="r" href="#">Вся лента &raquo;</a>Что нового у студентов</div>
+          <div class="maintitle"><a class="r" href="lenta.html">Вся лента &raquo;</a>Что нового у студентов</div>
           <form class="composer" id="feedComposer">
             <textarea id="feedText" placeholder="Что нового? Не более 500 знаков." maxlength="500" aria-label="Текст поста"></textarea>
             <div class="row">
@@ -252,6 +252,9 @@
 
           <div id="feedList"><p class="hint" style="padding:8px 2px">Загрузка...</p></div>
           <div class="catend"></div>
+        </div>
+        <div class="btns" style="margin-top:8px">
+          <a class="submit" id="feedSeeAll" href="lenta.html" hidden>Смотреть всю ленту</a>
         </div>
       </section>
 
@@ -340,7 +343,7 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/pm-badge.js?v=3"></script>
 <script src="js/social.js?v=3"></script>
 <script src="js/verify-upload.js?v=2"></script>
-<script src="js/feed.js?v=10"></script>
+<script src="js/feed.js?v=11"></script>
 <script src="js/listings.js?v=3"></script>
 <script src="js/confirm-dialog.js?v=1"></script>
 <script src="js/report.js?v=3"></script>

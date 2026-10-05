@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Артель — К’Артель — ПолиКоннект.ru</title>
-<meta name="description" content="Артель: состав, стена, голосование за главаря.">
+<title>Лента — ПолиКоннект.ru</title>
+<meta name="description" content="Лента студентов — все посты: вопросы, находки, объявления, мысли.">
 <link rel="icon" type="image/svg+xml" href="img/logo-mark.svg?v=2">
 <link rel="stylesheet" href="css/style.css?v=65">
 </head>
@@ -58,7 +58,7 @@
 
         <div class="row"><a class="item" href="index.html"><img src="img/icons/i-home.svg" alt="">Главная</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Коротко обо всём новом: лента и свежие темы форума.</div></div>
 
-        <div class="row"><a class="item" href="lenta.html"><img src="img/icons/i-arrow.svg" alt="">Лента</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Короткие посты обо всём: вопросы, находки, объявления, мысли.</div></div>
+        <div class="row"><a class="item now" href="lenta.html"><img src="img/icons/i-arrow.svg" alt="">Лента</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Короткие посты обо всём: вопросы, находки, объявления, мысли.</div></div>
 
         <div class="row"><a class="item" href="forum.html"><img src="img/icons/i-feed.svg" alt="">Форум</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Обсуждения по факультетам, корпусам и общим темам.</div></div>
 
@@ -69,7 +69,7 @@
 
         <div class="row"><a class="item" href="canteen.html"><img src="img/icons/i-canteen.svg" alt="">Столовая</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Общий чат сайта — болтовня, как в очереди за обедом.</div></div>
 
-        <div class="row"><a class="item now" href="artel.html"><img src="img/icons/i-artel.svg" alt="">К’Артель</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Свои команды. Раз в месяц голосованием выбираете главаря.</div></div>
+        <div class="row"><a class="item" href="artel.html"><img src="img/icons/i-artel.svg" alt="">К’Артель</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Свои команды. Раз в месяц голосованием выбираете главаря.</div></div>
 
         <div class="row"><a class="item" href="albums.html"><img src="img/icons/i-portfolio.svg" alt="">Альбомы</a><button class="qm" type="button" aria-expanded="false">!</button><div class="desc-pop">Только фото, без подписей: эстетичное и смешное вперемешку.</div></div>
 
@@ -88,88 +88,37 @@
         <div class="row"><a class="item" href="settings.html"><img src="img/icons/i-settings.svg" alt="">Настройки</a></div>
       </div>
 
-      <div class="sidebox" id="artelAboutBox" hidden>
-        <h2>Об артели</h2>
-        <div class="sb-line b">Категория</div>
-        <div class="sb-text" id="sbCategory"></div>
-        <div class="sb-line b">Основана</div>
-        <div class="sb-text" id="sbFounded"></div>
-        <div class="sb-line b">Участников</div>
-        <div class="sb-text"><b id="sbMemberCount"></b></div>
-        <div class="sb-line b">Главарь у руля</div>
-        <div class="sb-text" id="sbLeaderSince"></div>
-      </div>
-
-      <div class="sidebox">
-        <h2>Правила</h2>
-        <div class="sb-note">
-          Стену модерирует главарь. За грубость и спам — предупреждение, потом исключение. Жалобы на главаря — через кнопку «Пожаловаться в поддержку».
-        </div>
-      </div>
-
     </aside>
 
     <main id="orange">
 
-      <p class="crumbs"><a href="index.html">Главная</a> &rarr; <a href="artel.html">К’Артель</a> &rarr; <span class="here" id="crumbHere">Артель</span></p>
-
-      <section class="box" id="artelNotFound">
-        <h2>Артель не выбрана</h2>
-        <p style="padding:0 2px">Откройте <a href="artel.html">список артелей</a> и выберите одну — прямой ссылки на конкретную артель тут нет.</p>
-      </section>
-
-      <div id="artelRealArea" hidden>
+      <p class="crumbs"><a href="index.html">Главная</a> &rarr; <span class="here">Лента</span></p>
 
       <section class="box">
-        <div class="artel-head">
-          <div class="crest"><img src="img/icons/i-artel.svg" alt=""></div>
-          <div class="txt">
-            <h1 id="artelName">…</h1>
-            <p id="artelDesc"></p>
-            <span class="tag" id="tagCategory"></span><span class="tag" id="tagMembers"></span>
-            <div class="btns">
-              <button class="submit" type="button" id="joinBtn">Вступить</button>
-              <button class="submit" type="button" id="subBtn">Подписаться</button>
-              <a class="submit" href="#" id="writeLeaderBtn">Написать главарю</a>
-              <button class="submit" type="button" id="deleteArtelBtn" style="display:none;color:#b23e00">Удалить артель</button>
-            </div>
-            <p class="hint" id="artelHint">Подписаться можно на сколько угодно артелей — просто видеть их стену в своей ленте. Вступить как полноправный участник — только в одну: если вы уже состоите в другой, вступление сюда автоматически исключит вас оттуда. Обе кнопки — только для зарегистрированных.</p>
-          </div>
+        <h2>Лента</h2>
+        <p style="padding:0 2px">Все посты по порядку: вопросы, находки, объявления, мысли. Написать новый пост можно на главной.</p>
+
+        <div class="tabs" id="lentaSortTabs">
+          <a class="on" data-sort="new" href="#">Новые</a><a data-sort="top" href="#">Популярные</a>
+        </div>
+        <div class="tabs" id="lentaDateTabs" style="margin-top:4px">
+          <a class="on" data-range="all" href="#">Всё время</a><a data-range="day" href="#">Сегодня</a><a data-range="week" href="#">Неделя</a><a data-range="month" href="#">Месяц</a>
+        </div>
+        <div class="tabs" id="lentaFriendsTab" style="margin-top:4px">
+          <a href="#" id="lentaFriendsOnly">Только друзья</a>
         </div>
       </section>
 
-      <section class="box demo-only-note" id="votingComingSoon" hidden>
-        <h2>Выборы главаря и название</h2>
-        <p class="hint" style="padding:0 2px">Голосования — в разработке, скоро заработают по-настоящему. Пока главарь — тот, кто создал артель (или последний, кто её принял).</p>
-      </section>
-
-      <section class="box" id="votingRealSection" hidden>
-        <h2>Выборы главаря и название</h2>
-        <div id="votingRealBody"><p class="hint" style="padding:0 2px">Загрузка...</p></div>
-      </section>
-
-      <section class="box">
-        <h2>Состав</h2>
-        <div class="roster" id="rosterBox"></div>
-        <p class="hint" id="rosterMoreHint" style="padding:0 2px;display:none"></p>
-      </section>
-
-      <section class="box">
-        <h2>Стена артели</h2>
-        <div class="ipb" id="wallBox">
-          <div class="maintitle">Что нового</div>
-          <form class="composer" id="wallForm" action="#" onsubmit="return false">
-            <textarea id="wallText" placeholder="Написать на стену артели..." maxlength="500" aria-label="Текст поста"></textarea>
-            <div class="row">
-              <span class="left" id="wallHint">Писать может любой участник артели.</span>
-              <button class="submit" type="button" id="wallSubmit">Опубликовать</button>
-            </div>
-          </form>
+      <section class="box" id="lentaBox">
+        <div class="ipb">
+          <div id="lentaList"><p class="hint" style="padding:8px 2px">Загрузка...</p></div>
           <div class="catend"></div>
         </div>
+        <div class="btns" style="margin-top:8px">
+          <button class="submit" type="button" id="lentaMore" hidden>Показать ещё</button>
+        </div>
+        <button type="button" id="lentaFloatTop" class="submit fa-float-top" hidden title="Наверх, к ленте">&uarr;</button>
       </section>
-
-      </div>
 
     </main>
   </div>
@@ -206,9 +155,9 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/notify-sound.js?v=4"></script>
 <script src="js/pm-badge.js?v=3"></script>
 <script src="js/social.js?v=3"></script>
-<script src="js/artel-view.js?v=12"></script>
 <script src="js/confirm-dialog.js?v=1"></script>
 <script src="js/report.js?v=3"></script>
+<script src="js/lenta.js?v=1"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>
 </html>

@@ -11,6 +11,7 @@
   var composer = document.getElementById('feedComposer');
   var textEl = document.getElementById('feedText');
   var feedStatusEl = document.getElementById('feedStatus');
+  var seeAllBtn = document.getElementById('feedSeeAll');
   var isStaff = false;
   var currentUserId = null;
 
@@ -51,6 +52,7 @@
         '<a href="#" class="comment-toggle" data-ctype="feed_post" data-cid="' + row.id + '">Комментарии (' + (row.comment_count || 0) + ')</a>' +
         '<a href="#" class="fav-toggle" data-ftype="feed_post" data-fid="' + row.id + '">В избранное</a><a href="#" data-target-user="' + (prof.id || '') + '">Пожаловаться</a>' +
         ((isStaff || (currentUserId && currentUserId === prof.id)) ? '<a href="#" class="feed-del" data-id="' + row.id + '" style="color:#b23e00">Удалить</a>' : '') +
+        '<a href="lenta.html#post-' + row.id + '" class="fa-goto">Перейти к сообщению</a>' +
       '</div>';
     var delBtn = div.querySelector('.feed-del');
     if (delBtn) {
@@ -71,7 +73,7 @@
     window.supa.from('feed_posts')
       .select('id, body, created_at, score, comment_count, profiles(id, nickname, verified, avatar_url)')
       .order('created_at', { ascending: false })
-      .limit(20)
+      .limit(10)
       .then(function (res) {
         if (res.error) {
           console.error('feed load error', res.error);
@@ -85,6 +87,11 @@
         }
         res.data.forEach(function (row) { listEl.appendChild(renderPost(row)); });
         if (window.PKSocial) window.PKSocial.scan(listEl);
+        if (seeAllBtn) {
+          var lastRow = res.data[res.data.length - 1];
+          seeAllBtn.href = 'lenta.html#post-' + lastRow.id;
+          seeAllBtn.hidden = false;
+        }
       });
   }
 
