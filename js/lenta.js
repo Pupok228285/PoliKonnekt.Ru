@@ -33,6 +33,10 @@
   var anchorId = null;
   var anchorCutoff = null;
   var boxInView = false;
+  var topThreshold = null;
+  var needTopThreshold = true;
+  var loadToken = 0;
+  var topHintEl = document.getElementById('lentaTopHint');
 
   if (window.location.hash.indexOf('#post-') === 0) {
     anchorId = window.location.hash.slice(6);
@@ -101,16 +105,40 @@
     return d.toISOString();
   }
 
-  function buildBaseQuery() {
-    var q = window.supa.from('feed_posts')
-      .select('id, body, created_at, score, comment_count, author_id, profiles(id, nickname, verified, avatar_url)');
+  function applyFilters(q) {
     var cutoff = rangeCutoffIso();
     if (cutoff) q = q.gte('created_at', cutoff);
     if (anchorCutoff) q = q.lte('created_at', anchorCutoff);
     if (friendsOnly) q = q.in('author_id', (friendIds && friendIds.length) ? friendIds : ['00000000-0000-0000-0000-000000000000']);
-    if (sort === 'top') q = q.order('score', { ascending: false }).order('id', { ascending: false });
-    else q = q.order('created_at', { ascending: false });
     return q;
+  }
+
+  function buildBaseQuery() {
+    var q = applyFilters(window.supa.from('feed_posts')
+      .select('id, body, created_at, score, comment_count, author_id, profiles(id, nickname, verified, avatar_url)'));
+    if (sort === 'top') {
+      q = q.gte('score', topThreshold).order('score', { ascending: false }).order('id', { ascending: false });
+    } else {
+      q = q.order('created_at', { ascending: false });
+    }
+    return q;
+  }
+
+  // Популярные = посты с рейтингом не ниже 1,5× среднего по выбранному периоду,
+  // но не меньше 2 — чтобы один выброс (пост на 8 лайков при остальных по 1–3)
+  // не задирал планку, а случайный пост с 1 лайком не считался популярным.
+  function computeTopThreshold(cb) {
+    applyFilters(window.supa.from('feed_posts').select('score')).then(function (res) {
+      var rows = res.data || [];
+      var avg = rows.length ? rows.reduce(function (s, r) { return s + (r.score || 0); }, 0) / rows.length : 0;
+      topThreshold = Math.max(2, avg * 1.5);
+      if (topHintEl) {
+        topHintEl.textContent = 'Популярные: рейтинг от ' + topThreshold.toFixed(1).replace('.0', '') +
+          ' (в 1,5 раза выше среднего за период, но не меньше 2)';
+        topHintEl.hidden = false;
+      }
+      cb();
+    });
   }
 
   function updateFloatBtn() {
@@ -118,6 +146,16 @@
   }
 
   function loadMore(reset) {
+    if (reset) { loadToken++; needTopThreshold = true; }
+    if (sort === 'top' && needTopThreshold) {
+      computeTopThreshold(function () { needTopThreshold = false; loadPage(reset); });
+      return;
+    }
+    loadPage(reset);
+  }
+
+  function loadPage(reset) {
+    if (sort !== 'top' && topHintEl) topHintEl.hidden = true;
     if (reset) { loadedCount = 0; listEl.innerHTML = '<p class="hint" style="padding:8px 2px">Загрузка...</p>'; }
     if (friendsOnly && !currentUserId) {
       listEl.innerHTML = '<p class="hint" style="padding:8px 2px">Сначала войдите, чтобы смотреть ленту только от друзей.</p>';
@@ -126,7 +164,9 @@
     }
     var from = loadedCount;
     var to = loadedCount + BATCH - 1;
+    var myToken = ++loadToken;
     buildBaseQuery().range(from, to).then(function (res) {
+      if (myToken !== loadToken) return; // пришёл ответ на уже сброшенный выбор фильтра
       if (res.error) {
         listEl.innerHTML = '<p class="hint" style="padding:8px 2px">Не удалось загрузить ленту.</p>';
         return;
