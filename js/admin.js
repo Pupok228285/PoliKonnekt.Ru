@@ -435,11 +435,15 @@
 
     var uploadRow = document.createElement('div');
     uploadRow.className = 'btns';
-    uploadRow.style.cssText = 'justify-content:flex-start;margin-top:6px';
+    uploadRow.style.cssText = 'justify-content:flex-start;margin-top:6px;flex-wrap:wrap';
+    var captionInput = document.createElement('input');
+    captionInput.type = 'text'; captionInput.className = 'field'; captionInput.placeholder = 'Подпись (необязательно, для всех выбранных фото)';
+    captionInput.style.cssText = 'width:260px';
     var fileInput = document.createElement('input');
     fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.multiple = true;
     var statusSpan = document.createElement('span');
     statusSpan.className = 'hint';
+    uploadRow.appendChild(captionInput);
     uploadRow.appendChild(fileInput);
     uploadRow.appendChild(statusSpan);
     box.appendChild(uploadRow);
@@ -447,6 +451,7 @@
     fileInput.addEventListener('change', function () {
       var files = Array.prototype.slice.call(fileInput.files || []);
       if (!files.length) return;
+      var caption = (captionInput.value || '').trim() || null;
       // лимит фото — только для заявок от участников (см. album_submissions);
       // у админа своего альбома лимита нет, он и так осознанно наполняет сам
       var done = 0;
@@ -457,7 +462,7 @@
           return window.supa.storage.from('album-photos').upload(path, blob, { contentType: 'image/jpeg' }).then(function (upRes) {
             if (upRes.error) throw upRes.error;
             var url = window.supa.storage.from('album-photos').getPublicUrl(path).data.publicUrl;
-            return window.supa.from('album_photos').insert({ album_id: a.id, url: url }).then(function (insRes) {
+            return window.supa.from('album_photos').insert({ album_id: a.id, url: url, caption: caption }).then(function (insRes) {
               if (insRes.error) throw insRes.error;
               done++;
               statusSpan.textContent = 'Сжимаем и загружаем ' + done + '/' + files.length + '...';
@@ -540,7 +545,7 @@
       var albumId = Number(select.value);
       if (!albumId) return;
       addBtn.disabled = true;
-      window.supa.from('album_photos').insert({ album_id: albumId, url: s.photo_url }).then(function (insRes) {
+      window.supa.from('album_photos').insert({ album_id: albumId, url: s.photo_url, caption: s.caption || null }).then(function (insRes) {
         if (insRes.error) { alert(insRes.error.message); addBtn.disabled = false; return; }
         window.supa.from('album_submissions').delete().eq('id', s.id).then(function () { loadAlbumSubs(); });
       });

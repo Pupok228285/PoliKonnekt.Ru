@@ -21,18 +21,24 @@
   var lbPrev = document.getElementById('lbPrev');
   var lbNext = document.getElementById('lbNext');
   var lbCount = document.getElementById('lbCount');
-  var lbUrls = [];
+  var lbCaption = document.getElementById('lbCaption');
+  var lbItems = []; // [{url, caption}]
   var lbIndex = 0;
 
   function showLb(i) {
-    if (!lbUrls.length) return;
-    lbIndex = (i + lbUrls.length) % lbUrls.length;
-    lbImg.src = lbUrls[lbIndex];
-    if (lbCount) lbCount.textContent = (lbIndex + 1) + ' из ' + lbUrls.length;
+    if (!lbItems.length) return;
+    lbIndex = (i + lbItems.length) % lbItems.length;
+    var item = lbItems[lbIndex];
+    lbImg.src = item.url;
+    if (lbCount) lbCount.textContent = (lbIndex + 1) + ' из ' + lbItems.length;
+    if (lbCaption) {
+      lbCaption.textContent = item.caption || '';
+      lbCaption.hidden = !item.caption;
+    }
   }
 
-  function openLightbox(urls, index) {
-    lbUrls = urls;
+  function openLightbox(items, index) {
+    lbItems = items;
     if (!lightbox) return;
     lightbox.hidden = false;
     showLb(index);
@@ -104,7 +110,7 @@
     viewSection.hidden = false;
     Promise.all([
       window.supa.from('albums').select('id, title').eq('id', id).single(),
-      window.supa.from('album_photos').select('id, url').eq('album_id', id).order('created_at', { ascending: false })
+      window.supa.from('album_photos').select('id, url, caption').eq('album_id', id).order('created_at', { ascending: false })
     ]).then(function (results) {
       var albRes = results[0], photosRes = results[1];
       if (albRes.error || !albRes.data) { titleEl.textContent = 'Альбом не найден'; return; }
@@ -115,7 +121,7 @@
         return;
       }
       photosEl.innerHTML = '';
-      var urls = photosRes.data.map(function (p) { return p.url; });
+      var items = photosRes.data.map(function (p) { return { url: p.url, caption: p.caption }; });
       photosRes.data.forEach(function (p, i) {
         var fig = document.createElement('figure');
         var ph = document.createElement('div');
@@ -123,23 +129,59 @@
         ph.style.backgroundImage = 'url(' + p.url + ')';
         ph.style.backgroundSize = 'cover';
         ph.style.backgroundPosition = 'center';
-        ph.addEventListener('click', function () { openLightbox(urls, i); });
+        ph.addEventListener('click', function () { openLightbox(items, i); });
         fig.appendChild(ph);
+        if (p.caption) {
+          var cap = document.createElement('figcaption');
+          cap.textContent = p.caption;
+          fig.appendChild(cap);
+        }
         photosEl.appendChild(fig);
       });
     });
     return;
   }
 
-  window.supa.from('albums').select('id, title, created_at, album_photos(id)').order('created_at', { ascending: false })
+  window.supa.from('albums')
+    .select('id, title, created_at, album_photos(id), preview:album_photos(url, created_at)')
+    .order('created_at', { ascending: false })
+    .order('created_at', { foreignTable: 'preview', ascending: false })
+    .limit(5, { foreignTable: 'preview' })
     .then(function (res) {
       if (res.error || !res.data) { listEl.innerHTML = '<p class="hint" style="padding:4px 2px">Не удалось загрузить.</p>'; return; }
       if (!res.data.length) { listEl.innerHTML = '<p class="hint" style="padding:4px 2px">Пока ни одного альбома — администрация ещё наполняет.</p>'; return; }
-      listEl.innerHTML = res.data.map(function (a) {
+      listEl.innerHTML = '';
+      res.data.forEach(function (a) {
         var count = (a.album_photos || []).length;
-        return '<div class="p-row"><span class="lbl"><a href="albums.html?id=' + a.id + '">' + escapeHtml(a.title) + '</a></span>' +
-          '<span class="val">' + count + ' фото <span class="hint" style="margin:0">— ' + fmtDate(a.created_at) + '</span></span></div>';
-      }).join('');
+        var wrap = document.createElement('div');
+        wrap.className = 'p-row';
+        wrap.style.display = 'block';
+        var head = document.createElement('div');
+        head.innerHTML = '<span class="lbl"><a href="albums.html?id=' + a.id + '">' + escapeHtml(a.title) + '</a></span>' +
+          '<span class="val">' + count + ' фото <span class="hint" style="margin:0">— ' + fmtDate(a.created_at) + '</span></span>';
+        wrap.appendChild(head);
+        var preview = a.preview || [];
+        if (preview.length) {
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;gap:6px;align-items:center;margin:6px 0 2px 138px;flex-wrap:wrap';
+          preview.forEach(function (p) {
+            var thumb = document.createElement('a');
+            thumb.href = 'albums.html?id=' + a.id;
+            thumb.style.cssText = 'display:block;width:48px;height:48px;background:url(' + p.url + ') center/cover;border:1px solid #93a8c6';
+            row.appendChild(thumb);
+          });
+          if (count > preview.length) {
+            var more = document.createElement('a');
+            more.href = 'albums.html?id=' + a.id;
+            more.className = 'submit';
+            more.style.cssText = 'font-size:10px;padding:2px 8px';
+            more.textContent = 'Все фото →';
+            row.appendChild(more);
+          }
+          wrap.appendChild(row);
+        }
+        listEl.appendChild(wrap);
+      });
     });
 
   // ---------- прислать рисунок/фото на модерацию ----------

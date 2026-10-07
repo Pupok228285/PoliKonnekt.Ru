@@ -1046,6 +1046,19 @@ html, body { overflow-x: hidden; }
   padding: 3px 10px;
   border-radius: 10px;
 }
+.lb-caption {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80vw;
+  color: #fff;
+  font: 12px/1.4 var(--font);
+  background: rgba(20, 24, 32, .6);
+  padding: 4px 12px;
+  border-radius: 10px;
+  text-align: center;
+}
 
 /* ---------- знакомства ---------- */
 
