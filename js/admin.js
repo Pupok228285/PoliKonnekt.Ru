@@ -375,7 +375,7 @@
   function loadAlbumsAdmin() {
     if (!albumsAdminList) return;
     albumsAdminList.innerHTML = '<p class="hint" style="padding:4px 2px">Загрузка...</p>';
-    window.supa.from('albums').select('id, title, created_at, album_photos(id, url)').order('created_at', { ascending: false })
+    window.supa.from('albums').select('id, title, created_at, album_photos(id, url, caption)').order('created_at', { ascending: false })
       .then(function (res) {
         if (res.error) { albumsAdminList.innerHTML = '<p class="hint">' + escapeHtml(res.error.message) + '</p>'; return; }
         if (!res.data.length) { albumsAdminList.innerHTML = '<p class="hint" style="padding:4px 2px">Пока нет альбомов — создайте первый выше.</p>'; return; }
@@ -417,8 +417,21 @@
       ph.style.backgroundSize = 'cover';
       ph.style.backgroundPosition = 'center';
       var cap = document.createElement('figcaption');
+      if (p.caption) cap.appendChild(document.createTextNode(p.caption + ' '));
+      var ed = document.createElement('a');
+      ed.href = '#'; ed.textContent = p.caption ? 'изменить' : 'добавить подпись';
+      ed.addEventListener('click', function (e) {
+        e.preventDefault();
+        var next = prompt('Подпись к фото (пусто — убрать подпись):', p.caption || '');
+        if (next === null) return; // отмена
+        next = next.trim() || null;
+        window.supa.from('album_photos').update({ caption: next }).eq('id', p.id).then(function (r) {
+          if (r.error) { alert(r.error.message); return; }
+          loadAlbumsAdmin();
+        });
+      });
       var rm = document.createElement('a');
-      rm.href = '#'; rm.textContent = 'удалить';
+      rm.href = '#'; rm.textContent = 'удалить'; rm.style.marginLeft = '6px';
       rm.addEventListener('click', function (e) {
         e.preventDefault();
         window.supa.from('album_photos').delete().eq('id', p.id).then(function (r) {
@@ -426,6 +439,7 @@
           loadAlbumsAdmin();
         });
       });
+      cap.appendChild(ed);
       cap.appendChild(rm);
       fig.appendChild(ph);
       fig.appendChild(cap);
