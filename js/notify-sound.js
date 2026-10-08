@@ -356,15 +356,80 @@
     });
   }
 
+  // Подарок ника — не обычный тост: на весь экран, с «фейерверком» из
+  // эмодзи (в духе телеграмовских стикеров) на 5 секунд, и сразу кнопками
+  // принять/отклонить/отложить — получателю сначала надо согласиться,
+  // владение переходит только после «Принять» (см. respond_nickname_gift).
+  var GIFT_EMOJIS = ['🎉', '✨', '🎊', '🎁', '⭐', '💫'];
+
+  function showGiftCelebration(gift) {
+    if (document.querySelector('.gift-overlay[data-gift-id="' + gift.id + '"]')) return; // уже показан
+    var overlay = document.createElement('div');
+    overlay.className = 'gift-overlay';
+    overlay.setAttribute('data-gift-id', String(gift.id));
+
+    var fireworks = document.createElement('div');
+    fireworks.className = 'gift-fireworks';
+    for (var i = 0; i < 36; i++) {
+      var p = document.createElement('span');
+      p.className = 'gift-particle';
+      p.textContent = GIFT_EMOJIS[Math.floor(Math.random() * GIFT_EMOJIS.length)];
+      p.style.left = Math.round(Math.random() * 100) + 'vw';
+      p.style.fontSize = Math.round(16 + Math.random() * 20) + 'px';
+      p.style.animationDelay = (Math.random() * 1.2).toFixed(2) + 's';
+      p.style.animationDuration = (2.2 + Math.random() * 1.6).toFixed(2) + 's';
+      fireworks.appendChild(p);
+    }
+    overlay.appendChild(fireworks);
+    setTimeout(function () { fireworks.innerHTML = ''; }, 5000); // сам фейерверк — 5 секунд, карточка остаётся
+
+    var card = document.createElement('div');
+    card.className = 'gift-card';
+    var h2 = document.createElement('h2');
+    h2.textContent = '🎁 Вам подарили имя!';
+    var p1 = document.createElement('p');
+    p1.appendChild(document.createTextNode(gift.fromNick + ' передал(а) вам ник '));
+    var b = document.createElement('span');
+    b.className = 'gift-nick';
+    b.textContent = '«' + gift.nickname + '»';
+    p1.appendChild(b);
+    var status = document.createElement('p');
+    status.className = 'hint';
+    var actions = document.createElement('div');
+    actions.className = 'gift-actions';
+
+    function respond(accept) {
+      window.supa.rpc('respond_nickname_gift', { p_gift_id: gift.id, p_accept: accept }).then(function (res) {
+        if (res.error) { status.textContent = res.error.message; status.style.color = '#b23e00'; return; }
+        overlay.remove();
+      });
+    }
+
+    var acceptBtn = document.createElement('button');
+    acceptBtn.className = 'submit'; acceptBtn.type = 'button'; acceptBtn.textContent = 'Принять';
+    acceptBtn.addEventListener('click', function () { respond(true); });
+    var declineBtn = document.createElement('button');
+    declineBtn.className = 'submit'; declineBtn.type = 'button'; declineBtn.textContent = 'Отклонить';
+    declineBtn.addEventListener('click', function () {
+      window.pkConfirm ? window.pkConfirm('Отклонить ник «' + gift.nickname + '»?', function () { respond(false); }) : respond(false);
+    });
+    var laterBtn = document.createElement('button');
+    laterBtn.className = 'submit'; laterBtn.type = 'button'; laterBtn.textContent = 'Позже';
+    laterBtn.title = 'Подарок останется ждать в вашем профиле';
+    laterBtn.addEventListener('click', function () { overlay.remove(); });
+
+    actions.appendChild(acceptBtn); actions.appendChild(declineBtn); actions.appendChild(laterBtn);
+    card.appendChild(h2); card.appendChild(p1); card.appendChild(status); card.appendChild(actions);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+  }
+
   function onNicknameGiftInsert(row) {
     if (row.to_id !== myId) return;
-    notify(true, function () {
-      window.PKNotifyToast.show({
-        title: 'Вам передали имя',
-        body: '«' + row.nickname + '» теперь закреплено за вами — можно взять его в Настройках.',
-        icon: 'img/icons/i-smile.svg',
-        href: 'settings.html'
-      });
+    window.supa.from('profiles').select('nickname').eq('id', row.from_id).single().then(function (r) {
+      var fromNick = (r.data && r.data.nickname) || 'Кто-то';
+      playSound(readSound(), readVolume());
+      showGiftCelebration({ id: row.id, nickname: row.nickname, fromNick: fromNick });
     });
   }
 

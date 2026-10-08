@@ -6,7 +6,7 @@
 <title>Lika_S — профиль — ПолиКоннект.ru</title>
 <meta name="description" content="Профиль студента: имя, история изменений, фото, статистика.">
 <link rel="icon" type="image/svg+xml" href="img/logo-mark.svg?v=2">
-<link rel="stylesheet" href="css/style.css?v=71">
+<link rel="stylesheet" href="css/style.css?v=72">
 </head>
 <body>
 <div id="wrap">
@@ -217,6 +217,10 @@
           </span>
         </div>
         <p class="hint" style="padding:0 2px">Ник должен быть уникальным на всём сайте, как юзернейм в Телеграме — если занят, база сама откажет и подскажет. Ники, которыми вы когда-либо пользовались, остаются закреплёнными за вами навсегда — занять их никто другой не может, вы в любой момент можете вернуться к любому из них.</p>
+        <div class="p-row" id="pendingGiftsRow" hidden>
+          <span class="lbl">Вам дарят ник</span>
+          <span class="val" id="pendingGiftsBox"></span>
+        </div>
         <div class="p-row">
           <span class="lbl">Мои ники</span>
           <span class="val" id="myNicknamesBox">Загрузка...</span>
@@ -329,10 +333,10 @@ document.querySelectorAll('.seg[data-hist]').forEach(function (seg) {
 <script src="js/auth-ui.js?v=6"></script>
 <script src="js/presence.js?v=3"></script>
 <script src="js/notify-toast.js?v=2"></script>
-<script src="js/notify-sound.js?v=5"></script>
+<script src="js/notify-sound.js?v=6"></script>
 <script src="js/pm-badge.js?v=3"></script>
 <script src="js/confirm-dialog.js?v=1"></script>
-<script src="js/profile.js?v=18"></script>
+<script src="js/profile.js?v=19"></script>
 <script src="js/report.js?v=3"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>

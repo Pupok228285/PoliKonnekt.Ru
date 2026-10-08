@@ -503,6 +503,7 @@
         applyPrivacyState(p);
         loadHistory();
         loadMyNicknames();
+        loadPendingGifts();
         if (pAboutEdit) {
           pAboutEdit.hidden = false;
           document.getElementById('facultyInput').value = p.faculty || '';
@@ -666,15 +667,55 @@
           giftBtn.addEventListener('click', function () {
             var toNick = (giftInput.value || '').trim();
             if (!toNick) { setMsg(giftStatus, 'Введите ник получателя.', false); return; }
-            window.pkConfirm('Передать ник «' + r.nickname + '» пользователю «' + toNick + '»? Себе вернуть можно будет, только если он подарит его обратно.', function () {
-              setMsg(giftStatus, 'Передаём...', true);
+            window.pkConfirm('Предложить ник «' + r.nickname + '» пользователю «' + toNick + '»? Он станет его, только если тот примет.', function () {
+              setMsg(giftStatus, 'Отправляем...', true);
               window.supa.rpc('gift_nickname', { p_nickname: r.nickname, p_to_nickname: toNick }).then(function (res) {
                 if (res.error) { setMsg(giftStatus, res.error.message, false); return; }
-                setMsg(giftStatus, 'Передано!', true);
-                loadMyNicknames();
+                setMsg(giftStatus, 'Отправлено! Ждём, пока примет.', true);
+                giftInput.value = '';
               });
             });
           });
+        });
+      });
+  }
+
+  // Подарки ников, которые ждут вашего ответа — на случай, если всплывающий
+  // эффект (js/notify-sound.js) не увидели (были офлайн/закрыли вкладку).
+  function loadPendingGifts() {
+    var row = document.getElementById('pendingGiftsRow');
+    var box = document.getElementById('pendingGiftsBox');
+    if (!box || !row || !isOwnProfile || !currentUserId) return;
+    window.supa.from('nickname_gifts').select('id, nickname, profiles!from_id(nickname)')
+      .eq('to_id', currentUserId).eq('status', 'pending').order('created_at', { ascending: true })
+      .then(function (res) {
+        var rows = res.data || [];
+        if (!rows.length) { row.hidden = true; return; }
+        row.hidden = false;
+        box.innerHTML = '';
+        rows.forEach(function (g) {
+          var fromNick = (g.profiles && g.profiles.nickname) || '?';
+          var card = document.createElement('div');
+          card.className = 'gift-pending-row';
+          var text = document.createElement('span');
+          text.innerHTML = '🎁 <b>' + escapeHtml(fromNick) + '</b> дарит вам ник «<b>' + escapeHtml(g.nickname) + '</b>»';
+          var acceptA = document.createElement('a'); acceptA.href = '#'; acceptA.textContent = 'принять';
+          var declineA = document.createElement('a'); declineA.href = '#'; declineA.textContent = 'отклонить'; declineA.style.marginLeft = '8px';
+          var statusEl = document.createElement('span'); statusEl.className = 'hint'; statusEl.style.marginLeft = '8px';
+          function respond(accept) {
+            window.supa.rpc('respond_nickname_gift', { p_gift_id: g.id, p_accept: accept }).then(function (r) {
+              if (r.error) { setMsg(statusEl, r.error.message, false); return; }
+              loadPendingGifts();
+              loadMyNicknames();
+            });
+          }
+          acceptA.addEventListener('click', function (e) { e.preventDefault(); respond(true); });
+          declineA.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.pkConfirm('Отклонить ник «' + g.nickname + '»?', function () { respond(false); });
+          });
+          card.appendChild(text); card.appendChild(acceptA); card.appendChild(declineA); card.appendChild(statusEl);
+          box.appendChild(card);
         });
       });
   }
