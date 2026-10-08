@@ -54,13 +54,15 @@
   var urlId = new URLSearchParams(window.location.search).get('id');
   var FIELD_LABEL = { nickname: 'Ник', avatar_url: 'Аватар', quote: 'Цитата' };
   var RECENT_SOURCES = [
-    { table: 'feed_posts', label: 'в Ленте' },
-    { table: 'quote_posts', label: 'в Цитатах и Креативе' },
-    { table: 'canteen_posts', label: 'в Столовой' },
-    { table: 'forum_replies', label: 'на форуме' },
-    { table: 'artel_posts', label: 'на стене артели' },
-    { table: 'diary_posts', label: 'в Дневнике' },
-    { table: 'review_topics', label: 'в Отзывах' }
+    { table: 'feed_posts', label: 'в Ленте', href: function (r) { return 'lenta.html#post-' + r.id; } },
+    { table: 'quote_posts', label: 'в Цитатах и Креативе', href: function () { return 'quotes.html'; } },
+    { table: 'canteen_posts', label: 'в Столовой', href: function () { return 'canteen.html'; } },
+    { table: 'forum_replies', label: 'на форуме', select: 'id, body, created_at, topic_id',
+      href: function (r) { return 'forum-topic.html?id=' + r.topic_id + '#reply-' + r.id; } },
+    { table: 'artel_posts', label: 'на стене артели', select: 'id, body, created_at, artel_id',
+      href: function (r) { return 'artel-view.html?id=' + r.artel_id; } },
+    { table: 'diary_posts', label: 'в Дневнике', href: function (r, userId) { return 'diary.html?id=' + userId; } },
+    { table: 'review_topics', label: 'в Отзывах', href: function (r) { return 'review-topic.html?id=' + r.id; } }
   ];
 
   function setMsg(el, text, ok) {
@@ -435,16 +437,18 @@
   function loadRecent(userId) {
     if (!pRecentBox) return;
     Promise.all(RECENT_SOURCES.map(function (src) {
-      return window.supa.from(src.table).select('id, body, created_at').eq('author_id', userId)
+      var sel = src.select || 'id, body, created_at';
+      return window.supa.from(src.table).select(sel).eq('author_id', userId)
         .order('created_at', { ascending: false }).limit(8)
-        .then(function (res) { return (res.data || []).map(function (r) { return { body: r.body, created_at: r.created_at, label: src.label }; }); });
+        .then(function (res) { return (res.data || []).map(function (r) { return { body: r.body, created_at: r.created_at, label: src.label, href: src.href(r, userId) }; }); });
     })).then(function (lists) {
       var all = [].concat.apply([], lists).sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); }).slice(0, 8);
       if (!all.length) { pRecentBox.innerHTML = '<p class="hint" style="padding:4px 2px">Пока ничего не публиковал(а).</p>'; return; }
       pRecentBox.innerHTML = all.map(function (r) {
         var snippet = escapeHtml((r.body || '').slice(0, 90));
-        return '<div class="p-row"><span class="lbl">' + fmtDate(r.created_at) + '</span><span class="val">' + snippet +
-          (r.body && r.body.length > 90 ? '…' : '') + ' <span class="hint" style="margin:0">— ' + r.label + '</span></span></div>';
+        return '<div class="p-row"><span class="lbl">' + fmtDate(r.created_at) + '</span><span class="val">' +
+          '<a href="' + escapeHtml(r.href) + '">' + snippet + (r.body && r.body.length > 90 ? '…' : '') + '</a>' +
+          ' <span class="hint" style="margin:0">— ' + r.label + '</span></span></div>';
       }).join('');
     });
   }
