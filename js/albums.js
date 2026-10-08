@@ -108,6 +108,117 @@
   if (id) {
     listSection.hidden = true;
     viewSection.hidden = false;
+
+    var albumToggle = document.getElementById('albumCommentsToggle');
+    var albumScope = document.getElementById('albumCommentsScope');
+    var albumPanel = document.getElementById('albumCommentsPanel');
+    var albumList = document.getElementById('albumCommentsList');
+    var albumInput = document.getElementById('albumCommentInput');
+    var albumSendBtn = document.getElementById('albumCommentSend');
+    var photoTitleById = {};
+    var photoCommentsByPhoto = {};
+    var albumComments = [];
+    var mergeScope = 'all';
+
+    function fmtDateTime(iso) {
+      var d = new Date(iso);
+      return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+        ' - ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function nameHtml(prof) {
+      prof = prof || {};
+      return (prof.id ? '<a href="profile.html?id=' + prof.id + '">' + escapeHtml(prof.nickname || '?') + '</a>' : escapeHtml(prof.nickname || '?')) +
+        (prof.verified ? '<img class="tick" src="img/icons/i-verified.svg" alt="" style="vertical-align:-2px">' : '');
+    }
+
+    // Объединённая лента: свои комментарии к альбому + последние комментарии
+    // к фото этого альбома, с ссылкой-переходом к конкретному фото (клик —
+    // скролл к фото и подсветка, как переход на ответ форума).
+    function renderAlbumPanel() {
+      var rows = [];
+      if (mergeScope !== 'photos') rows = rows.concat(albumComments.map(function (c) { return { c: c, photo: null }; }));
+      if (mergeScope !== 'album') {
+        Object.keys(photoCommentsByPhoto).forEach(function (pid) {
+          photoCommentsByPhoto[pid].forEach(function (c) { rows.push({ c: c, photo: pid }); });
+        });
+      }
+      rows.sort(function (a, b) { return new Date(b.c.created_at) - new Date(a.c.created_at); });
+      if (!rows.length) { albumList.innerHTML = '<p class="hint" style="margin:2px 0">Пока без комментариев — начните первым.</p>'; return; }
+      albumList.innerHTML = '';
+      rows.forEach(function (r) {
+        var p = document.createElement('p');
+        p.className = 'comment-row';
+        p.innerHTML = '<b>' + nameHtml(r.c.profiles) + '</b>: ' + escapeHtml(r.c.body) +
+          ' <span class="hint" style="margin:0">' + fmtDateTime(r.c.created_at) + '</span>' +
+          (r.photo ? ' <a href="#photo-' + r.photo + '" class="fa-goto">к фото</a>' : '');
+        if (r.photo) {
+          p.querySelector('a.fa-goto').addEventListener('click', function (e) {
+            e.preventDefault();
+            jumpToPhoto(r.photo, p);
+          });
+        }
+        albumList.appendChild(p);
+      });
+    }
+
+    function jumpToPhoto(photoId, commentRow) {
+      var fig = document.getElementById('photo-' + photoId);
+      if (!fig) return;
+      fig.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      fig.classList.remove('flash-target'); void fig.offsetWidth; fig.classList.add('flash-target');
+      setTimeout(function () { fig.classList.remove('flash-target'); }, 2000);
+      if (commentRow) {
+        commentRow.classList.remove('flash-target'); void commentRow.offsetWidth; commentRow.classList.add('flash-target');
+        setTimeout(function () { commentRow.classList.remove('flash-target'); }, 2000);
+      }
+      // открыть и раскрыть ветку комментариев этого фото, если ещё закрыта
+      var photoToggle = document.querySelector('.comment-toggle[data-ctype="album_photo"][data-cid="' + photoId + '"]');
+      if (photoToggle) {
+        var thread = photoToggle.nextElementSibling;
+        if (thread && thread.hidden) photoToggle.click();
+      }
+    }
+
+    if (albumToggle) {
+      albumToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        albumPanel.hidden = !albumPanel.hidden;
+        if (albumScope) albumScope.style.display = albumPanel.hidden ? 'none' : '';
+      });
+    }
+    if (albumScope) {
+      albumScope.addEventListener('click', function (e) {
+        var a = e.target.closest('a[data-scope]');
+        if (!a) return;
+        e.preventDefault();
+        mergeScope = a.getAttribute('data-scope');
+        albumScope.querySelectorAll('a').forEach(function (x) { x.classList.remove('on'); });
+        a.classList.add('on');
+        renderAlbumPanel();
+      });
+    }
+    if (albumSendBtn) {
+      albumSendBtn.addEventListener('click', function () {
+        var body = (albumInput.value || '').trim();
+        if (!body) return;
+        window.supa.auth.getSession().then(function (res) {
+          var session = res.data && res.data.session;
+          if (!session) { alert('Сначала войдите вверху страницы.'); return; }
+          albumSendBtn.disabled = true;
+          window.supa.from('comments').insert({ content_type: 'album', content_id: Number(id), author_id: session.user.id, body: body })
+            .select('id, body, created_at, profiles!author_id(id, nickname, verified)').single()
+            .then(function (r) {
+              albumSendBtn.disabled = false;
+              if (r.error) { alert(r.error.message); return; }
+              albumInput.value = '';
+              albumComments.push(r.data);
+              renderAlbumPanel();
+            });
+        });
+      });
+    }
+
     Promise.all([
       window.supa.from('albums').select('id, title').eq('id', id).single(),
       window.supa.from('album_photos').select('id, url, caption').eq('album_id', id).order('created_at', { ascending: false })
@@ -116,27 +227,63 @@
       if (albRes.error || !albRes.data) { titleEl.textContent = 'Альбом не найден'; return; }
       titleEl.textContent = albRes.data.title;
       if (crumbCurrent) { crumbCurrent.hidden = false; crumbCurrent.textContent = ' → ' + albRes.data.title; }
+      if (albumToggle) albumToggle.setAttribute('data-cid', String(id));
       if (photosRes.error || !photosRes.data || !photosRes.data.length) {
         photosEl.innerHTML = '<p class="hint" style="padding:4px 2px">Фото в этом альбоме пока нет.</p>';
-        return;
+        photosRes = { data: [] };
       }
       photosEl.innerHTML = '';
-      var items = photosRes.data.map(function (p) { return { url: p.url, caption: p.caption }; });
-      photosRes.data.forEach(function (p, i) {
-        var fig = document.createElement('figure');
-        var ph = document.createElement('div');
-        ph.className = 'ph';
-        ph.style.backgroundImage = 'url(' + p.url + ')';
-        ph.style.backgroundSize = 'cover';
-        ph.style.backgroundPosition = 'center';
-        ph.addEventListener('click', function () { openLightbox(items, i); });
-        fig.appendChild(ph);
-        if (p.caption) {
-          var cap = document.createElement('figcaption');
-          cap.textContent = p.caption;
-          fig.appendChild(cap);
+      var photoRows = photosRes.data || [];
+      var items = photoRows.map(function (p) { return { url: p.url, caption: p.caption }; });
+      var photoIds = photoRows.map(function (p) { return p.id; });
+
+      Promise.all([
+        photoIds.length
+          ? window.supa.from('comments').select('id, content_id, body, created_at, profiles!author_id(id, nickname, verified)')
+              .eq('content_type', 'album_photo').in('content_id', photoIds).order('created_at', { ascending: true })
+          : Promise.resolve({ data: [] }),
+        window.supa.from('comments').select('id, body, created_at, profiles!author_id(id, nickname, verified)')
+          .eq('content_type', 'album').eq('content_id', id).order('created_at', { ascending: true })
+      ]).then(function (cRes) {
+        (cRes[0].data || []).forEach(function (c) {
+          if (!photoCommentsByPhoto[c.content_id]) photoCommentsByPhoto[c.content_id] = [];
+          photoCommentsByPhoto[c.content_id].push(c);
+        });
+        albumComments = cRes[1].data || [];
+
+        photoRows.forEach(function (p, i) {
+          var fig = document.createElement('figure');
+          fig.id = 'photo-' + p.id;
+          var ph = document.createElement('div');
+          ph.className = 'ph';
+          ph.style.backgroundImage = 'url(' + p.url + ')';
+          ph.style.backgroundSize = 'cover';
+          ph.style.backgroundPosition = 'center';
+          ph.addEventListener('click', function () { openLightbox(items, i); });
+          fig.appendChild(ph);
+          if (p.caption) {
+            var cap = document.createElement('figcaption');
+            cap.textContent = p.caption;
+            fig.appendChild(cap);
+          }
+          var n = (photoCommentsByPhoto[p.id] || []).length;
+          var ctoggle = document.createElement('a');
+          ctoggle.href = '#'; ctoggle.className = 'comment-toggle'; ctoggle.style.cssText = 'display:block;font-size:10px;margin-top:2px';
+          ctoggle.setAttribute('data-ctype', 'album_photo'); ctoggle.setAttribute('data-cid', String(p.id));
+          ctoggle.textContent = 'Комментарии (' + n + ')';
+          fig.appendChild(ctoggle);
+          photosEl.appendChild(fig);
+        });
+
+        if (window.PKSocial) window.PKSocial.scan(photosEl);
+        renderAlbumPanel();
+
+        // Переход по прямой ссылке на конкретное фото (из объединённой ленты
+        // или общей ссылкой) — подскроллить и подсветить.
+        if (window.location.hash.indexOf('#photo-') === 0) {
+          var pid = window.location.hash.slice(7);
+          setTimeout(function () { jumpToPhoto(pid, null); }, 50);
         }
-        photosEl.appendChild(fig);
       });
     });
     return;

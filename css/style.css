@@ -1130,7 +1130,7 @@ html, body { overflow-x: hidden; }
 /* ---------- подсветка ответа, на который пришли по ссылке (forum-topic.js) ---------- */
 /* .post — grid-контейнер, дочерние ячейки сами красят фон, поэтому подсветка
    через рамку/тень вокруг всей карточки, а не background на самом .post. */
-.post.flash-target { animation: postFlash 2s ease; }
+.post.flash-target, .p-photos figure.flash-target .ph, .comment-row.flash-target { animation: postFlash 2s ease; }
 @keyframes postFlash {
   0% { box-shadow: 0 0 0 3px #ffd84d; }
   100% { box-shadow: 0 0 0 3px rgba(255, 216, 77, 0); }

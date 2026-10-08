@@ -6,7 +6,7 @@
 <title>Альбомы — ПолиКоннект.ru</title>
 <meta name="description" content="Фото без подписей: эстетичное и смешное вперемешку.">
 <link rel="icon" type="image/svg+xml" href="img/logo-mark.svg?v=2">
-<link rel="stylesheet" href="css/style.css?v=70">
+<link rel="stylesheet" href="css/style.css?v=71">
 </head>
 <body>
 <div id="wrap">
@@ -120,6 +120,17 @@
 
       <section class="box" id="albumViewSection" hidden>
         <h2 id="albumTitle">…</h2>
+        <p style="padding:0 2px 6px">
+          <a href="#" id="albumCommentsToggle">Комментарии к альбому</a>
+          <span class="tabs" id="albumCommentsScope" style="display:none;margin-left:8px">
+            <a href="#" class="on" data-scope="all">Все</a><a href="#" data-scope="album">Только об альбоме</a><a href="#" data-scope="photos">Только к фото</a>
+          </span>
+        </p>
+        <div id="albumCommentsPanel" hidden>
+          <div class="comment-list" id="albumCommentsList"></div>
+          <div class="comment-compose"><input class="field" type="text" id="albumCommentInput" placeholder="Комментарий к альбому..." maxlength="1000">
+            <button class="submit" type="button" id="albumCommentSend">Отправить</button></div>
+        </div>
         <p class="hint" style="padding:0 2px 6px"><a href="albums.html">← Все альбомы</a></p>
         <div class="p-photos" id="albumPhotos"></div>
       </section>
@@ -166,7 +177,8 @@ document.querySelectorAll('.sidebox .qm').forEach(function (btn) {
 <script src="js/notify-toast.js?v=2"></script>
 <script src="js/notify-sound.js?v=4"></script>
 <script src="js/pm-badge.js?v=3"></script>
-<script src="js/albums.js?v=5"></script>
+<script src="js/social.js?v=3"></script>
+<script src="js/albums.js?v=7"></script>
 <script src="js/report.js?v=3"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>
