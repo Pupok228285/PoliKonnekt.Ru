@@ -67,7 +67,7 @@ Deno.serve(async (req: Request) => {
     if (table === 'verification_requests') {
       const prof = await lookupProfile(record.profile_id);
       const who = prof ? `${escapeHtml(prof.nickname)} (№${prof.member_no})` : 'неизвестный студент';
-      text = `🎓 <b>Новая заявка на подтверждение зачётки</b>\nОт: ${who}\nОткрыть: админ-панель сайта.`;
+      text = `🎓 <b>Новая заявка на подтверждение студенческого билета</b>\nОт: ${who}\nОткрыть: админ-панель сайта.`;
     } else if (table === 'support_messages') {
       const prof = await lookupProfile(record.author_id);
       const who = prof ? prof.nickname : 'неизвестный автор';

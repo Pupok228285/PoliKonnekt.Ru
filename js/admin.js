@@ -118,7 +118,7 @@
   }
   setInterval(loadOnline, 30000);
 
-  // ---------- очередь зачёток ----------
+  // ---------- очередь студенческих билетов ----------
   function loadQueue() {
     window.supa.from('verification_requests')
       .select('id, photo_path, created_at, profiles!profile_id(id, nickname, member_no)')
