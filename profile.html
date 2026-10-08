@@ -216,18 +216,22 @@
             <span class="hint" id="nickStatus" style="margin:0 0 0 6px"></span>
           </span>
         </div>
-        <p class="hint" style="padding:0 2px">Ник должен быть уникальным на всём сайте, как юзернейм в Телеграме — если занят, база сама откажет и подскажет.</p>
+        <p class="hint" style="padding:0 2px">Ник должен быть уникальным на всём сайте, как юзернейм в Телеграме — если занят, база сама откажет и подскажет. Ники, которыми вы когда-либо пользовались, остаются закреплёнными за вами навсегда — занять их никто другой не может, вы в любой момент можете вернуться к любому из них.</p>
+        <div class="p-row">
+          <span class="lbl">Мои ники</span>
+          <span class="val" id="myNicknamesBox">Загрузка...</span>
+        </div>
         <div class="p-row">
           <span class="lbl">История имени</span>
           <span class="val">
-            <div class="seg" data-hist="name">
+            <div class="seg" data-hist="nickname">
               <button type="button" data-show="1">Открыта всем</button>
               <button type="button" data-show="0">Скрыта</button>
             </div>
             <span class="hint" id="nameHistStatus" style="margin:0 0 0 6px"></span>
           </span>
         </div>
-        <div class="p-hist" id="hist-name">Загрузка...</div>
+        <div class="p-hist" id="hist-nickname">Загрузка...</div>
 
         <div class="p-row">
           <span class="lbl">Аватар</span>
@@ -325,9 +329,10 @@ document.querySelectorAll('.seg[data-hist]').forEach(function (seg) {
 <script src="js/auth-ui.js?v=6"></script>
 <script src="js/presence.js?v=3"></script>
 <script src="js/notify-toast.js?v=2"></script>
-<script src="js/notify-sound.js?v=4"></script>
+<script src="js/notify-sound.js?v=5"></script>
 <script src="js/pm-badge.js?v=3"></script>
-<script src="js/profile.js?v=17"></script>
+<script src="js/confirm-dialog.js?v=1"></script>
+<script src="js/profile.js?v=18"></script>
 <script src="js/report.js?v=3"></script>
 <script src="js/dev-switch.js?v=1"></script>
 </body>

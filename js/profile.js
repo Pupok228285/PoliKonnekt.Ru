@@ -149,7 +149,7 @@
   }
 
   function applyPrivacyState(p) {
-    var map = { name: p.name_history_public, avatar: p.avatar_history_public, quote: p.quote_history_public };
+    var map = { nickname: p.name_history_public, avatar: p.avatar_history_public, quote: p.quote_history_public };
     document.querySelectorAll('.seg[data-hist]').forEach(function (seg) {
       var key = seg.getAttribute('data-hist') === 'avatar_url' ? 'avatar' : seg.getAttribute('data-hist');
       var isPublic = map[key];
@@ -502,6 +502,7 @@
         quoteInput.value = p.quote || '';
         applyPrivacyState(p);
         loadHistory();
+        loadMyNicknames();
         if (pAboutEdit) {
           pAboutEdit.hidden = false;
           document.getElementById('facultyInput').value = p.faculty || '';
@@ -590,23 +591,92 @@
   window.supa.auth.onAuthStateChange(function () { refresh(); });
 
   // --- ник ---
+  // Общая смена ника — и для формы «Сохранить», и для «сделать текущим»
+  // из списка своих закреплённых ников.
+  function changeNickname(value, statusEl, cb) {
+    if (!currentUserId || !value) return;
+    setMsg(statusEl, 'Сохраняем...', true);
+    window.supa.from('profiles').update({ nickname: value }).eq('id', currentUserId).then(function (res) {
+      if (res.error) {
+        setMsg(statusEl, res.error.code === '23505' ? 'Этот ник уже занят, выберите другой.' : res.error.message, false);
+        if (cb) cb(false);
+        return;
+      }
+      setMsg(statusEl, 'Сохранено.', true);
+      nickInput.value = value;
+      pNick.textContent = value;
+      if (!document.getElementById('pAv').style.backgroundImage) pAv.textContent = value.charAt(0).toUpperCase();
+      loadHistory();
+      loadMyNicknames();
+      if (cb) cb(true);
+    });
+  }
+
   if (nickSave) {
     nickSave.addEventListener('click', function () {
-      if (!currentUserId) return;
       var value = (nickInput.value || '').trim();
       if (!value) { setMsg(nickStatus, 'Ник не может быть пустым.', false); return; }
-      setMsg(nickStatus, 'Сохраняем...', true);
-      window.supa.from('profiles').update({ nickname: value }).eq('id', currentUserId).then(function (res) {
-        if (res.error) {
-          setMsg(nickStatus, res.error.code === '23505' ? 'Этот ник уже занят, выберите другой.' : res.error.message, false);
-          return;
-        }
-        setMsg(nickStatus, 'Сохранено.', true);
-        pNick.textContent = value;
-        if (!document.getElementById('pAv').style.backgroundImage) pAv.textContent = value.charAt(0).toUpperCase();
-        loadHistory();
-      });
+      changeNickname(value, nickStatus);
     });
+  }
+
+  function loadMyNicknames() {
+    var box = document.getElementById('myNicknamesBox');
+    if (!box || !isOwnProfile || !currentUserId) return;
+    window.supa.from('nickname_registry').select('nickname').eq('owner_id', currentUserId)
+      .order('created_at', { ascending: true }).then(function (res) {
+        if (res.error) { box.innerHTML = '<span class="hint">Не удалось загрузить.</span>'; return; }
+        var rows = (res.data || []).filter(function (r) { return r.nickname !== nickInput.value; });
+        if (!rows.length) { box.innerHTML = '<span class="hint">Других закреплённых ников пока нет — они появляются сами, когда вы меняете имя.</span>'; return; }
+        box.innerHTML = '';
+        rows.forEach(function (r) {
+          var row = document.createElement('div');
+          row.style.cssText = 'margin-bottom:4px';
+          var useA = document.createElement('a');
+          useA.href = '#'; useA.textContent = 'сделать текущим'; useA.style.marginLeft = '6px';
+          var giftA = document.createElement('a');
+          giftA.href = '#'; giftA.textContent = 'подарить'; giftA.style.marginLeft = '6px';
+          var giftForm = document.createElement('span');
+          giftForm.hidden = true;
+          var giftInput = document.createElement('input');
+          giftInput.className = 'field'; giftInput.type = 'text'; giftInput.placeholder = 'Ник получателя'; giftInput.style.cssText = 'width:140px;margin-left:6px';
+          var giftBtn = document.createElement('button');
+          giftBtn.className = 'submit'; giftBtn.type = 'button'; giftBtn.textContent = 'Отправить'; giftBtn.style.marginLeft = '4px';
+          var giftStatus = document.createElement('span');
+          giftStatus.className = 'hint'; giftStatus.style.marginLeft = '6px';
+          giftForm.appendChild(giftInput); giftForm.appendChild(giftBtn); giftForm.appendChild(giftStatus);
+
+          row.appendChild(document.createTextNode(r.nickname));
+          row.appendChild(useA);
+          row.appendChild(giftA);
+          row.appendChild(giftForm);
+          box.appendChild(row);
+
+          useA.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.pkConfirm('Сделать «' + r.nickname + '» вашим текущим именем?', function () {
+              changeNickname(r.nickname, nickStatus);
+            });
+          });
+          giftA.addEventListener('click', function (e) {
+            e.preventDefault();
+            giftForm.hidden = !giftForm.hidden;
+            if (!giftForm.hidden) giftInput.focus();
+          });
+          giftBtn.addEventListener('click', function () {
+            var toNick = (giftInput.value || '').trim();
+            if (!toNick) { setMsg(giftStatus, 'Введите ник получателя.', false); return; }
+            window.pkConfirm('Передать ник «' + r.nickname + '» пользователю «' + toNick + '»? Себе вернуть можно будет, только если он подарит его обратно.', function () {
+              setMsg(giftStatus, 'Передаём...', true);
+              window.supa.rpc('gift_nickname', { p_nickname: r.nickname, p_to_nickname: toNick }).then(function (res) {
+                if (res.error) { setMsg(giftStatus, res.error.message, false); return; }
+                setMsg(giftStatus, 'Передано!', true);
+                loadMyNicknames();
+              });
+            });
+          });
+        });
+      });
   }
 
   // --- цитата ---

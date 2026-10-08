@@ -356,6 +356,18 @@
     });
   }
 
+  function onNicknameGiftInsert(row) {
+    if (row.to_id !== myId) return;
+    notify(true, function () {
+      window.PKNotifyToast.show({
+        title: 'Вам передали имя',
+        body: '«' + row.nickname + '» теперь закреплено за вами — можно взять его в Настройках.',
+        icon: 'img/icons/i-smile.svg',
+        href: 'settings.html'
+      });
+    });
+  }
+
   function subscribe() {
     if (channel) window.supa.removeChannel(channel);
     channel = window.supa.channel('site-notify-' + myId)
@@ -364,6 +376,7 @@
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'forum_replies' }, function (p) { onForumReplyInsert(p.new); })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, function (p) { onCommentInsert(p.new); })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'review_comments' }, function (p) { onReviewCommentInsert(p.new); })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'nickname_gifts' }, function (p) { onNicknameGiftInsert(p.new); })
       .subscribe();
   }
 
