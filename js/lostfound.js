@@ -145,10 +145,7 @@
 
   if (openBtn) {
     openBtn.addEventListener('click', function () {
-      window.supa.auth.getSession().then(function (res) {
-        if (!res.data || !res.data.session) { alert('Сначала войдите вверху страницы.'); return; }
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-      });
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
     });
   }
 
