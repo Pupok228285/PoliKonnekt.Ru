@@ -362,7 +362,7 @@
   // владение переходит только после «Принять» (см. respond_nickname_gift).
   var GIFT_EMOJIS = ['🎉', '✨', '🎊', '🎁', '⭐', '💫'];
 
-  function showGiftCelebration(gift) {
+  function showGiftCelebration(gift, onClose) {
     if (document.querySelector('.gift-overlay[data-gift-id="' + gift.id + '"]')) return; // уже показан
     var overlay = document.createElement('div');
     overlay.className = 'gift-overlay';
@@ -398,10 +398,15 @@
     var actions = document.createElement('div');
     actions.className = 'gift-actions';
 
+    function close() {
+      overlay.remove();
+      if (onClose) onClose();
+    }
+
     function respond(accept) {
       window.supa.rpc('respond_nickname_gift', { p_gift_id: gift.id, p_accept: accept }).then(function (res) {
         if (res.error) { status.textContent = res.error.message; status.style.color = '#b23e00'; return; }
-        overlay.remove();
+        close();
       });
     }
 
@@ -416,7 +421,7 @@
     var laterBtn = document.createElement('button');
     laterBtn.className = 'submit'; laterBtn.type = 'button'; laterBtn.textContent = 'Позже';
     laterBtn.title = 'Подарок останется ждать в вашем профиле';
-    laterBtn.addEventListener('click', function () { overlay.remove(); });
+    laterBtn.addEventListener('click', close);
 
     actions.appendChild(acceptBtn); actions.appendChild(declineBtn); actions.appendChild(laterBtn);
     card.appendChild(h2); card.appendChild(p1); card.appendChild(status); card.appendChild(actions);
@@ -431,6 +436,30 @@
       playSound(readSound(), readVolume());
       showGiftCelebration({ id: row.id, nickname: row.nickname, fromNick: fromNick });
     });
+  }
+
+  // Не только «вживую» (пока вы на сайте в момент дарения) — подарок,
+  // на который ещё не ответили, встречает фейерверком на КАЖДОЙ странице
+  // при каждом заходе, пока не нажали принять/отклонить (Телеграм делает
+  // так же со стикерами-подарками). «Позже» просто закрывает карточку —
+  // статус остаётся pending, и она всплывёт заново на следующей странице.
+  function showPendingGiftsOneByOne(gifts, i) {
+    if (i >= gifts.length) return;
+    var row = gifts[i];
+    window.supa.from('profiles').select('nickname').eq('id', row.from_id).single().then(function (r) {
+      var fromNick = (r.data && r.data.nickname) || 'Кто-то';
+      showGiftCelebration({ id: row.id, nickname: row.nickname, fromNick: fromNick }, function () {
+        showPendingGiftsOneByOne(gifts, i + 1);
+      });
+    });
+  }
+
+  function checkPendingGifts() {
+    window.supa.from('nickname_gifts').select('id, nickname, from_id')
+      .eq('to_id', myId).eq('status', 'pending').order('created_at', { ascending: true })
+      .then(function (res) {
+        if (res.data && res.data.length) showPendingGiftsOneByOne(res.data, 0);
+      });
   }
 
   function subscribe() {
@@ -465,6 +494,7 @@
       loadMyConversationIds();
       loadMyGroupIds();
       subscribe();
+      checkPendingGifts();
     });
   }
 
