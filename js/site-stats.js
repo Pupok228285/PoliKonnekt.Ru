@@ -40,6 +40,36 @@
     return d.innerHTML;
   }
 
+  // ---------- «Полезное»: приоритетные Потеряшки (последние 3 дня) ----------
+  // Не отдельная таблица-кэш — просто окно по дате: как только объявлению
+  // исполняется 3 дня, оно само перестаёт сюда попадать (если не обновили,
+  // см. renew_lostfound_post в lostfound.js). check_lostfound_reminders —
+  // ленивая проверка просроченных (как close_artel_election_if_due) —
+  // достаточно дёргать её при заходе на главную, пока на тарифе нет pg_cron.
+  var lfFeaturedBox = document.getElementById('lfFeaturedBox');
+  if (lfFeaturedBox) {
+    window.supa.rpc('check_lostfound_reminders');
+    window.supa.from('lost_found_posts')
+      .select('id, kind, title, created_at, renewed_at')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(function (res) {
+        var cutoff = Date.now() - 3 * 24 * 3600 * 1000;
+        var rows = (res.data || []).filter(function (p) {
+          return new Date(p.renewed_at || p.created_at).getTime() > cutoff;
+        }).slice(0, 3);
+        if (!rows.length) return;
+        var KIND = { lost: 'Потеряли', found: 'Нашли' };
+        lfFeaturedBox.innerHTML = '<b style="display:block;margin:0 0 3px">🔎 Потеряшки</b>' +
+          rows.map(function (p) {
+            return '<a href="lostfound.html" style="display:block;margin-bottom:2px">' +
+              escapeHtml(KIND[p.kind] || p.kind) + ': ' + escapeHtml(p.title) + '</a>';
+          }).join('') +
+          '<a href="lostfound.html" class="hint" style="display:block;margin-top:2px">Все записи →</a>';
+      });
+  }
+
   // ---------- сайдбар "Статистика" ----------
   // Лёгкие count-запросы (head:true — без строк, только число) — раз в 10
   // секунд не нагружает сайт, а числа на главной не выглядят замёршими.

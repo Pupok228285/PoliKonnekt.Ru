@@ -462,6 +462,21 @@
       });
   }
 
+  function onLostfoundReminderInsert(row) {
+    if (row.author_id !== myId) return;
+    window.supa.from('lost_found_posts').select('title').eq('id', row.lostfound_id).single().then(function (r) {
+      var title = r.data && r.data.title;
+      notify(true, function () {
+        window.PKNotifyToast.show({
+          title: 'Напоминание о Потеряшках',
+          body: 'Прошло 3 дня с публикации' + (title ? ' «' + title + '»' : '') + ' — ещё актуально? Отметьте или подтвердите на странице.',
+          icon: 'img/icons/i-lost.svg',
+          href: 'lostfound.html'
+        });
+      });
+    });
+  }
+
   function subscribe() {
     if (channel) window.supa.removeChannel(channel);
     channel = window.supa.channel('site-notify-' + myId)
@@ -471,6 +486,7 @@
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, function (p) { onCommentInsert(p.new); })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'review_comments' }, function (p) { onReviewCommentInsert(p.new); })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'nickname_gifts' }, function (p) { onNicknameGiftInsert(p.new); })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'lostfound_reminders' }, function (p) { onLostfoundReminderInsert(p.new); })
       .subscribe();
   }
 

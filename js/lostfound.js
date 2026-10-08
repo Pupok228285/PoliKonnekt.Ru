@@ -46,7 +46,7 @@
 
   function load() {
     window.supa.from('lost_found_posts')
-      .select('id, kind, title, description, location, status, created_at, author_id, profiles!author_id(nickname, verified)')
+      .select('id, kind, title, description, location, status, created_at, renewed_at, author_id, profiles!author_id(nickname, verified)')
       .order('created_at', { ascending: false })
       .then(function (res) {
         if (res.error || !res.data) {
@@ -110,6 +110,23 @@
         window.supa.from('lost_found_posts').update({ status: 'resolved' }).eq('id', p.id).then(load);
       });
       tr.lastElementChild.appendChild(btn);
+
+      // Висит 3+ дня, не отмечено решённым — предлагаем подтвердить, что
+      // ещё актуально (сбрасывает отсчёт и снимает напоминание), а не
+      // забыть и оставить висеть вечно.
+      var ref = new Date(p.renewed_at || p.created_at).getTime();
+      if (Date.now() - ref > 3 * 24 * 3600 * 1000) {
+        var renewBtn = document.createElement('button');
+        renewBtn.className = 'submit';
+        renewBtn.type = 'button';
+        renewBtn.style.cssText = 'font-size:10px;padding:1px 6px;margin-left:4px';
+        renewBtn.title = 'Висит больше 3 дней — подтвердить, что всё ещё актуально';
+        renewBtn.textContent = 'Актуально';
+        renewBtn.addEventListener('click', function () {
+          window.supa.rpc('renew_lostfound_post', { p_id: p.id }).then(load);
+        });
+        tr.lastElementChild.appendChild(renewBtn);
+      }
     }
     return tr;
   }
