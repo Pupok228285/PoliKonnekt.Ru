@@ -473,9 +473,9 @@
       pTick.style.display = p.verified ? '' : 'none';
       if (pVerifyNote) {
         if (p.verified) {
-          pVerifyNote.innerHTML = '<img src="img/icons/i-verified.svg" width="16" height="16" alt="" style="vertical-align:-4px"> Студент подтверждён по зачётке.';
+          pVerifyNote.innerHTML = '<img src="img/icons/i-verified.svg" width="16" height="16" alt="" style="vertical-align:-4px"> Студент подтверждён по студенческому билету.';
         } else if (viewingOwn) {
-          pVerifyNote.innerHTML = 'Пока не подтверждён. <a href="index.html">Отправить фото зачётки</a> — проверит администратор.';
+          pVerifyNote.innerHTML = 'Пока не подтверждён. <a href="index.html">Отправить фото студенческого билета</a> — проверит администратор.';
         } else {
           pVerifyNote.textContent = 'Пока не подтверждён.';
         }

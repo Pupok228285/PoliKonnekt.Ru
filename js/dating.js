@@ -100,7 +100,7 @@
       myId = session.user.id;
       window.supa.from('profiles').select('verified').eq('id', myId).single().then(function (pres) {
         if (!pres.data || !pres.data.verified) {
-          guestText.textContent = 'Раздел открыт только подтверждённым студентам — сначала подтвердите зачётку (кнопка на главной).';
+          guestText.textContent = 'Раздел открыт только подтверждённым студентам — сначала подтвердите студенческий билет (кнопка на главной).';
           guestNotice.hidden = false;
           datingArea.hidden = true;
           return;
