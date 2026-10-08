@@ -453,11 +453,18 @@
     var captionInput = document.createElement('input');
     captionInput.type = 'text'; captionInput.className = 'field'; captionInput.placeholder = 'Подпись (необязательно, для всех выбранных фото)';
     captionInput.style.cssText = 'width:260px';
+    var anonLabel = document.createElement('label');
+    anonLabel.className = 'hint'; anonLabel.style.cssText = 'display:flex;align-items:center;gap:4px';
+    var anonInput = document.createElement('input');
+    anonInput.type = 'checkbox';
+    anonLabel.appendChild(anonInput);
+    anonLabel.appendChild(document.createTextNode('Анонимно (не показывать моё имя)'));
     var fileInput = document.createElement('input');
     fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.multiple = true;
     var statusSpan = document.createElement('span');
     statusSpan.className = 'hint';
     uploadRow.appendChild(captionInput);
+    uploadRow.appendChild(anonLabel);
     uploadRow.appendChild(fileInput);
     uploadRow.appendChild(statusSpan);
     box.appendChild(uploadRow);
@@ -466,6 +473,7 @@
       var files = Array.prototype.slice.call(fileInput.files || []);
       if (!files.length) return;
       var caption = (captionInput.value || '').trim() || null;
+      var isAnon = anonInput.checked;
       // лимит фото — только для заявок от участников (см. album_submissions);
       // у админа своего альбома лимита нет, он и так осознанно наполняет сам
       var done = 0;
@@ -476,7 +484,7 @@
           return window.supa.storage.from('album-photos').upload(path, blob, { contentType: 'image/jpeg' }).then(function (upRes) {
             if (upRes.error) throw upRes.error;
             var url = window.supa.storage.from('album-photos').getPublicUrl(path).data.publicUrl;
-            return window.supa.from('album_photos').insert({ album_id: a.id, url: url, caption: caption }).then(function (insRes) {
+            return window.supa.from('album_photos').insert({ album_id: a.id, url: url, caption: caption, author_id: myId, is_anonymous: isAnon }).then(function (insRes) {
               if (insRes.error) throw insRes.error;
               done++;
               statusSpan.textContent = 'Сжимаем и загружаем ' + done + '/' + files.length + '...';
@@ -499,7 +507,7 @@
     if (!albumSubsList) return;
     albumSubsList.innerHTML = '<p class="hint" style="padding:4px 2px">Загрузка...</p>';
     Promise.all([
-      window.supa.from('album_submissions').select('id, photo_url, caption, created_at, profiles!author_id(id, nickname)').order('created_at', { ascending: true }),
+      window.supa.from('album_submissions').select('id, photo_url, caption, author_id, is_anonymous, created_at, profiles!author_id(id, nickname)').order('created_at', { ascending: true }),
       window.supa.from('albums').select('id, title').order('title', { ascending: true })
     ]).then(function (results) {
       var subsRes = results[0], albumsRes = results[1];
@@ -528,7 +536,8 @@
       : escapeHtml(prof.nickname || '?');
     right.innerHTML =
       '<div>' + nickHtml + ' <span class="hint" style="margin:0">— ' + fmtDateTime(s.created_at) + '</span></div>' +
-      (s.caption ? '<div style="margin:4px 0">' + escapeHtml(s.caption) + '</div>' : '');
+      (s.caption ? '<div style="margin:4px 0">' + escapeHtml(s.caption) + '</div>' : '') +
+      (s.is_anonymous ? '<div class="hint" style="margin:0;color:#b23e00">Просит опубликовать анонимно</div>' : '');
 
     var actRow = document.createElement('div');
     actRow.className = 'btns';
@@ -559,7 +568,7 @@
       var albumId = Number(select.value);
       if (!albumId) return;
       addBtn.disabled = true;
-      window.supa.from('album_photos').insert({ album_id: albumId, url: s.photo_url, caption: s.caption || null }).then(function (insRes) {
+      window.supa.from('album_photos').insert({ album_id: albumId, url: s.photo_url, caption: s.caption || null, author_id: s.author_id, is_anonymous: !!s.is_anonymous }).then(function (insRes) {
         if (insRes.error) { alert(insRes.error.message); addBtn.disabled = false; return; }
         window.supa.from('album_submissions').delete().eq('id', s.id).then(function () { loadAlbumSubs(); });
       });

@@ -32,8 +32,11 @@
     lbImg.src = item.url;
     if (lbCount) lbCount.textContent = (lbIndex + 1) + ' из ' + lbItems.length;
     if (lbCaption) {
-      lbCaption.textContent = item.caption || '';
-      lbCaption.hidden = !item.caption;
+      var parts = [];
+      if (item.caption) parts.push(item.caption);
+      if (item.authorNick) parts.push('Автор: ' + item.authorNick);
+      lbCaption.textContent = parts.join(' — ');
+      lbCaption.hidden = !parts.length;
     }
   }
 
@@ -221,7 +224,7 @@
 
     Promise.all([
       window.supa.from('albums').select('id, title').eq('id', id).single(),
-      window.supa.from('album_photos').select('id, url, caption').eq('album_id', id).order('created_at', { ascending: false })
+      window.supa.from('album_photos').select('id, url, caption, score, is_anonymous, profiles!author_id(id, nickname, verified)').eq('album_id', id).order('created_at', { ascending: false })
     ]).then(function (results) {
       var albRes = results[0], photosRes = results[1];
       if (albRes.error || !albRes.data) { titleEl.textContent = 'Альбом не найден'; return; }
@@ -234,7 +237,10 @@
       }
       photosEl.innerHTML = '';
       var photoRows = photosRes.data || [];
-      var items = photoRows.map(function (p) { return { url: p.url, caption: p.caption }; });
+      var items = photoRows.map(function (p) {
+        var authorNick = (!p.is_anonymous && p.profiles && p.profiles.nickname) ? p.profiles.nickname : null;
+        return { url: p.url, caption: p.caption, authorNick: authorNick };
+      });
       var photoIds = photoRows.map(function (p) { return p.id; });
 
       Promise.all([
@@ -266,9 +272,26 @@
             cap.textContent = p.caption;
             fig.appendChild(cap);
           }
+          var prof = p.profiles;
+          if (!p.is_anonymous && prof && prof.id) {
+            var authorLine = document.createElement('div');
+            authorLine.style.cssText = 'font-size:9px;text-align:center;margin-top:2px';
+            authorLine.innerHTML = '<a href="profile.html?id=' + prof.id + '">' + escapeHtml(prof.nickname || '?') + '</a>' +
+              (prof.verified ? '<img class="tick" src="img/icons/i-verified.svg" alt="" style="vertical-align:-2px;width:10px;height:10px">' : '');
+            fig.appendChild(authorLine);
+          }
+          var actRow = document.createElement('div');
+          actRow.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:4px;margin-top:2px';
+          actRow.innerHTML =
+            '<span class="vote-widget" data-vtype="album_photo" data-vid="' + p.id + '">' +
+              '<button type="button" class="vote-up" title="В плюс репутации">&#9650;</button>' +
+              '<b class="vote-score">' + (p.score || 0) + '</b>' +
+              '<button type="button" class="vote-down" title="В минус репутации">&#9660;</button>' +
+            '</span>';
+          fig.appendChild(actRow);
           var n = (photoCommentsByPhoto[p.id] || []).length;
           var ctoggle = document.createElement('a');
-          ctoggle.href = '#'; ctoggle.className = 'comment-toggle'; ctoggle.style.cssText = 'display:block;font-size:10px;margin-top:2px';
+          ctoggle.href = '#'; ctoggle.className = 'comment-toggle'; ctoggle.style.cssText = 'display:block;font-size:10px;margin-top:2px;text-align:center';
           ctoggle.setAttribute('data-ctype', 'album_photo'); ctoggle.setAttribute('data-cid', String(p.id));
           ctoggle.textContent = 'Комментарии (' + n + ')';
           fig.appendChild(ctoggle);
@@ -336,6 +359,7 @@
   var subPhotoInput = document.getElementById('subPhotoInput');
   var subPhotoPreview = document.getElementById('subPhotoPreview');
   var subCaption = document.getElementById('subCaption');
+  var subAnonymous = document.getElementById('subAnonymous');
   var subSubmitBtn = document.getElementById('subSubmitBtn');
   var subHint = document.getElementById('subHint');
   var pendingSubPhoto = null;
@@ -392,7 +416,8 @@
             return window.supa.from('album_submissions').insert({
               author_id: session.user.id,
               photo_url: url,
-              caption: (subCaption.value || '').trim() || null
+              caption: (subCaption.value || '').trim() || null,
+              is_anonymous: !!(subAnonymous && subAnonymous.checked)
             });
           });
         }).then(function (insRes) {
@@ -404,6 +429,7 @@
           subPhotoPreview.style.display = 'none';
           subPhotoPreview.textContent = '';
           subCaption.value = '';
+          if (subAnonymous) subAnonymous.checked = false;
         }).catch(function (err) {
           subSubmitBtn.disabled = false;
           setSubHint(err.message || 'Не удалось отправить.', false);
