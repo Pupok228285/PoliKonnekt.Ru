@@ -1035,12 +1035,16 @@
             if (r.error) { alert(r.error.message); return; }
             m.is_admin = role === 'admin' ? value : m.is_admin;
             m.is_moderator = role === 'moderator' ? value : m.is_moderator;
+            m.verified = role === 'verified' ? value : m.verified;
             showMemberDetail(m);
             loadMembers();
           });
         });
         actsEl.appendChild(btn);
       }
+
+      if (m.verified) addRoleBtn('Снять галочку', 'verified', false);
+      else addRoleBtn('Выдать галочку', 'verified', true);
 
       if (m.is_moderator) addRoleBtn('Снять модератора', 'moderator', false);
       else addRoleBtn('Сделать модератором', 'moderator', true);
